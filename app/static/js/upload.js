@@ -22,6 +22,12 @@ async function uploadFile() {
 
         if (result.status === "success") {
             status.innerText = "Файл успешно загружен";
+            const form = document.getElementById("manual-input");
+            const input = document.getElementById('filename-input');
+            input.value = result.saved_as;
+            form.appendChild(input);
+            console.log(result.saved_as);
+
         } else {
             status.innerText = "Ошибка: " + result.message;
         }

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, UploadFile, HTTPException
+from fastapi import FastAPI, Request, UploadFile, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
@@ -54,3 +54,7 @@ async def upload_file(file: UploadFile):
             "message": str(e)
         }, status_code=500)
 
+
+@app.post("/generate-report")
+async def generate_report(file_id: str=Form(), example: str=Form()):
+    return JSONResponse({"file_id":file_id, "example": example}, status_code=200)

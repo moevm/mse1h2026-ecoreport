@@ -1,0 +1,14 @@
+<script src="static/js/upload.js"></script>
+<div id="upload-container">
+    <input type="file" id="file-input" name="file" accept=".csv,.xlsx"/>
+    <button onclick="uploadFile()">Загрузить</button>
+    <p id="status"></p>
+</div>
+<form id="manual-input" action="/generate-report" method="POST">
+    <input type="hidden" id="filename-input" name="file_id">
+    <p>
+        <label for="example">Введите данные:</label>
+        <input type="text" name="example">
+    </p>
+    <button type="submit">Генерировать отчет</button>
+</form>

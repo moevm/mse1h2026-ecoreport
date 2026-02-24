@@ -1,14 +1,108 @@
-<script src="static/js/upload.js"></script>
+<script src="static/js/index.js"></script>
+<form>
+    <h2>Общая информация об объекте</h2>
+    <p>
+        <label for="site-type">Тип*</label>
+        <select name="site-type" id="site-type">
+            <option value="">Выберите тип объекта</option>
+            <option value="bog">Болото</option>
+            <option value="urban">Город</option>
+            <option value="protected">ООПТ</option>
+        </select>,
+        <label for="site-name">Наименование*</label>
+        <input type="text" name="site-name" id="site-name">,
+        <label for="site-desc">Описание</label>
+        <input type="text" name="site-desc" id="site-desc">,
+        Координаты(градусы)*:
+            <label for="site-longitude">Широта</label>
+            <input type="text" name="site-longitude"  id="site-longitude">,
+            <label for="site-latitude">Долгота</label>
+            <input type="text" name="site-latitude" id="site-latitude">,
+        <label for="site-area">Площадь(Га)</label>
+        <input type="text" name="site-area" id="site-area">,
+        <label for="site-area">Категория земель</label>
+        <input type="text" name="site-area">.
+    </p>
+    <h2>Специальная информация об объекте</h2>
+    <p name="urban-extra">
+        <label for="urban-population">Численность населения</label>
+        <input type="text" name="urban-population" id="urban-population">,
+        <label for="urban-density">Плотность застройки</label>
+        <input type="text" name="urban-density" id="urban-density">,
+        <label for="urban-drainage-type">Тип дренажной системы</label>
+        <input type="text" name="urban-drainage-type" id="urban-drainage-type">.
+    </p>
+    <p name="bog-extra">
+        <label for="bog-type">Тип болота</label>
+        <input type="text" name="bog-type" id="bog-type">,
+        <label for="bog-depth">Средняя глубина(м)</label>
+        <input type="text" name="bog-depth" id="bog-depth">,
+        <label for="bog-peat-volume">Объем торфа(м³)</label>
+        <input type="text" name="bog-peat-volume" id="bog-peat-volume">,
+        <label for="bog-hydro-regime">Характеристика водного режима</label>
+        <input type="text" name="bog-hydro-regime" id="bog-hydro-regime">.
+    </p>
+    <p name="protected-extra">
+        <label for="protected-category">Категория ООПТ</label>
+        <input type="text" name="protected-category" id="protected-category">,
+        <label for="protected-regime">Режим особой охраны</label>
+        <input type="text" name="protected-regime" id="protected-regime">,
+        <label for="protected-org">Организация, ответственная за охрану</label>
+        <input type="text" name="protected-org" id="protected-org">.
+    </p>
+    <h2>Дренажные системы</h2>
+    <p name="drainage">
+        <label for="drainage-id">ID*</label>
+        <input type="text" name="drainage-id" id="drainage-id">,
+        <label for="drainage-type">Тип*</label>
+        <input type="text" name="drainage-type" id="drainage-type">,
+        <label for="drainage-materials">Материалы*</label>
+        <input type="text" name="drainage-materials" id="drainage-materials">,
+        <label for="drainage-year">Год ввода в эксплуатацию</label>
+        <input type="text" name="drainage-year" id="drainage-year">,
+        <label for="drainage-min-depth">Min глубина заложения(м)</label>
+        <input type="text" name="drainage-min-depth" id="drainage-min-depth">,
+        <label for="drainage-max-depth">Max глубина заложения(м)</label>
+        <input type="text" name="drainage-max-depth" id="drainage-max-depth">,
+        <label for="drainage-diameter">Диаметр трубы(мм)</label>
+        <input type="text" name="drainage-diameter" id="drainage-diameter">,
+        <label for="drainage-length">Общая протяженность(м)</label>
+        <input type="text" name="drainage-length" id="drainage-length">,
+        <label for="drainage-area">Обслуживаемая площадь(Га)</label>
+        <input type="text" name="drainage-area" id="drainage-area">.
+    </p>
+    <h2>Материал</h2>
+    <p name="material">
+        <label for="material-type">Тип*</label>
+        <input type="text" name="material-type" id="material-type">,
+        <label for="material-desc">Описание</label>
+        <input type="text" name="material-desc" id="material-desc">,
+        <label for="material-density">Плотность(кг/м³)</label>
+        <input type="text" name="material-density" id="material-density">,
+        <label for="material-chem">Химический состав</label>
+        <input type="text" name="material-chem" id="material-chem">.
+    </p>
+    <h2>Результаты выщелчивания</h2>
+    <p name="leaching">
+        <label for="leaching-substance">Вещество*</label>
+        <input type="text" name="leaching-substance" id="leaching-substance">,
+        <label for="leaching-concentration">Концентрация*</label>
+        <input type="text" name="leaching-concentration" id="leaching-concentration">,
+        <label for="leaching-measure-unit">Единица измерения*</label>
+        <input type="text" name="leaching-measure-unit" id="leaching-measure-unit">,
+        <label for="leaching-date">Дата отбора пробы*</label>
+        <input type="text" name="leaching-date" id="leaching-date">,
+        <label for="leaching-method">Методика анализа</label>
+        <input type="text" name="leaching-method" id="leaching-method">,
+        Координаты точки анализа(градусы)*: 
+        <label for="leaching-latitude">Широта</label>
+        <input type="text" name="leaching-latitude" id="leaching-latitude">,
+        <label for="leaching-longitude">Долгота</label>
+        <input type="text" name="leaching-longitude" id="leaching-longitude">.
+    </p>
+</form> 
 <div id="upload-container">
     <input type="file" id="file-input" name="file" accept=".csv,.xlsx"/>
-    <button onclick="uploadFile()">Загрузить</button>
-    <p id="status"></p>
+    <button onclick="uploadFile()">Загрузить данные из файла</button>
+    <p id="upload-status"></p>
 </div>
-<form id="manual-input" action="/generate-report" method="POST">
-    <input type="hidden" id="filename-input" name="file_id">
-    <p>
-        <label for="example">Введите данные:</label>
-        <input type="text" name="example">
-    </p>
-    <button type="submit">Генерировать отчет</button>
-</form>

@@ -55,3 +55,30 @@ async function sendForm() {
         status.innerText = "Ошибка соединения";
     }
 }
+
+window.addEventListener('load', function () {
+    const site_type_input = document.getElementById("site-type");
+    const bog_extra = document.getElementById("bog-extra");
+    const urban_extra = document.getElementById("urban-extra");
+    const protected_extra = document.getElementById("protected-extra");
+    site_type_input.addEventListener('input', function() {
+        bog_extra.hidden = true;
+        urban_extra.hidden = true;
+        protected_extra.hidden = true;
+        switch (site_type_input.value){
+            case "bog":
+                bog_extra.hidden = false;
+                break;
+            case "urban":
+                urban_extra.hidden = false;
+                break;
+            case "protected":
+                protected_extra.hidden = false;
+                break;
+            default:
+                break;
+    
+        }
+    
+    });
+})

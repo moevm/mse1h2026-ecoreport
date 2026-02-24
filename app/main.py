@@ -23,6 +23,9 @@ async def index(request: Request):
 
 @app.get("/download/{id}")
 async def download_file(request: Request):
+    '''
+    Скачивание файла по id
+    '''
     file_id = request.get('path_params')['id']
     for filename in os.listdir(UPLOAD_DIR):
         if filename.startswith(file_id):
@@ -36,6 +39,10 @@ async def download_file(request: Request):
 
 @app.post("/upload")
 async def upload_file(file: UploadFile):
+    '''
+    Сюда загружается файл .csv или .xlsx с данными, на данный момент он просто сохраняется в отдельной папке.
+    В будущем здесь будет обработка содержимого файла.
+    '''
     try:
         file_id = uuid.uuid4()
         file_ext = os.path.splitext(file.filename)[1]
@@ -56,5 +63,6 @@ async def upload_file(file: UploadFile):
 
 
 @app.post("/generate-report")
-async def generate_report(file_id: str=Form(), example: str=Form()):
-    return JSONResponse({"file_id":file_id, "example": example}, status_code=200)
+async def generate_report(request: Request):
+    '''Сюда будут отправляться данные формы для генерирования отчета'''
+    return JSONResponse({"status": "success"}, status_code=200)

@@ -32,3 +32,26 @@ async function uploadFile() {
         status.innerText = "Ошибка соединения";
     }
 }
+
+async function sendForm() {
+    const form = document.getElementById("input-form");
+    const formData = new FormData(form);
+    const status = document.getElementById("report-status");
+
+    try {
+        const response = await fetch("/generate-report", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+            status.innerText = "Отчет готов!";
+        } else {
+            status.innerText = "Ошибка: " + result.message;
+        }
+    } catch (error) {
+        status.innerText = "Ошибка соединения";
+    }
+}

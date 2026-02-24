@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="static/js/index.js"></script>
     <title>Eco report</title>
 </head>
 <body>
     <p>Server is running.</p>
     {% include "data_input.html" %}
+    <button onclick="sendForm()">Сгенерировать отчет</button>
+    <p id="report-status"></p>
+    <button>Скачать отчет в формате pdf</button>
+    <button>Скачать отчет в формате docx</button>
+    <button>Скачать объект GeoJSON</button>
 </body>
 </html>

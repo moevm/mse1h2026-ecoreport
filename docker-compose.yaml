@@ -1,0 +1,8 @@
+name: eco-report
+services:
+  python:
+    build: .
+    container_name: python
+    ports:
+      - "127.0.0.1:80:80"
+    restart: always

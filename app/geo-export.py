@@ -1,7 +1,7 @@
 import geojson
 
 
-POLLUTION_THRESHOLD = 10.0
+POLLUTION_THRESHOLD = 10.0 #нужный порог выставить
 GREEN_HEX = "#30DB30"
 RED_HEX = "#DB3030"
 
@@ -26,13 +26,13 @@ def feature_data_point(longitude: float, latitude: float, pollution_level: float
 
 def create_collection_geojson(longitudes: list[float], latitudes: list[float], pollution_levels: list[float]) -> str:
     '''
-    create a GeoJSON Feature object representing a Point with included data, such as the color to display based on pollution level
+    create a collection of GeoJSON Feature objects representing a Point with included data, such as the color to display based on pollution level, and dump the file text
 
     :type longitudes: list[float]
     :type latitudes: list[float]
     :type pollution_levels: list[float]
     :return:
-    :rtype: geojson.FeatureCollection
+    :rtype: str
     '''
     points: list = list()
     for i in range(len(longitudes)):
@@ -42,6 +42,15 @@ def create_collection_geojson(longitudes: list[float], latitudes: list[float], p
 
 
 def create_point_feature_geojson(longitude: float, latitude: float, pollution_level: float) -> str:
+    '''
+    create a GeoJSON Feature object representing a Point with included data, such as the color to display based on pollution level, and dump the file text
+
+    :type longitude: float
+    :type latitude: float
+    :type pollution_levels: float
+    :return:
+    :rtype: str
+    '''
     return geojson.dumps(feature_data_point(longitude, latitude, pollution_level))
 
 

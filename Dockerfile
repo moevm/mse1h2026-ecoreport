@@ -1,16 +1,17 @@
 FROM python:3.14-alpine
 
-WORKDIR /app
 
-EXPOSE 80
+WORKDIR /src/app
 
-COPY ./requirements.txt .
+COPY ./requirements.txt /src/app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+COPY ./app /src/app
 
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN adduser -D appuser && chown -R appuser:appuser /src
 
-COPY ./app /app
-
-RUN useradd appuser && chown -R appuser /app
 USER appuser
 
-CMD ["fastapi", "run", "main.py", "--port", "80"]
+EXPOSE 80
+ENV PYTHONPATH=/src
+
+CMD ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]

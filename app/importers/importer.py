@@ -2,8 +2,9 @@ import json
 from abc import ABC, abstractmethod
 from typing import List, Any, Dict
 import pandas as pd
-from input_models import ReportInputData
+from app.models.input_models import ReportInputData
 
+# TODO переделать на async
 
 class Importer(ABC):
     """

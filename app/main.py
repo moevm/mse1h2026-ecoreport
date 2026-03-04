@@ -1,12 +1,37 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from dishka import make_async_container
+from dishka.integrations.fastapi import setup_dishka
 
-app = FastAPI()
+from app.api.endpoints import router
+from app.infrastructure.rabbit.rabbit_provider import rabbit_provider
+from app.services.workers.manager import WorkerManager
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Контекстный менеджер жизненного цикла приложения.
+    Отвечает за запуск и остановку фоновых воркеров при старте и завершении приложения.
+    """
+    worker_manager = await app.state.dishka_container.get(WorkerManager)
+    await worker_manager.start_all()
+    yield
+    await worker_manager.stop_all()
 
-@app.get("/")
-async def index():
-    return templates.TemplateResponse("index.html")
+
+def create_app() -> FastAPI:
+    """
+    Фабрика для создания и настройки экземпляра приложения FastAPI.
+    Включает роутеры, настраивает DI-контейнер Dishka и задает жизненный цикл.
+
+    :return: Настроенный экземпляр FastAPI.
+    """
+    app = FastAPI(lifespan=lifespan)
+    app.include_router(router)
+    
+    container = make_async_container(rabbit_provider)
+    setup_dishka(container, app)
+    
+    return app
+
+app = create_app()

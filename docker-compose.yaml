@@ -1,8 +1,31 @@
 name: eco-report
+
 services:
   python:
     build: .
     container_name: python
     ports:
-      - "127.0.0.1:80:80"
+      - "127.0.0.1:8000:8000"
     restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  rabbitmq_data:

@@ -1,1 +1,4 @@
+aiormq
+aio-pika
+dishka
 fastapi[all]>=0.65.2

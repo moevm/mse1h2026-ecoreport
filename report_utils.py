@@ -94,6 +94,33 @@ def monitored_points_table(points: list,
     return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
 
 
+def lab_test_results_table(ph: float, iron: float, mn: float, no3: float, so4: float,
+                           fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
+    """Создает таблицу "Результаты лабораторных анализов" (Таблица 3 из макета)
+    Параметры:
+        ph: float - pH
+        iron: float - Железо
+        mn: float - Марганец
+        no3: float - Нитраты
+        so4: float - Сульфаты
+        fontname: str - Имя шрифта, зарегистрированного в ReportLab (для генерации отчета необохдимо зарегистрировать шрифт с кириллицей!!!)
+        fontsize: int - размер шрифта
+    Возвращает: ReportLab объект Table для включения в pdf отчет"""
+    par_style: ParagraphStyle = get_paragraph_style(fontname, fontsize)
+    par_style_justify: ParagraphStyle = get_paragraph_style(fontname, fontsize, TA_JUSTIFY)
+    header = ("Показатель", "Норматив", "Результат", "Ед. изм.", "Соответствие")
+    relative_error = 0.2
+    data = [header,
+            ("pH", "6-9", round(ph, 2), "-", "Соответсвует" if 6 <= ph <= 9 else "Не соответствует"),
+            ("Железо", 0.3, round(iron, 2), "мг/л", "Соответсвует" if abs(iron - 0.3)/0.3 <= relative_error else "Не соответствует"),
+            ("Марганец", 0.1, round(mn, 2), "мг/л", "Соответсвует" if abs(mn - 0.1)/0.1 <= relative_error else "Не соответствует"),
+            ("Нитраты", 45, round(no3, 2), "мг/л", "Соответсвует" if abs(no3 - 45)/45 <= relative_error else "Не соответствует"),
+            ("Сульфаты", 500, round(so4, 2), "мг/л", "Соответсвует" if abs(so4 - 500)/500 <= relative_error else "Не соответствует"),
+            ]
+    col_widths = [inch * 1, inch * 1, inch * 1.5, inch * 0.8, inch * 2]
+    return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
+
+
 if __name__ == "__main__":
     #Пример создания таблицы
     from reportlab.platypus import SimpleDocTemplate
@@ -110,4 +137,6 @@ if __name__ == "__main__":
               ("Точка 2", 0.1111111, 0.1111111, "Дренажная вода", "Контрольная точка")]
     table2 = monitored_points_table(points)
 
-    doc.build([table1, table2])
+    table3 = lab_test_results_table(7, 0.2, 0.11, 50, 489)
+
+    doc.build([table1, table2, table3])

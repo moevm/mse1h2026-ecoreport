@@ -2,6 +2,7 @@ from reportlab.platypus import Table, TableStyle, Paragraph
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
+from datetime import date
 
 
 def get_table_style(fontname: str = "TimesNewRoman", fontsize: int = 14) -> TableStyle:
@@ -121,6 +122,30 @@ def lab_test_results_table(ph: float, iron: float, mn: float, no3: float, so4: f
     return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
 
 
+def lab_dynamics(entries: list[tuple],
+                 fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
+    """Создает таблицу "Таблица динамики наблюдений" (Таблица 4 из макета)
+    Параметры:
+        entries: list - надор наблюдений в виде списка кортежей вида:
+            date: Date - дата наблюдения в виде объекта date из datetime
+            ph: float - pH
+            iron: float - Железо
+            mn: float - Марганец
+            no3: float - Нитраты
+            so4: float - Сульфаты
+        fontname: str - Имя шрифта, зарегистрированного в ReportLab (для генерации отчета необохдимо зарегистрировать шрифт с кириллицей!!!)
+        fontsize: int - размер шрифта
+    Возвращает: ReportLab объект Table для включения в pdf отчет"""
+    header = ("Дата", "pH", "Железо", "Марганец", "Нитраты", "Сульфаты")
+    data = [header,]
+    for i in range(len(entries)):
+        entry = entries[i]
+        date_i: date = entry[0]
+        data.append((date_i.strftime("%d.%m.%Y"), round(entry[1], 2), round(entry[2], 2), round(entry[3], 2), round(entry[4], 2), round(entry[5], 2)))
+    col_widths = [inch * 1, inch * 1.2, inch * 1.2, inch * 1.2, inch * 1.2, inch * 1.2]
+    return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
+
+
 if __name__ == "__main__":
     #Пример создания таблицы
     from reportlab.platypus import SimpleDocTemplate
@@ -139,4 +164,8 @@ if __name__ == "__main__":
 
     table3 = lab_test_results_table(7, 0.2, 0.11, 50, 489)
 
-    doc.build([table1, table2, table3])
+    entries = [(date.today(), 1, 1, 1, 1, 1),
+               (date.today(), 2, 2, 2, 2, 2)]
+    table4 = lab_dynamics(entries)
+
+    doc.build([table1, table2, table3, table4])

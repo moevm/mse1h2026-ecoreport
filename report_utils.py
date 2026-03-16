@@ -89,7 +89,7 @@ def monitored_points_table(points: list,
     header = ("№", Paragraph("Точка наблюдения", par_style), "Широта", "Долгота", "Тип среды", "Описание")
     data = [header,]
     for i in range(len(points)):
-        point = points[0]
+        point = points[i]
         data.append((i+1, Paragraph(point[0], par_style), round(point[1], 7), round(point[2], 7), Paragraph(point[3], par_style), Paragraph(point[4], par_style_justify)))
     col_widths = [inch * 0.5, inch * 1.5, inch * 1, inch * 1, inch * 2]
     return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))

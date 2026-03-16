@@ -74,6 +74,26 @@ def main_system_specifications_table(system_type: str, pipe_material: str, pipe_
     return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
 
 
+
+def monitored_points_table(points: list,
+                           fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
+    """Создает таблицу "Координаты точек наблюдения" (Таблица 2 из макета)
+    Параметры:
+        points: список точек наблюдения в формате [(Имя, Широта, Долгота, Тип среды, Описание), ...]
+        fontname: str - Имя шрифта, зарегистрированного в ReportLab (для генерации отчета необохдимо зарегистрировать шрифт с кириллицей!!!)
+        fontsize: int - размер шрифта
+    Возвращает: ReportLab объект Table для включения в pdf отчет"""
+    par_style: ParagraphStyle = get_paragraph_style(fontname, fontsize)
+    par_style_justify: ParagraphStyle = get_paragraph_style(fontname, fontsize, TA_JUSTIFY)
+    header = ("№", Paragraph("Точка наблюдения", par_style), "Широта", "Долгота", "Тип среды", "Описание")
+    data = [header,]
+    for i in range(len(points)):
+        point = points[0]
+        data.append((i+1, Paragraph(point[0], par_style), round(point[1], 7), round(point[2], 7), Paragraph(point[3], par_style), Paragraph(point[4], par_style_justify)))
+    col_widths = [inch * 0.5, inch * 1.5, inch * 1, inch * 1, inch * 2]
+    return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
+
+
 if __name__ == "__main__":
     #Пример создания таблицы
     from reportlab.platypus import SimpleDocTemplate
@@ -83,6 +103,11 @@ if __name__ == "__main__":
     doc = SimpleDocTemplate("table_test.pdf")
     #Необходимо зарегистрировать шрифт с кириллицей для корректного отображения, иначе будут черные квадраты!
     pdfmetrics.registerFont(TTFont("TimesNewRoman", "times-new-roman-regular.ttf"))
-    elements = [main_system_specifications_table("Какая-то дренажная система", "Какой-то материал труб", 100, 100, 1000, 2026, 1,
-                                                 note_system_type="Здесь может быть примечание, если ни в одной строке примечаний нет, то столбец удаляется")]
-    doc.build(elements)
+    table1 = main_system_specifications_table("Какая-то дренажная система", "Какой-то материал труб", 100, 100, 1000, 2026, 1,
+                                              note_system_type="Здесь может быть примечание, если ни в одной строке примечаний нет, то столбец удаляется")
+
+    points = [("Точка 1", 0.1111111, 0.1111111, "Дренажная вода", "Контрольная точка"),
+              ("Точка 2", 0.1111111, 0.1111111, "Дренажная вода", "Контрольная точка")]
+    table2 = monitored_points_table(points)
+
+    doc.build([table1, table2])

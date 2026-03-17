@@ -10,7 +10,9 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 COPY ./app /app
 
-RUN useradd appuser && chown -R appuser /app
+RUN addgroup -S appgroup \
+    && adduser -S -G appgroup appuser \
+    && chown -R appuser:appgroup /app
 USER appuser
 
 CMD ["fastapi", "run", "main.py", "--port", "80"]

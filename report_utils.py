@@ -81,6 +81,7 @@ def comparison_bar_chart(iron: float, mn: float, no3: float, so4: float,
     ax.legend(loc='upper left')
     ax.set_xticks(x + width, measurements)
     ax.tick_params(right=False, left=False, axis='y', length=0, which='both')
+    ax.set_yticks([])
     fig.set_figwidth(6)
 
     return create_image_through_buffer(fig)

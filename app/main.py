@@ -6,14 +6,10 @@ import shutil
 import os
 import uuid
 
-
 app: FastAPI = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates: Jinja2Templates = Jinja2Templates(directory="templates")
-
-UPLOAD_DIR = "uploads"
-
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -23,7 +19,17 @@ async def index(request: Request):
 
 @app.get("/new-report", response_class=HTMLResponse)
 async def new_report(request: Request):
-    context = {'request': request}
+    context = {
+        'request': request,
+        'osm_tile_url': os.getenv("OSM_TILE_URL"),
+        'osm_attribution': os.getenv("OSM_ATTRIBUTION"),
+        'leaflet_js_url': os.getenv("LEAFLET_JS_URL"),
+        'leaflet_js_integrity': os.getenv("LEAFLET_JS_INTEGRITY"),
+        'leaflet_js_crossorigin': os.getenv("LEAFLET_JS_CROSSORIGIN"),
+        'leaflet_css_url': os.getenv("LEAFLET_CSS_URL"),
+        'leaflet_css_integrity': os.getenv("LEAFLET_CSS_INTEGRITY"),
+        'leaflet_css_crossorigin': os.getenv("LEAFLET_CSS_CROSSORIGIN"),
+    }
     return templates.TemplateResponse(name="new_report.html", context=context)
 
 

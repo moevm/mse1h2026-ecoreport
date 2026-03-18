@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="{{ leaflet_css_url }}" integrity="{{ leaflet_css_integrity }}" crossorigin="{{ leaflet_css_crossorigin }}" />
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/topbar.css') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/new_report.css') }}">
     <link rel="icon" href="{{ request.url_for('static', path='images/eco-house.png') }}" type="image/png">
@@ -16,185 +15,28 @@
         <section class="new-report-shell">
             <h1 class="new-report-title">Новый отчет</h1>
 
-            <section class="new-report-section">
-                <h2>Импорт данных</h2>
-                <div class="import-row">
-                    <label for="file-upload" class="file-upload">
-                        Прикрепите файл формата .xlsx / .csv ...
-                        <img src="{{ request.url_for('static', path='images/clip.png') }}" />
-                    </label>
-                    <input id="file-upload" type="file" />
-                    <button class="btn-upload">Принять</button>
-                </div>
-            </section>
+            {% include "report_sections/import.html" %}
+            {% include "report_sections/organization_info.html" %}
+            {% include "report_sections/gost.html" %}
+            {% include "report_sections/object_info.html" %}
+            {% include "report_sections/drainage.html" %}
+            {% include "report_sections/observation_points.html" %}
+            {% include "report_sections/test_results.html" %}
+            {% include "report_sections/observation_dynamics.html" %}
+            {% include "report_sections/contact.html" %}
 
             <section class="new-report-section">
-                <div class="fields-row">
-                    <div class="field">
-                        <label for="organization-name">Название организации</label>
-                        <input id="organization-name" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                    <div class="field">
-                        <label for="full-object-name">Полное название объекта</label>
-                        <input id="full-object-name" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                    <div class="field">
-                        <label for="short-object-name">Сокращенное название объекта</label>
-                        <input id="short-object-name" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                </div>
-
-                <div class="fields-row fields-row--two">
-                    <div class="field">
-                        <label for="region">Регион размещения</label>
-                        <input id="region" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                    <div class="field">
-                        <label for="year">Год наблюдений</label>
-                        <input id="year" type="text" placeholder="YYYY">
-                    </div>
-                </div>
-            </section>
-
-            <section class="new-report-section">
-                <h2>Документы для ГОСТа</h2>
-                {% set gost_list = [
-                    'ГОСТ Р 72274-2025', 'ГОСТ Р 70628.2-2023', 'ГОСТ 33068-2014', 'ГОСТ Р 71831-2024',
-                    'ГОСТ Р 70628.5-2023', 'ГОТ 31416-2009', 'ГОСТ Р 71856-2024', 'ГОСТ 1811-2019',
-                    'ГОСТ 6942-98', 'ГОСТ Р 70628.1-2023', 'ГОСТ Р 54560-2015', 'ГОСТ 17.1.3.13-86',
-                    'ГОСТ 4.225-83', 'ГОСТ 286-82', 'СанПиН 2.1.3684-21', 'СП 31.13330.2021',
-                    'СП 34.13330.2021', 'СП 121.13330.2019', 'СП 32.13330.2018', 'СП 10.13330.2016',
-                    'СП 104.13330.1026', 'СП 250.1325800.2016', 'СП 116.13330.2012', 'СП 50-101-2004',
-                    'СНиП 32-03-96', 'СНиП 2.06.15-85', 'СНиП 2.04.03-85', 'СНиП 2.05.02-85', 'СНиП 2.06.03-85'
-                ] %}
-
-                <div class="gost-layout">
-                    <div class="gost-grid">
-                        {% for gost in gost_list %}
-                            <button type="button" class="gost-chip">{{ gost }}</button>
-                        {% endfor %}
-                    </div>
-
-                    <div class="field field--other">
-                        <label for="gost-other">Другое</label>
-                        <input id="gost-other" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                </div>
-            </section>
-
-            <section class="new-report-section">
-                <div class="geo-layout">
-                    <div class="geo-left">
-                        <div class="field">
-                            <label for="object-type">Тип объекта</label>
-                            <input id="object-type" type="text" placeholder="Введите ваш ответ...">
-                        </div>
-                        <div class="field">
-                            <label for="relief-type">Тип рельефа</label>
-                            <input id="relief-type" type="text" placeholder="Введите ваш ответ...">
-                        </div>
-                        <div class="field">
-                            <label for="soil-type">Тип почвы</label>
-                            <input id="soil-type" type="text" placeholder="Введите ваш ответ...">
-                        </div>
-                        <div class="field">
-                            <label for="climate-zone">Тип климата</label>
-                            <select id="climate-zone">
-                                <option value="">Выберите тип климата</option>
-                                <option value="">экваториальный</option>
-                                <option value="">тропический муссонный</option>
-                                <option value="">тропический сухой</option>
-                                <option value="">средиземноморский</option>
-                                <option value="">субтропический сухой</option>
-                                <option value="">умеренный морской</option>
-                                <option value="">умеренный континентальный</option>
-                                <option value="">умеренный муссонный</option>
-                                <option value="">субарктический</option>
-                                <option value="">субантарктический</option>
-                                <option value="">арктический</option>
-                                <option value="">антарктический</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label for="groundwater-level">Уровень грунтовых вод (м)</label>
-                            <input id="groundwater-level" type="number" step="0.01" placeholder="Введите ваш ответ...">
-                        </div>
-                    </div>
-
-                    <div class="geo-right">
-                        <div class="geo-coords-row">
-                            <h3 class="geo-title">Отметить координаты области</h3>
-                            <div>
-                                <input id="coord-n" type="text">
-                                <label for="coord-n">N</label>
-                            </div>
-                            <div>
-                                <input id="coord-e" type="text">
-                                <label for="coord-e">E</label>
-                            </div>
-                        </div>
-                        <div id="coordinates-map" class="coordinates-map" aria-label="Интерактивная карта"></div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="new-report-section">
-                <div class="fields-row">
-                    <div class="field">
-                        <label for="type-system">Тип дренажа</label>
-                        <select id="type-system">
-                            <option value="">горизонтальный</option>
-                            <option value="">вертикальный</option>
-                            <option value="">пластовый</option>
-                            <option value="">кольцевой</option>
-                            <option value="">поверхностный точечный</option>
-                            <option value="">поверхностный линейный</option>
-                            <option value="">глубинный</option>
-                            <option value="">закрытый</option>
-                            <option value="">открытый</option>
-                            <option value="">засыпной</option>
-                            <option value="">головной</option>
-                            <option value="">береговой</option>
-                            <option value="">систематический</option>
-                            <option value="">комбинированный</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label for="pipe-diameter">Диаметр труб (мм)</label>
-                        <input id="pipe-diameter" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                    <div class="field">
-                        <label for="total-length">Общая протяженность (м)</label>
-                        <input id="total-length" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                </div>
-
-                <div class="fields-row fields-row">
-                    <div class="field">
-                        <label for="pipe-material">Материал труб</label>
-                        <input id="pipe-material" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                    <div class="field">
-                        <label for="burial-depth">Глубина заложения (м)</label>
-                        <input id="burial-depth" type="text" placeholder="Введите ваш ответ...">
-                    </div>
-                    <div class="field">
-                        <label for="laying-year">Год заложения</label>
-                        <input id="laying-year" type="text" placeholder="YYYY">
-                    </div>
-                </div>
-                <div class="fields-row fields-row">
-                    <div class="field">
-                        <label for="wells-count">Количество колодцев (шт)</label>
-                        <input id="wells-count" type="text" placeholder="Введите ваш ответ...">
-                    </div>
+                <div class="action__container">
+                    <button class="action__button">Удалить черновик</button>
+                    <button class="action__button">Очистить поля</button>
+                    <button class="action__button">Сохранить черновик</button>
+                    <button class="action__button">Сгенерировать отчет</button>
                 </div>
             </section>
         </section>
     </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="{{ request.url_for('static', path='js/new_report.js') }}"></script>
+    <script src="{{ leaflet_js_url }}" integrity="{{ leaflet_js_integrity }}" crossorigin="{{ leaflet_js_crossorigin }}"></script>
+    <script src="{{ request.url_for('static', path='js/new_report/map_init.js') }}"></script>
 </body>
 </html>

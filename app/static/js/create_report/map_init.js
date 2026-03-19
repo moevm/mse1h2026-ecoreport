@@ -25,26 +25,26 @@ function initCoordinatesMap(config) {
 
     let marker = null;
 
+    marker = L.circleMarker([config.latInput.value, config.lngInput.value], {
+        radius: 5,
+        color: "#2A4D88",
+        fillColor: "#7C94B8",
+        weight: 2,
+    }).addTo(map);
+
+    document.getElementById(config.latInput.id).addEventListener("change", function() {
+        marker.setLatLng([config.latInput.value, config.lngInput.value])
+    });
+
+    document.getElementById(config.lngInput.id).addEventListener("change", function() {
+        marker.setLatLng([config.latInput.value, config.lngInput.value])
+    });
+
     map.on("click", function (event) {
         latInput.value = Number(event.latlng.lat).toFixed(6);
         lngInput.value = Number(event.latlng.lng).toFixed(6);
-
-        if (marker) {
-            marker.setLatLng(event.latlng);
-            return;
-        }
-
-        marker = L.circleMarker(event.latlng, {
-            radius: 10,
-            color: "#2A4D88",
-            fillColor: "#7C94B8",
-            weight: 2,
-        }).addTo(map);
+        marker.setLatLng(event.latlng);
     });
-
-    setTimeout(function () {
-        map.invalidateSize();
-    }, 100);
 
     return map;
 }

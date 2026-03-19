@@ -11,7 +11,7 @@
     ] %}
 
     <div class="gost__layout">
-        <div class="gost__list">
+        <div id="gost_list" class="gost__list">
             {% for gost in gost_list %}
                 <button type="button" class="list_element">{{ gost }}</button>
             {% endfor %}
@@ -23,3 +23,5 @@
         </div>
     </div>
 </section>
+
+<script src="{{ request.url_for('static', path='js/create_report/gost.js') }}"></script>

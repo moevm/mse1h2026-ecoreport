@@ -2,12 +2,12 @@
     <h2>Динамика наблюдений</h2>
     {% set result_list = ['pH', 'Железо', 'Марганец', 'Нитраты', 'Сульфаты'] %}
     <div class="section__row--small">
-        {% for assay in result_list %}
-            <button type="button" class="list_element">{{ assay }}</button>
+        {% for result in result_list %}
+            <button type="button" class="list_element">{{ result }}</button>
         {% endfor %}
         <button class="action__button">Добавить дату</button>
     </div>
-    <table class="table">
+    <table id="observation_dynamics_table" class="table">
         <thead>
             <th>Дата</th>
             <th>pH</th>
@@ -16,23 +16,6 @@
             <th>Нитраты</th>
             <th>Сульфаты</th>
         </thead>
-        <tbody>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-        </tbody>
+        <tbody></tbody>
     </table>
 </section>

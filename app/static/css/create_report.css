@@ -45,7 +45,7 @@ input[type="file"] {
     display: none;
 }
 
-.file-upload {
+.file_upload {
     background: rgba(177, 187, 200, 50%);
     color: var(--nr-accent);
     padding: 9px 16px;
@@ -56,7 +56,7 @@ input[type="file"] {
     gap: 3em;
 }
 
-.file-upload img {
+.file_upload img {
     width: 1.2em;
 }
 
@@ -145,6 +145,11 @@ input[type="file"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.list_element--active {
+    background: var(--nr-accent);
+    color: #ffffff;
 }
 
 .field--short {

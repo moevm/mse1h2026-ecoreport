@@ -1,39 +1,38 @@
-<section class="new-report-section">
+<section class="section">
     <h2>Динамика наблюдений</h2>
-    <div class="assay-container">
-        <div class="assay-row">
-            {% for assay in result_list %}
-                <button type="button" class="gost-chip">{{ assay }}</button>
-            {% endfor %}
-            <button class="action__button">Добавить дату</button>
-        </div>
-        <table class="observ-table">
-            <thead>
-                <th>Дата</th>
-                <th>pH</th>
-                <th>Железо</th>
-                <th>Марганец</th>
-                <th>Нитраты</th>
-                <th>Сульфаты</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                </tr>
-                <tr>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                    <td>...</td>
-                </tr>
-            </tbody>
-        </table>
+    {% set result_list = ['pH', 'Железо', 'Марганец', 'Нитраты', 'Сульфаты'] %}
+    <div class="section__row--small">
+        {% for assay in result_list %}
+            <button type="button" class="list_element">{{ assay }}</button>
+        {% endfor %}
+        <button class="action__button">Добавить дату</button>
     </div>
+    <table class="table">
+        <thead>
+            <th>Дата</th>
+            <th>pH</th>
+            <th>Железо</th>
+            <th>Марганец</th>
+            <th>Нитраты</th>
+            <th>Сульфаты</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </tbody>
+    </table>
 </section>

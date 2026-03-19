@@ -4,22 +4,20 @@
     --nr-button: #7C94B8;
     --nr-secondary-half: rgba(177, 187, 200, 0.3);
     --nr-title-bg: #B1BBC8;
-    --nr-panel-bg: #ffffff;
-    --nr-page-bg: #eef3f8;
 }
 
-.new-report-page {
+.page {
     min-height: calc(100vh - 3.5em);
     padding: 1.5em;
 }
 
-.new-report-shell {
+.page__container {
     margin: 0 auto;
     display: grid;
     gap: 1.5em;
 }
 
-.new-report-title {
+.title {
     margin: 0;
     padding: 0.2em;
     border-radius: 40px;
@@ -30,24 +28,17 @@
     text-align: center;
 }
 
-.new-report-section {
+.section {
     border: 2.5px dashed var(--nr-accent);
     border-radius: 20px;
     padding: 0.5em 1em;
 }
 
-.new-report-section h2 {
+.section h2 {
     margin: 0 0 1em 0;
     font-weight: 700;
     color: var(--nr-accent);
     font-size: 1.1rem;
-}
-
-.import-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
 }
 
 input[type="file"] {
@@ -79,7 +70,11 @@ input[type="file"] {
     padding: 9px 16px;
 }
 
-.fields-row {
+.action__button--small {
+    max-width: 40%;
+}
+
+.section__row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 2em;
@@ -113,14 +108,14 @@ input[type="file"] {
     padding: 0 0.5em;
 }
 
-.gost-layout {
+.gost__layout {
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.8em;
     align-items: start;
 }
 
-.gost-grid {
+.gost__list {
     grid-column: 1;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -131,7 +126,7 @@ input[type="file"] {
     justify-content: stretch;
 }
 
-.gost-chip {
+.list_element {
     border: 1px solid var(--nr-accent);
     border-radius: 18px;
     background: var(--nr-secondary-half);
@@ -140,6 +135,7 @@ input[type="file"] {
     padding: 0.4em 0.7em;
     font-size: 0.9rem;
     font-weight: 600;
+    min-width: 12em;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -151,72 +147,58 @@ input[type="file"] {
     text-overflow: ellipsis;
 }
 
-.field--other {
+.field--short {
     grid-column: 1;
     width: min(420px, 100%);
     margin-bottom: 0.7em;
 }
 
-.field--other input {
-    height: 2.4em;
-}
-
-.geo-layout {
+.section__container {
     display: grid;
     grid-template-columns: minmax(260px, 0.35fr) minmax(420px, 0.65fr);
     gap: 1.2em;
     align-items: start;
 }
 
-.geo-section-header {
-    display: grid;
-    grid-template-columns: minmax(260px, 0.35fr) minmax(420px, 0.65fr);
-    align-items: baseline;
-    margin-bottom: 0.6em;
-}
-
-.geo-section-header h2 {
-    margin: 0;
-}
-
-.geo-left {
+.section__container--left {
     display: grid;
     gap: 1.5em;
     margin-bottom: 1em;
 }
 
-.geo-right {
+.section__container--right {
     display: grid;
     gap: 0.8em;
 }
 
-.geo-title {
+.section h3 {
     margin: 0;
     color: var(--nr-accent);
     font-size: 1rem;
     font-weight: 700;
 }
 
-.geo-coords-row {
+.section__row--small {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 2em;
+    gap: 1em;
+    margin-bottom: 1em;
 }
 
-.geo-coords-row input {
+.section__row--small input {
     background-color: var(--nr-secondary-half);
     border: 1px solid var(--nr-accent);
     border-radius: 20px;
     padding: 3px 1em;
 }
 
-.geo-coords-row label {
+.section__row--small label {
     color: var(--nr-accent);
     font-weight: 700;
 }
 
-.coordinates-map {
+.map {
     width: 100%;
     height: 340px;
     min-height: 340px;
@@ -225,7 +207,7 @@ input[type="file"] {
     overflow: hidden;
 }
 
-.observ-table {
+.table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
@@ -233,8 +215,8 @@ input[type="file"] {
     border: 1px solid var(--nr-accent);
 }
 
-.observ-table th,
-.observ-table td {
+.table th,
+.table td {
     border: 1px solid var(--nr-accent);
     text-align: center;
     vertical-align: middle;
@@ -242,11 +224,11 @@ input[type="file"] {
     color: var(--nr-accent);
 }
 
-.observ-table thead th {
+.table thead th {
     font-weight: 700;
 }
 
-.observ-table td input {
+.table td input {
     width: 100%;
     text-align: center;
     border: none;
@@ -256,61 +238,9 @@ input[type="file"] {
     box-sizing: border-box;
 }
 
-.assay-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-}
-
 .action__container {
     display: grid;
     gap: 1rem;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     box-sizing: border-box;
-}
-
-@media (max-width: 900px) {
-    .fields-row {
-        grid-template-columns: 1fr;
-    }
-
-    .fields-row--two {
-        grid-template-columns: 1fr;
-    }
-
-    .gost-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .gost-grid {
-        grid-column: auto;
-        grid-template-columns: 1fr;
-    }
-
-    .field--other {
-        grid-column: auto;
-        grid-row: auto;
-    }
-
-    .geo-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .geo-section-header {
-        grid-template-columns: 1fr;
-        gap: 0.3em;
-    }
-
-    .geo-coords-row {
-        grid-template-columns: 1fr;
-    }
-
-    .coordinates-map {
-        height: 280px;
-        min-height: 280px;
-    }
-
-    .observ-table-container {
-        padding: 0.75em;
-    }
 }

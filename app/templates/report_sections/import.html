@@ -1,11 +1,11 @@
-<section class="new-report-section">
+<section class="section">
     <h2>Импорт данных</h2>
-    <div class="import-row">
+    <div class="section__row">
         <label for="file-upload" class="file-upload">
             Прикрепите файл формата .xlsx / .csv ...
             <img src="{{ request.url_for('static', path='images/clip.png') }}" />
         </label>
         <input id="file-upload" type="file" />
-        <button class="action__button">Принять</button>
+        <button class="action__button action__button--small">Принять</button>
     </div>
 </section>

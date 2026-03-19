@@ -17,8 +17,8 @@ async def index(request: Request):
     return templates.TemplateResponse(name="index.html", context=context)
 
 
-@app.get("/new-report", response_class=HTMLResponse)
-async def new_report(request: Request):
+@app.get("/create", response_class=HTMLResponse)
+async def create_report(request: Request):
     context = {
         'request': request,
         'osm_tile_url': os.getenv("OSM_TILE_URL"),
@@ -30,7 +30,7 @@ async def new_report(request: Request):
         'leaflet_css_integrity': os.getenv("LEAFLET_CSS_INTEGRITY"),
         'leaflet_css_crossorigin': os.getenv("LEAFLET_CSS_CROSSORIGIN"),
     }
-    return templates.TemplateResponse(name="new_report.html", context=context)
+    return templates.TemplateResponse(name="create_report.html", context=context)
 
 
 @app.get("/settings", response_class=HTMLResponse)

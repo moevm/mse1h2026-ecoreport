@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ leaflet_css_url }}" integrity="{{ leaflet_css_integrity }}" crossorigin="{{ leaflet_css_crossorigin }}" />
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/topbar.css') }}">
-    <link rel="stylesheet" href="{{ request.url_for('static', path='css/new_report.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/create_report.css') }}">
     <link rel="icon" href="{{ request.url_for('static', path='images/eco-house.png') }}" type="image/png">
-    <title>Новый отчет</title>
+    <title>Ecological Report</title>
 </head>
 <body>
     {% include "topbar.html" %}
-    <main class="new-report-page">
-        <section class="new-report-shell">
-            <h1 class="new-report-title">Новый отчет</h1>
+    <main class="page">
+        <section class="page__container">
+            <h1 class="title">Новый отчет</h1>
 
             {% include "report_sections/import.html" %}
             {% include "report_sections/organization_info.html" %}
@@ -25,7 +25,7 @@
             {% include "report_sections/observation_dynamics.html" %}
             {% include "report_sections/contact.html" %}
 
-            <section class="new-report-section">
+            <section class="section">
                 <div class="action__container">
                     <button class="action__button">Удалить черновик</button>
                     <button class="action__button">Очистить поля</button>
@@ -37,6 +37,6 @@
     </main>
 
     <script src="{{ leaflet_js_url }}" integrity="{{ leaflet_js_integrity }}" crossorigin="{{ leaflet_js_crossorigin }}"></script>
-    <script src="{{ request.url_for('static', path='js/new_report/map_init.js') }}"></script>
+    <script src="{{ request.url_for('static', path='js/create_report/map_init.js') }}"></script>
 </body>
 </html>

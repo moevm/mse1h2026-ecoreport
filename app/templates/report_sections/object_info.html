@@ -1,6 +1,6 @@
-<section class="new-report-section">
-    <div class="geo-layout">
-        <div class="geo-left">
+<section class="section">
+    <div class="section__container">
+        <div class="section__container--left">
             <div class="field">
                 <label for="object-type">Тип объекта</label>
                 <input id="object-type" type="text" placeholder="Введите ваш ответ...">
@@ -37,9 +37,9 @@
             </div>
         </div>
 
-        <div class="geo-right">
-            <div class="geo-coords-row">
-                <h3 class="geo-title">Отметить координаты области</h3>
+        <div class="object_info__container--right">
+            <div class="section__row--small">
+                <h3>Отметить координаты области</h3>
                 <div>
                     <input id="coord-n" type="text">
                     <label for="coord-n">N</label>
@@ -51,7 +51,7 @@
             </div>
             <div
                 id="coordinates-map"
-                class="coordinates-map"
+                class="map"
                 data-osm-tile-url="{{ osm_tile_url }}"
                 data-osm-attribution="{{ osm_attribution }}"
             ></div>

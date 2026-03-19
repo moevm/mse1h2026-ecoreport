@@ -1,4 +1,4 @@
-<section class="new-report-section">
+<section class="section">
     <h2>Документы для ГОСТа</h2>
     {% set gost_list = [
         'ГОСТ Р 72274-2025', 'ГОСТ Р 70628.2-2023', 'ГОСТ 33068-2014', 'ГОСТ Р 71831-2024',
@@ -10,14 +10,14 @@
         'СНиП 32-03-96', 'СНиП 2.06.15-85', 'СНиП 2.04.03-85', 'СНиП 2.05.02-85', 'СНиП 2.06.03-85'
     ] %}
 
-    <div class="gost-layout">
-        <div class="gost-grid">
+    <div class="gost__layout">
+        <div class="gost__list">
             {% for gost in gost_list %}
-                <button type="button" class="gost-chip">{{ gost }}</button>
+                <button type="button" class="list_element">{{ gost }}</button>
             {% endfor %}
         </div>
 
-        <div class="field field--other">
+        <div class="field field--short">
             <label for="gost-other">Другое</label>
             <input id="gost-other" type="text" placeholder="Введите ваш ответ...">
         </div>

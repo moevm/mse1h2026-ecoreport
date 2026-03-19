@@ -1,0 +1,74 @@
+<section class="section">
+    <div class="section__container">
+        <div class="section__container--left">
+            <div class="field">
+                <label for="monitor-amount">Количество точек мониторинга (шт)</label>
+                <input id="monitor-amount" type="text" placeholder="Введите ваш ответ...">
+            </div>
+            <div class="field">
+                <label for="observ-period">Периодичность наблюдений</label>
+                <input id="observ-period" type="text" placeholder="Введите ваш ответ...">
+            </div>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td>Точка наблюдения</td>
+                        <td><input id="observ-point" type="text" placeholder="Введите значение..."></td>
+                    </tr>
+                    <tr>
+                        <td>Широта (N)</td>
+                        <td><input id="observ-coord-n" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Долгота (E)</td>
+                        <td><input id="observ-coord-e" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Тип среды</td>
+                        <td><input id="eco-type" type="text" placeholder="Введите значение..."></td>
+                    </tr>
+                    <tr>
+                        <td>Описание</td>
+                        <td><input id="description" type="text" placeholder="Введите значение..."></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="action__button">Внести данные</button>
+        </div>
+
+        <div class="section__container--right">
+            <h3>Отметить координаты области</h3>
+            <div
+                id="observ-coordinates-map"
+                class="map"
+                data-osm-tile-url="{{ osm_tile_url }}"
+                data-osm-attribution="{{ osm_attribution }}"
+            ></div>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <th>Точка наблюдения</th>
+            <th>Широта (N)</th>
+            <th>Долгота (E)</th>
+            <th>Тип среды</th>
+            <th>Описание</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </tbody>
+    </table>
+</section>

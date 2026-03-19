@@ -1,0 +1,18 @@
+<section class="section">
+    <h2>Результаты лабораторных анализов</h2>
+    {% set result_list = ['pH', 'Железо', 'Марганец', 'Нитраты', 'Сульфаты'] %}
+    <div class="section__row--small">
+        {% for assay in result_list %}
+            <button type="button" class="list_element">{{ assay }}</button>
+        {% endfor %}
+    </div>
+    <table id="test_results_table" class="table">
+        <thead>
+            <th>Показатель</th>
+            <th>Норматив</th>
+            <th>Результат</th>
+            <th>Единицы измерения</th>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>

@@ -1,0 +1,60 @@
+<section class="section">
+    <div class="section__container">
+        <div class="section__container--left">
+            <div class="field">
+                <label for="object-type">Тип объекта</label>
+                <input id="object-type" type="text" placeholder="Введите ваш ответ...">
+            </div>
+            <div class="field">
+                <label for="relief-type">Тип рельефа</label>
+                <input id="relief-type" type="text" placeholder="Введите ваш ответ...">
+            </div>
+            <div class="field">
+                <label for="soil-type">Тип почвы</label>
+                <input id="soil-type" type="text" placeholder="Введите ваш ответ...">
+            </div>
+            <div class="field">
+                <label for="climate-zone">Тип климата</label>
+                <select id="climate-zone">
+                    <option value="">Выберите тип климата</option>
+                    <option value="">экваториальный</option>
+                    <option value="">тропический муссонный</option>
+                    <option value="">тропический сухой</option>
+                    <option value="">средиземноморский</option>
+                    <option value="">субтропический сухой</option>
+                    <option value="">умеренный морской</option>
+                    <option value="">умеренный континентальный</option>
+                    <option value="">умеренный муссонный</option>
+                    <option value="">субарктический</option>
+                    <option value="">субантарктический</option>
+                    <option value="">арктический</option>
+                    <option value="">антарктический</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="groundwater-level">Уровень грунтовых вод (м)</label>
+                <input id="groundwater-level" type="number" step="0.01" placeholder="Введите ваш ответ...">
+            </div>
+        </div>
+
+        <div class="object_info__container--right">
+            <div class="section__row--small">
+                <h3>Отметить координаты области</h3>
+                <div>
+                    <input id="coord-n" type="text">
+                    <label for="coord-n">N</label>
+                </div>
+                <div>
+                    <input id="coord-e" type="text">
+                    <label for="coord-e">E</label>
+                </div>
+            </div>
+            <div
+                id="coordinates-map"
+                class="map"
+                data-osm-tile-url="{{ osm_tile_url }}"
+                data-osm-attribution="{{ osm_attribution }}"
+            ></div>
+        </div>
+    </div>
+</section>

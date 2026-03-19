@@ -1,0 +1,19 @@
+<header class="topbar">
+    <div class="topbar__side topbar__side--left">
+        <a class="topbar__icon-link" href="{{ request.url_for('documents_page') }}" title="Отчеты" aria-label="Отчеты">
+            <img src="{{ request.url_for('static', path='images/home.png') }}" alt="Отчеты">
+        </a>
+        <a class="topbar__icon-link" href="{{ request.url_for('create_report') }}" title="Новый отчет" aria-label="Новый отчет">
+            <img src="{{ request.url_for('static', path='images/documents.png') }}" alt="Новый отчет">
+        </a>
+    </div>
+
+    <div class="topbar__title">Ecological Report</div>
+
+    <div class="topbar__side topbar__side--right">
+        <a class="topbar__icon-link" href="{{ request.url_for('settings_page') }}" title="Настройки" aria-label="Настройки">
+            <img src="{{ request.url_for('static', path='images/settings.png') }}" alt="Настройки">
+        </a>
+        <img class="topbar__avatar" src="{{ request.url_for('static', path='images/avatar.jpg') }}" alt="Аватар пользователя">
+    </div>
+</header>

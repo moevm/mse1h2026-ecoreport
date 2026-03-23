@@ -5,11 +5,28 @@ from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 import shutil
 import os
 import uuid
+import sys
+
+# Настройка путей для импорта модулей из корня и папки генератора
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+GENERATOR_PATH = os.path.join(BASE_DIR, "task 4.2_implement_creation_minimal_report", "report_generator")
+if GENERATOR_PATH not in sys.path:
+    sys.path.append(GENERATOR_PATH)
+
+from input_models import ReportInputData
+from report_generator import generate_report
+
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 app: FastAPI = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates: Jinja2Templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+templates: Jinja2Templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -58,13 +75,12 @@ async def register_page(request: Request):
 
 
 @app.get("/download/{id}")
-async def download_file(request: Request):
+async def download_file(id: str):
     '''
     Скачивание файла по id
     '''
-    file_id = request.get('path_params')['id']
     for filename in os.listdir(UPLOAD_DIR):
-        if filename.startswith(file_id):
+        if filename.startswith(id):
             file_path = os.path.join(UPLOAD_DIR, filename)
             return FileResponse(
                 path=file_path,
@@ -99,6 +115,24 @@ async def upload_file(file: UploadFile):
 
 
 @app.post("/generate-report")
-async def generate_report(request: Request):
+async def generate_report_endpoint(data: ReportInputData):
     '''Сюда будут отправляться данные формы для генерирования отчета'''
-    return JSONResponse({"status": "success"}, status_code=200)
+    try:
+        file_id = str(uuid.uuid4())
+        filename = f"{file_id}.pdf"
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        
+        # Генерация отчета на основе валидированных данных
+        generate_report(data.model_dump(), output_path=file_path)
+        
+        return JSONResponse({
+            "status": "success",
+            "file_id": file_id,
+            "filename": filename,
+            "download_url": f"/download/{file_id}"
+        })
+    except Exception as e:
+        return JSONResponse({
+            "status": "error",
+            "message": str(e)
+        }, status_code=500)

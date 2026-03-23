@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/topbar.css') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/create_report.css') }}">
     <link rel="icon" href="{{ request.url_for('static', path='images/eco-house.png') }}" type="image/png">
+    <script src="{{ request.url_for('static', path='js/index.js') }}"></script>
     <title>Ecological Report</title>
 </head>
 <body>
@@ -26,11 +27,12 @@
             {% include "report_sections/contact.html" %}
 
             <section class="section">
+                <div id="report-status" style="margin-bottom: 10px; font-weight: bold;"></div>
                 <div class="action__container">
                     <button class="action__button">Удалить черновик</button>
                     <button class="action__button">Очистить поля</button>
                     <button class="action__button">Сохранить черновик</button>
-                    <button class="action__button">Сгенерировать отчет</button>
+                    <button class="action__button" onclick="sendForm()">Сгенерировать отчет</button>
                 </div>
             </section>
         </section>

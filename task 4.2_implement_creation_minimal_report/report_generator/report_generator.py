@@ -7,8 +7,11 @@ from reportlab.pdfbase.ttfonts import TTFont
 import os
 from jinja2 import Template  
 
+# определение базовой директории модуля
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # подключение шрифта Times New Roman
-font_path = os.path.join("Times New Roman", "timesnewromanpsmt.ttf")
+font_path = os.path.join(BASE_DIR, "Times New Roman", "timesnewromanpsmt.ttf")
 pdfmetrics.registerFont(TTFont("TimesNewRoman", font_path))
 
 def mm_to_pt(mm):
@@ -196,12 +199,12 @@ def read_section(file_path, title_style, normal_style, data_dict):
 
 
 # основная функция генерации отчета
-def generate_report(user_data):
+def generate_report(user_data, output_path="report.pdf"):
     """ генерирует PDF-отчёт на основе предоставленных данных """
 
     # настройка документа
     doc = SimpleDocTemplate(
-        "report.pdf",
+        output_path,
         pagesize=A4,
         leftMargin=LEFT_MARGIN,
         rightMargin=RIGHT_MARGIN,
@@ -246,7 +249,7 @@ def generate_report(user_data):
     elements.append(PageBreak())
 
     # содержание
-    content_file = os.path.join("report_module", "content.txt")
+    content_file = os.path.join(BASE_DIR, "report_module", "content.txt")
     if not os.path.exists(content_file):
         elements.append(Paragraph("Файл content.txt не найден.", normal_style))
     else:
@@ -273,7 +276,7 @@ def generate_report(user_data):
 
         # чтение и добавление разделов с подстановкой данных
         for i, section in enumerate(sections, 1):
-            section_file = os.path.join("report_module", f"section_{i}.txt")
+            section_file = os.path.join(BASE_DIR, "report_module", f"section_{i}.txt")
             if os.path.exists(section_file):
                 elements.extend(read_section(section_file, title_style, normal_style, user_data))
             else:
@@ -288,4 +291,4 @@ def generate_report(user_data):
     onFirstPage=lambda c, d: header_footer_title(c, d, user_data["FULL_OBJECT_NAME"], user_data["SHORT_OBJECT_NAME"]),
     onLaterPages=lambda c, d: header_footer_main(c, d)
     )
-    print("Отчёт готов: report.pdf")
+    print(f"Отчёт готов: {output_path}")

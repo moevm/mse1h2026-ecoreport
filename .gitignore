@@ -1,2 +1,4 @@
 __pycache__
 .idea/
+test_data_transfer.py
+test_importer.py

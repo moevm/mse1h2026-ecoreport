@@ -50,7 +50,7 @@ class Importer(ABC):
             clean_record = {k: v for k, v in record.items() if pd.notna(v)}
 
             # Попытка распарсить JSON в полях, которые ожидают вложенные структуры
-            complex_fields = ["site_info", "drainage_systems", "leaching_results", "normative_docs"]
+            complex_fields = ["DOCUMENTS_GOST", "RESULTS_DYNAMIC"]
             for field in complex_fields:
                 if field in clean_record and isinstance(clean_record[field], str):
                     value = clean_record[field].strip()

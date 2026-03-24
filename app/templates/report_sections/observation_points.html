@@ -9,7 +9,7 @@
                 <label for="observ-period">Периодичность наблюдений</label>
                 <input id="observ-period" type="text" placeholder="Введите ваш ответ...">
             </div>
-            <table class="table">
+            <table id="add_observation_point" class="table">
                 <tbody>
                     <tr>
                         <td>Точка наблюдения</td>
@@ -46,7 +46,7 @@
             ></div>
         </div>
     </div>
-    <table class="table">
+    <table id="observation_points_table" class="table">
         <thead>
             <th>Точка наблюдения</th>
             <th>Широта (N)</th>
@@ -54,21 +54,8 @@
             <th>Тип среды</th>
             <th>Описание</th>
         </thead>
-        <tbody>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-        </tbody>
+        <tbody></tbody>
     </table>
 </section>
+
+<script src="{{ request.url_for('static', path='js/create_report/tables.js') }}"></script>

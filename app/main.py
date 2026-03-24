@@ -31,7 +31,7 @@ templates: Jinja2Templates = Jinja2Templates(directory=os.path.join(os.path.dirn
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     context = {'request': request}
-    return templates.TemplateResponse(name="index.html", context=context)
+    return templates.TemplateResponse(request=request, name="index.html", context=context)
 
 
 @app.get("/create", response_class=HTMLResponse)
@@ -47,31 +47,31 @@ async def create_report(request: Request):
         'leaflet_css_integrity': os.getenv("LEAFLET_CSS_INTEGRITY"),
         'leaflet_css_crossorigin': os.getenv("LEAFLET_CSS_CROSSORIGIN"),
     }
-    return templates.TemplateResponse(name="create_report.html", context=context)
+    return templates.TemplateResponse(request=request, name="create_report.html", context=context)
 
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     context = {'request': request}
-    return templates.TemplateResponse(name="settings.html", context=context)
+    return templates.TemplateResponse(request=request, name="settings.html", context=context)
 
 
 @app.get("/documents", response_class=HTMLResponse)
 async def documents_page(request: Request):
     context = {'request': request}
-    return templates.TemplateResponse(name="documents.html", context=context)
+    return templates.TemplateResponse(request=request, name="documents.html", context=context)
 
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     context = {'request': request}
-    return templates.TemplateResponse(name="login.html", context=context)
+    return templates.TemplateResponse(request=request, name="login.html", context=context)
 
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     context = {'request': request}
-    return templates.TemplateResponse(name="register.html", context=context)
+    return templates.TemplateResponse(request=request, name="register.html", context=context)
 
 
 @app.get("/download/{id}")

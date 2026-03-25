@@ -1,5 +1,6 @@
 <section class="section">
     <div class="section__container">
+        <!-- Левая часть: форма ввода -->
         <div class="section__container--left">
             <div class="field">
                 <label for="monitor-amount">Количество точек мониторинга (шт)</label>
@@ -9,6 +10,8 @@
                 <label for="observ-period">Периодичность наблюдений</label>
                 <input id="observ-period" type="text" placeholder="Введите ваш ответ...">
             </div>
+
+            <!-- Форма для добавления точки -->
             <table class="table">
                 <tbody>
                     <tr>
@@ -33,9 +36,11 @@
                     </tr>
                 </tbody>
             </table>
-            <button class="action__button">Внести данные</button>
+
+            <button id="add_observation_point" class="action__button">Внести данные</button>
         </div>
 
+        <!-- Правая часть: карта -->
         <div class="section__container--right">
             <h3>Отметить координаты области</h3>
             <div
@@ -46,7 +51,9 @@
             ></div>
         </div>
     </div>
-    <table class="table">
+
+    <!-- Таблица уже добавленных точек -->
+    <table id="observation_points_table" class="table" style="margin-top: 20px;">
         <thead>
             <th>Точка наблюдения</th>
             <th>Широта (N)</th>
@@ -54,21 +61,6 @@
             <th>Тип среды</th>
             <th>Описание</th>
         </thead>
-        <tbody>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-        </tbody>
+        <tbody></tbody>
     </table>
 </section>

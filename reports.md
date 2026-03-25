@@ -107,7 +107,9 @@
 [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/2)
 
 ## Итерация №2
-### [презентация](docs/EcoReport_Sprint_2_Presentation.pptx)
+### [Презентация](docs/EcoReport_Sprint_2_Presentation.pptx)
+
+### [Инструкция к запуску](docs/run-instruction/instruction.md)
 
 ### Скринкасты
 [демо1](docs/demo1.zip)
@@ -115,6 +117,7 @@
 - Разработать прототип приложения
 - [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/2)
 ### Выполненные задачи
+- Разработан прототип с базовым функционалом
 [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/2)
 ### Задачи на следующую итерацию
 [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/3)

@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/topbar.css') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/create_report.css') }}">
     <link rel="icon" href="{{ request.url_for('static', path='images/eco-house.png') }}" type="image/png">
-    <script src="{{ request.url_for('static', path='js/index.js') }}"></script>
     <title>Ecological Report</title>
 </head>
 <body>
@@ -40,5 +39,7 @@
 
     <script src="{{ leaflet_js_url }}" integrity="{{ leaflet_js_integrity }}" crossorigin="{{ leaflet_js_crossorigin }}"></script>
     <script src="{{ request.url_for('static', path='js/create_report/map_init.js') }}"></script>
+    <script src="{{ request.url_for('static', path='js/create_report/tables.js') }}"></script>
+    <script src="{{ request.url_for('static', path='js/index.js') }}"></script>
 </body>
 </html>

@@ -96,6 +96,7 @@ def monitored_points_table(points: list,
 
 
 def lab_test_results_table(ph: float, iron: float, mn: float, no3: float, so4: float,
+                           norm_ph: tuple[float, float] = (6, 9), norm_iron: float = 0.3, norm_mn: float = 0.1, norm_no3: float = 45, norm_so4: float = 500,
                            fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
     """Создает таблицу "Результаты лабораторных анализов" (Таблица 3 из макета)
     Параметры:
@@ -104,19 +105,23 @@ def lab_test_results_table(ph: float, iron: float, mn: float, no3: float, so4: f
         mn: float - Марганец
         no3: float - Нитраты
         so4: float - Сульфаты
+        norm_ph: tuple[float,float] - Норматив ph (диапазон значений)
+        norm_iron: float - Норматив железа
+        norm_mn: float - Норматив марганца
+        norm_no3: float - Норматив нитратов
+        norm_so4: float - Норматив сульфатов
         fontname: str - Имя шрифта, зарегистрированного в ReportLab (для генерации отчета необохдимо зарегистрировать шрифт с кириллицей!!!)
         fontsize: int - размер шрифта
     Возвращает: ReportLab объект Table для включения в pdf отчет"""
     par_style: ParagraphStyle = get_paragraph_style(fontname, fontsize)
     par_style_justify: ParagraphStyle = get_paragraph_style(fontname, fontsize, TA_JUSTIFY)
     header = ("Показатель", "Норматив", "Результат", "Ед. изм.", "Соответствие")
-    relative_error = 0.2
     data = [header,
-            ("pH", "6-9", round(ph, 2), "-", "Соответсвует" if 6 <= ph <= 9 else "Не соответствует"),
-            ("Железо", 0.3, round(iron, 2), "мг/л", "Соответсвует" if abs(iron - 0.3)/0.3 <= relative_error else "Не соответствует"),
-            ("Марганец", 0.1, round(mn, 2), "мг/л", "Соответсвует" if abs(mn - 0.1)/0.1 <= relative_error else "Не соответствует"),
-            ("Нитраты", 45, round(no3, 2), "мг/л", "Соответсвует" if abs(no3 - 45)/45 <= relative_error else "Не соответствует"),
-            ("Сульфаты", 500, round(so4, 2), "мг/л", "Соответсвует" if abs(so4 - 500)/500 <= relative_error else "Не соответствует"),
+            ("pH", "6-9", round(ph, 2), "-", "Соответсвует" if norm_ph[0] <= ph <= norm_ph[1] else "Выходит за норму"),
+            ("Железо", 0.3, round(iron, 2), "мг/л", "Соответсвует" if iron <= norm_iron else "Превышает норму"),
+            ("Марганец", 0.1, round(mn, 2), "мг/л", "Соответсвует" if mn <= norm_mn else "Превышает норму"),
+            ("Нитраты", 45, round(no3, 2), "мг/л", "Соответсвует" if no3 <= norm_no3 else "Превышает норму"),
+            ("Сульфаты", 500, round(so4, 2), "мг/л", "Соответсвует" if so4 <= norm_so4 else "Превышает норму"),
             ]
     col_widths = [inch * 1, inch * 1, inch * 1.5, inch * 0.8, inch * 2]
     return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))

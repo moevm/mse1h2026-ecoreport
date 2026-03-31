@@ -1,7 +1,5 @@
 __pycache__
-.env
 .idea/
-test_data_transfer.py
-test_importer.py
-test_endpoint.py
-.env
+.venv/
+/tests
+/src/env/

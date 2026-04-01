@@ -4,9 +4,7 @@ from reports.schemas.report_models import GeneratedReportData
 
 
 class SaveDataUseCase:
-    def __init__(self,
-                 postgres_repository: ReportsRepository,
-                 database: Database):
+    def __init__(self, postgres_repository: ReportsRepository, database: Database):
         self._postgres_repository = postgres_repository
         self._database = database
 

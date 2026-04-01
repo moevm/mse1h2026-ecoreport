@@ -31,9 +31,9 @@ class InfrastructureProvider(Provider):
     def get_minio_raw_client(self) -> Minio:
         endpoint = f"{settings.MINIO_HOST}:{settings.MINIO_PORT}"
         return Minio(endpoint,
-                     access_key=settings.MINIO_ROOT_USER.get_secret_value(),
-                     secret_key=settings.MINIO_ROOT_PASSWORD.get_secret_value(),
-                     secure=False)
+                        access_key=settings.MINIO_ROOT_USER.get_secret_value(),
+                        secret_key=settings.MINIO_ROOT_PASSWORD.get_secret_value(),
+                        secure=False)
 
     @provide
     def get_minio_client(self, client: Minio) -> MinioClient:
@@ -73,13 +73,12 @@ class UseCaseProvider(Provider):
 
     @provide
     def get_generate_report_use_case(self, publisher: RabbitPublisher,
-                                     generator: ReportGenerator,
-                                     repository: MinioRepository) -> GenerateReportUseCase:
+                                        generator: ReportGenerator,
+                                        repository: MinioRepository) -> GenerateReportUseCase:
         return GenerateReportUseCase(publisher, generator, repository)
 
     @provide
-    def get_save_data_use_case(self, repository: ReportsRepository,
-                                 database: Database) -> SaveDataUseCase:
+    def get_save_data_use_case(self, repository: ReportsRepository, database: Database) -> SaveDataUseCase:
         return SaveDataUseCase(repository, database)
 
     @provide
@@ -87,7 +86,4 @@ class UseCaseProvider(Provider):
         return DownloadReportUseCase(repository)
 
 
-container = make_async_container(InfrastructureProvider(),
-                                 RepositoryProvider(),
-                                 ServiceProvider(),
-                                 UseCaseProvider())
+container = make_async_container(InfrastructureProvider(), RepositoryProvider(), ServiceProvider(), UseCaseProvider())

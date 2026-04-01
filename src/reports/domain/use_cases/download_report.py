@@ -2,8 +2,7 @@ from reports.infrastructure.minio.repository import MinioRepository
 
 
 class DownloadReportUseCase:
-    def __init__(self,
-                 minio_repository: MinioRepository):
+    def __init__(self, minio_repository: MinioRepository):
         self._minio_repository = minio_repository
 
     async def execute(self, report_id: str) -> bytes:

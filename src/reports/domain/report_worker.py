@@ -17,7 +17,6 @@ async def handle_new_request(msg: str):
     async with container() as c:
         use_case = await c.get(GenerateReportUseCase)
         await use_case.execute(message)
-    
 
 @broker.subscriber(gen_queue, exchange)
 async def handle_generated(msg: str):

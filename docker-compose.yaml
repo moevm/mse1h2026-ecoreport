@@ -2,7 +2,7 @@ name: ecoreport
 
 services:
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:4.2.5-management-alpine
     container_name: ecoreport-rabbitmq
     ports:
       - "5672:5672"
@@ -11,32 +11,33 @@ services:
       - src/env/rabbitmq.env
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - ecoreport-net
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
+    restart: always
 
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
     container_name: ecoreport-minio
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+        - "9000"
+        - "9001"
     env_file:
       - src/env/minio.env
     volumes:
       - minio_data:/data
-    networks:
-      - ecoreport-net
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
 
   postgres:
-    image: postgres:16
+    image: postgres:16.13-alpine3.23
     container_name: ecoreport-postgres
     ports:
       - "5432:5432"
@@ -44,18 +45,15 @@ services:
       - src/env/postgres.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - ecoreport-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d ecoreport"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
+    restart: always
 
   app:
-    build:
-      context: .
+    build: .
     container_name: ecoreport-app
     ports:
       - "8080:8080"
@@ -72,13 +70,9 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
-    networks:
-      - ecoreport-net
     volumes:
-      - ./src:/app
-      - ./alembic:/app/alembic
-      - ./alembic.ini:/app/alembic.ini
-    restart: unless-stopped
+      - ./src:/app/src
+    restart: always
 
 volumes:
   rabbitmq_data:
@@ -87,8 +81,3 @@ volumes:
     name: ecoreport_minio_data
   postgres_data:
     name: ecoreport_postgres_data
-
-networks:
-  ecoreport-net:
-    name: ecoreport_network
-    driver: bridge

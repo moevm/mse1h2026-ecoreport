@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ leaflet_css_url }}" integrity="{{ leaflet_css_integrity }}" crossorigin="{{ leaflet_css_crossorigin }}" />
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/topbar.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/create_report.css') }}">
+    <link rel="icon" href="{{ request.url_for('static', path='images/eco-house.png') }}" type="image/png">
+    <script src="{{ request.url_for('static', path='js/index.js') }}"></script>
+    <title>Ecological Report</title>
+</head>
+<body>
+    {% include "topbar.html" %}
+    <main class="page">
+        <section class="page__container">
+            <h1 class="title">Новый отчет</h1>
+
+            {% include "report_sections/import.html" %}
+            {% include "report_sections/organization_info.html" %}
+            {% include "report_sections/gost.html" %}
+            {% include "report_sections/object_info.html" %}
+            {% include "report_sections/drainage.html" %}
+            {% include "report_sections/observation_points.html" %}
+            {% include "report_sections/test_results.html" %}
+            {% include "report_sections/observation_dynamics.html" %}
+            {% include "report_sections/contact.html" %}
+
+            <section class="section">
+                <div id="report-status" style="margin-bottom: 10px; font-weight: bold;"></div>
+                <div class="action__container">
+                    <button class="action__button">Удалить черновик</button>
+                    <button class="action__button">Очистить поля</button>
+                    <button class="action__button">Сохранить черновик</button>
+                    <button class="action__button" onclick="sendForm()">Сгенерировать отчет</button>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="{{ leaflet_js_url }}" integrity="{{ leaflet_js_integrity }}" crossorigin="{{ leaflet_js_crossorigin }}"></script>
+    <script src="{{ request.url_for('static', path='js/create_report/map_init.js') }}"></script>
+</body>
+</html>

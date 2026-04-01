@@ -1,10 +1,83 @@
-name: eco-report
+name: ecoreport
+
 services:
-  python:
-    build: .
-    container_name: python
-    env_file:
-      - .env
+  rabbitmq:
+    image: rabbitmq:4.2.5-management-alpine
+    container_name: ecoreport-rabbitmq
     ports:
-      - "127.0.0.1:80:80"
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - src/env/rabbitmq.env
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: always
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
+    container_name: ecoreport-minio
+    command: server /data --console-address ":9001"
+    ports:
+        - "9000"
+        - "9001"
+    env_file:
+      - src/env/minio.env
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  postgres:
+    image: postgres:16.13-alpine3.23
+    container_name: ecoreport-postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - src/env/postgres.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ecoreport"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  app:
+    build: .
+    container_name: ecoreport-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - src/env/app.env
+      - src/env/rabbitmq.env
+      - src/env/minio.env
+      - src/env/postgres.env
+      - src/env/frontend.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    volumes:
+      - ./src:/app/src
+    restart: always
+
+volumes:
+  rabbitmq_data:
+    name: ecoreport_rabbitmq_data
+  minio_data:
+    name: ecoreport_minio_data
+  postgres_data:
+    name: ecoreport_postgres_data

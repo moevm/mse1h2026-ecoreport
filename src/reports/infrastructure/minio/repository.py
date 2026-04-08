@@ -32,4 +32,9 @@ class MinioRepository:
             result.close()
             result.release_conn()
 
-
+    def list_objects(self, bucket: str = settings.MINIO_BUCKET_NAME):
+        return [
+            obj
+            for obj in self._client.list_objects(bucket_name=bucket, recursive=True)
+            if not obj.is_dir
+        ]

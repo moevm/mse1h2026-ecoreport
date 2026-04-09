@@ -1,7 +1,6 @@
 from faststream.rabbit import RabbitQueue, RabbitExchange
 import logging
 from reports.core.config import settings
-from reports.domain.use_cases.save_report import SaveDataUseCase
 from reports.infrastructure.rabbitmq.broker import broker
 from reports.infrastructure.websocket.report_notifications import report_notification_hub
 from reports.schemas.report_models import ReportInputData, GeneratedReportData
@@ -22,10 +21,6 @@ async def handle_new_request(msg: str):
 @broker.subscriber(gen_queue, exchange)
 async def handle_generated(msg: str):
     message = GeneratedReportData.model_validate_json(msg)
-    async with container() as c:
-        use_case = await c.get(SaveDataUseCase)
-        await use_case.execute(message)
-
     await report_notification_hub.publish_report_ready(
         user_id=message.user_id,
         file_name=message.file_name,

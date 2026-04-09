@@ -34,9 +34,6 @@ async function uploadFile() {
 }
 
 async function sendForm() {
-    const status = document.getElementById("report-status");
-    if (status) status.innerText = "Генерация отчета...";
-
     // Сбор данных из всех известных полей по их ID (на основе ReportInputData)
     const data = {
         // Информация об объекте
@@ -98,57 +95,14 @@ async function sendForm() {
     };
 
     try {
-        const response = await fetch("/generate-report", {
+        await fetch("/generate-report", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         });
-
-        const result = await response.json();
-
-        if (result.status === "success") {
-            const downloadUrl = `/download/${result.report_id}`;
-
-            status.innerHTML = `
-                Отчет готов!
-                <a href="${downloadUrl}" target="_blank"
-                   style="color: #5050f5; text-decoration: underline;">
-                   Скачать PDF
-                </a>
-            `;
-        } else {
-            status.innerText = "Ошибка: " + result.message;
-        }
     } catch (error) {
-        status.innerText = "Ошибка соединения: " + error.message;
+        alert("Ошибка соединения: " + error.message);
     }
 }
-
-window.addEventListener('load', function () {
-    const site_type_input = document.getElementById("site-type");
-    const bog_extra = document.getElementById("bog-extra");
-    const urban_extra = document.getElementById("urban-extra");
-    const protected_extra = document.getElementById("protected-extra");
-    site_type_input.addEventListener('input', function() {
-        bog_extra.hidden = true;
-        urban_extra.hidden = true;
-        protected_extra.hidden = true;
-        switch (site_type_input.value){
-            case "bog":
-                bog_extra.hidden = false;
-                break;
-            case "urban":
-                urban_extra.hidden = false;
-                break;
-            case "protected":
-                protected_extra.hidden = false;
-                break;
-            default:
-                break;
-    
-        }
-    
-    });
-})

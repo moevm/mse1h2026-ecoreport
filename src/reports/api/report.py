@@ -1,11 +1,13 @@
 import uuid
+import asyncio
+import json
 from datetime import timedelta, timezone
 from os.path import splitext
 
 from dishka import FromDishka
 from fastapi import APIRouter, Request, Response, UploadFile, HTTPException, status
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from dishka.integrations.fastapi import inject
 import os
 
@@ -13,6 +15,7 @@ from reports.domain.use_cases.download_report import DownloadReportUseCase
 from reports.domain.use_cases.generate_report import GenerateReportUseCase
 from reports.domain.use_cases.new_report_generation import NewReportGenerateUseCase
 from reports.infrastructure.minio.repository import MinioRepository
+from reports.infrastructure.websocket.report_notifications import report_notification_hub
 from reports.schemas.report_models import ReportInputData
 
 reports_router = APIRouter()
@@ -181,3 +184,34 @@ async def generate_report(payload: dict,
         return {"status": "success", "report_id": report_id}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
+
+
+@reports_router.get("/events/report-ready")
+async def report_ready_events(request: Request):
+    user_id = "1"  # TODO получать user_id из авторизации
+
+    async def event_stream():
+        queue = await report_notification_hub.subscribe(user_id)
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=15)
+                    payload = json.dumps(event, ensure_ascii=False)
+                    yield f"event: report_ready\ndata: {payload}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            await report_notification_hub.unsubscribe(user_id, queue)
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

@@ -3,6 +3,7 @@ import logging
 from reports.core.config import settings
 from reports.domain.use_cases.save_report import SaveDataUseCase
 from reports.infrastructure.rabbitmq.broker import broker
+from reports.infrastructure.websocket.report_notifications import report_notification_hub
 from reports.schemas.report_models import ReportInputData, GeneratedReportData
 from reports.domain.use_cases.generate_report import GenerateReportUseCase
 from reports.core.providers.setup import container
@@ -24,3 +25,8 @@ async def handle_generated(msg: str):
     async with container() as c:
         use_case = await c.get(SaveDataUseCase)
         await use_case.execute(message)
+
+    await report_notification_hub.publish_report_ready(
+        user_id=message.user_id,
+        file_name=message.file_name,
+    )

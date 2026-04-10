@@ -210,35 +210,50 @@ def observation_dynamics_table(dynamics: list, fontname: str = "TimesNewRoman", 
     Возвращает: ReportLab объект Table для включения в pdf отчет"""
     header_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
     cell_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
-    
-    header = [
-        Paragraph("Дата", header_style),
-        Paragraph("pH", header_style),
-        Paragraph("Железо", header_style),
-        Paragraph("Марганец", header_style),
-        Paragraph("Нитраты", header_style),
-        Paragraph("Сульфаты", header_style)
+
+    metric_order = [
+        ("pH", "pH"),
+        ("iron", "Железо"),
+        ("manganese", "Марганец"),
+        ("nitrates", "Нитраты"),
+        ("sulfates", "Сульфаты")
     ]
-    
+
+    def to_simple_dict(item):
+        if hasattr(item, "model_dump"):
+            return item.model_dump(exclude_unset=True, exclude_none=True)
+        if hasattr(item, "dict"):
+            try:
+                return item.dict(exclude_unset=True, exclude_none=True)
+            except TypeError:
+                return item.dict()
+        if isinstance(item, dict):
+            return {k: v for k, v in item.items() if v is not None}
+        return dict(item)
+
+    simple_dynamics = [to_simple_dict(entry) for entry in dynamics]
+
+    selected_metrics = [
+        metric for metric, label in metric_order
+        if any(metric in entry for entry in simple_dynamics)
+    ]
+
+    columns = [("date", "Дата")] + [(metric, label) for metric, label in metric_order if metric in selected_metrics]
+
+    header = [Paragraph(label, header_style) for _, label in columns]
+
     data = [header]
-    for entry in dynamics:
-        date_str = str(entry.get("date", ""))
-        ph = str(entry.get("pH", entry.get("ph", "")))
-        iron = str(entry.get("iron", ""))
-        manganese = str(entry.get("manganese", ""))
-        nitrates = str(entry.get("nitrates", ""))
-        sulfates = str(entry.get("sulfates", ""))
-        
-        data.append([
-            Paragraph(date_str, cell_style),
-            Paragraph(ph, cell_style),
-            Paragraph(iron, cell_style),
-            Paragraph(manganese, cell_style),
-            Paragraph(nitrates, cell_style),
-            Paragraph(sulfates, cell_style)
-        ])
-    
-    col_widths = [inch * 1.0, inch * 1.1, inch * 1.1, inch * 1.1, inch * 1.1, inch * 1.1]
+    for entry in simple_dynamics:
+        row = []
+        for key, _ in columns:
+            if key == "date":
+                value = str(entry.get("date", ""))
+            else:
+                value = str(entry.get(key, ""))
+            row.append(Paragraph(value, cell_style))
+        data.append(row)
+
+    col_widths = [inch * 1.0] + [inch * 1.1 for _ in selected_metrics]
     return Table(data, col_widths, style=get_unified_table_style(fontname=fontname, fontsize=fontsize))
 
 

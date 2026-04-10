@@ -33,6 +33,233 @@ async function uploadFile() {
     }
 }
 
+function setFieldError(input, message) {
+    if (!input) return;
+    input.classList.add("invalid-field");
+    input.setAttribute("aria-invalid", "true");
+    input.title = message;
+
+    let error = input.nextElementSibling;
+    if (!error || !error.classList.contains("field-error")) {
+        error = document.createElement("span");
+        error.className = "field-error";
+        input.parentNode.insertBefore(error, input.nextSibling);
+    }
+    error.textContent = message;
+}
+
+function clearFieldError(input) {
+    if (!input) return;
+    input.classList.remove("invalid-field");
+    input.removeAttribute("aria-invalid");
+    input.title = "";
+    const error = input.nextElementSibling;
+    if (error?.classList.contains("field-error")) {
+        error.remove();
+    }
+}
+
+function validatePositiveTwoDecimals(value) {
+    const normalized = value.trim().replace(',', '.');
+    return /^\d+\.\d{2}$/.test(normalized) && parseFloat(normalized) > 0;
+}
+
+function validatePositiveInteger(value) {
+    return /^[1-9]\d*$/.test(value.trim());
+}
+
+function validateYear(value) {
+    const normalized = value.trim();
+    const year = parseInt(normalized, 10);
+    const currentYear = new Date().getFullYear();
+    return /^[1-9]\d*$/.test(normalized) && year <= currentYear;
+}
+
+function validateDateNotFuture(value) {
+    if (!value) return false;
+    const date = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return !Number.isNaN(date.getTime()) && date <= today;
+}
+
+function validateFieldInput(field, validator, hint) {
+    if (!field) return true;
+    const value = field.value.trim();
+    if (!value) {
+        clearFieldError(field);
+        return true;
+    }
+    const valid = validator(value);
+    if (!valid) {
+        setFieldError(field, hint);
+    } else {
+        clearFieldError(field);
+    }
+    return valid;
+}
+
+function attachValidationRule(id, validator, hint) {
+    const field = document.getElementById(id);
+    if (!field) return;
+    field.addEventListener("input", () => validateFieldInput(field, validator, hint));
+}
+
+function validateTestResultsInput(field) {
+    if (!field) return true;
+    const value = field.value.trim();
+    if (value === "") {
+        setFieldError(field, "Заполните результат или отключите показатель");
+        return false;
+    }
+    if (!validatePositiveTwoDecimals(value)) {
+        setFieldError(field, "Введите положительное число с двумя знаками после запятой");
+        return false;
+    }
+    clearFieldError(field);
+    return true;
+}
+
+function validateObservationDynamicsInput(field) {
+    if (!field) return true;
+    const fieldName = field.dataset.field;
+    const value = field.value.trim();
+
+    if (fieldName === "Дата") {
+        if (value === "") {
+            setFieldError(field, "Укажите дату");
+            return false;
+        }
+        if (!validateDateNotFuture(value)) {
+            setFieldError(field, "Дата не должна быть позже сегодняшнего дня");
+            return false;
+        }
+        clearFieldError(field);
+        return true;
+    }
+
+    if (value === "") {
+        clearFieldError(field);
+        return true;
+    }
+    if (!validatePositiveTwoDecimals(value)) {
+        setFieldError(field, "Введите положительное число с двумя знаками после запятой");
+        return false;
+    }
+    clearFieldError(field);
+    return true;
+}
+
+function validateTestResultsTable() {
+    const table = document.getElementById("test_results_table");
+    if (!table) return true;
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return true;
+
+    let valid = true;
+    tbody.querySelectorAll("input[data-field='Результат']").forEach((input) => {
+        if (!validateTestResultsInput(input)) valid = false;
+    });
+    return valid;
+}
+
+function validateObservationDynamicsTable() {
+    const table = document.getElementById("observation_dynamics_table");
+    if (!table) return true;
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return true;
+
+    let valid = true;
+    tbody.querySelectorAll("tr").forEach((row) => {
+        const dateInput = row.querySelector("input[data-field='Дата']");
+        const metricInputs = Array.from(row.querySelectorAll("input[data-field]")).filter((input) => input.dataset.field !== "Дата");
+        const hasMetric = metricInputs.some((input) => input.value.trim() !== "");
+
+        if (!dateInput || !dateInput.value.trim()) {
+            if (hasMetric) {
+                setFieldError(dateInput, "Дата обязательна, если введены показатели");
+                valid = false;
+            }
+        } else if (hasMetric && !validateObservationDynamicsInput(dateInput)) {
+            valid = false;
+        }
+
+        metricInputs.forEach((input) => {
+            if (input.value.trim() !== "" && !validateObservationDynamicsInput(input)) {
+                valid = false;
+            }
+        });
+    });
+
+    return valid;
+}
+
+function validateMetadataFields() {
+    const rules = [
+        { id: "groundwater-level", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
+        { id: "pipe-diameter", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
+        { id: "total-length", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
+        { id: "burial-depth", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
+        { id: "laying-year", validator: validateYear, hint: `Введите год не больше ${new Date().getFullYear()}` },
+        { id: "wells-count", validator: validatePositiveInteger, hint: "Введите целое положительное число" },
+        { id: "monitor-amount", validator: validatePositiveInteger, hint: "Введите целое положительное число" }
+    ];
+
+    let valid = true;
+    rules.forEach((rule) => {
+        const field = document.getElementById(rule.id);
+        if (field && !validateFieldInput(field, rule.validator, rule.hint)) {
+            valid = false;
+        }
+    });
+    return valid;
+}
+
+function validateAllForm() {
+    let valid = true;
+    valid = validateMetadataFields() && valid;
+    valid = validateTestResultsTable() && valid;
+    valid = validateObservationDynamicsTable() && valid;
+
+    if (!valid) {
+        const status = document.getElementById("report-status");
+        if (status) {
+            status.innerText = "Исправьте ошибки в выделенных полях и повторите попытку";
+        }
+    }
+
+    return valid;
+}
+
+window.addEventListener("load", function () {
+    attachValidationRule("groundwater-level", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
+    attachValidationRule("pipe-diameter", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
+    attachValidationRule("total-length", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
+    attachValidationRule("burial-depth", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
+    attachValidationRule("laying-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
+    attachValidationRule("wells-count", validatePositiveInteger, "Введите целое положительное число");
+    attachValidationRule("monitor-amount", validatePositiveInteger, "Введите целое положительное число");
+
+    document.addEventListener("input", function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.closest("#test_results_table") && target.dataset.field === "Результат") {
+            validateTestResultsInput(target);
+        }
+        if (target.closest("#observation_dynamics_table") && target.dataset.field && target.dataset.field !== "Дата") {
+            validateObservationDynamicsInput(target);
+        }
+    });
+
+    document.addEventListener("change", function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.closest("#observation_dynamics_table") && target.dataset.field === "Дата") {
+            validateObservationDynamicsInput(target);
+        }
+    });
+});
+
 function readObservationPoints() {
     const table = document.getElementById("observation_points_table");
     const points = [];
@@ -41,7 +268,7 @@ function readObservationPoints() {
         return points;
     }
 
-    // Получаем ВСЕ строки в таблице (не только из tbody)
+    // Получаем все строки в таблице (не только из tbody)
     const rows = Array.from(table.querySelectorAll("tr")).filter(row => {
         const cells = row.querySelectorAll("td");
         return cells.length >= 5; // Пропускаем заголовки
@@ -55,7 +282,7 @@ function readObservationPoints() {
 
     rows.forEach((row) => {
         const cells = row.querySelectorAll("td");
-        if (cells.length < 6) return; // Теперь нужно 6 ячеек (№ + 5 данных)
+        if (cells.length < 6) return; 
         
         const point = {
             observation_point: cells[1].textContent.trim(),
@@ -115,16 +342,21 @@ function readTestResults() {
             console.log(`  Input field "${field}" = "${value}"`);
             
             if (field === "Норматив") result.standard = value;
-            else if (field === "Результат") result.result = parseFloat(value) || value;
+            else if (field === "Результат") result.result = value;
             else if (field === "Единицы измерения") result.unit = value || "";
             else if (field === "Соответствие") result.compliance = value;
         });
         
         console.log("Result object:", result);
         
-        // Добавляем если есть индикатор
-        if (result.indicator) {
-            results.push(result);
+        const maybeResult = typeof result.result === "string" ? result.result.trim() : String(result.result).trim();
+        if (result.indicator && maybeResult !== "") {
+            const normalized = maybeResult.replace(',', '.');
+            const numeric = parseFloat(normalized);
+            if (!Number.isNaN(numeric)) {
+                result.result = numeric;
+                results.push(result);
+            }
         }
     });
 
@@ -149,37 +381,56 @@ function readObservationDynamics() {
     const rows = tbody.querySelectorAll("tr");
     console.log("Observation dynamics table rows found:", rows.length);
 
+    const metricKeyMap = {
+        "pH": "pH",
+        "Железо": "iron",
+        "Марганец": "manganese",
+        "Нитраты": "nitrates",
+        "Сульфаты": "sulfates"
+    };
+
     rows.forEach((row, rowIndex) => {
         // Ищем input элементы с data-field
         const inputs = row.querySelectorAll("input[data-field]");
         console.log(`Row ${rowIndex} has ${inputs.length} inputs`);
         
-        const entry = {
-            date: "",
-            pH: "",
-            iron: "",
-            manganese: "",
-            nitrates: "",
-            sulfates: ""
-        };
+        const entry = { date: "" };
         
         inputs.forEach((input) => {
             const field = input.dataset.field;
             const value = input.value.trim();
             console.log(`  Input field "${field}" = "${value}"`);
             
-            if (field === "Дата") entry.date = value;
-            else if (field === "pH") entry.pH = parseFloat(value) || value;
-            else if (field === "Железо") entry.iron = parseFloat(value) || value;
-            else if (field === "Марганец") entry.manganese = parseFloat(value) || value;
-            else if (field === "Нитраты") entry.nitrates = parseFloat(value) || value;
-            else if (field === "Сульфаты") entry.sulfates = parseFloat(value) || value;
+            if (field === "Дата") {
+                entry.date = value;
+            } else {
+                const key = metricKeyMap[field] || field;
+                entry[key] = value;
+            }
         });
         
         console.log("Entry object:", entry);
-        
-        // Добавляем если есть дата
-        if (entry.date) {
+
+        const metrics = ["pH", "iron", "manganese", "nitrates", "sulfates"];
+        const hasMetricValue = metrics.some((metric) => {
+            return entry[metric] !== undefined && String(entry[metric]).trim() !== "";
+        });
+
+        if (entry.date && hasMetricValue) {
+            const normalize = (value) => {
+                if (value === undefined || value === null || String(value).trim() === "") {
+                    return "";
+                }
+                const normalized = String(value).trim().replace(',', '.');
+                const parsed = parseFloat(normalized);
+                return Number.isNaN(parsed) ? value : parsed;
+            };
+
+            metrics.forEach((metric) => {
+                if (entry[metric] !== undefined) {
+                    entry[metric] = normalize(entry[metric]);
+                }
+            });
             dynamics.push(entry);
         }
     });
@@ -189,6 +440,10 @@ function readObservationDynamics() {
 }
 
 async function sendForm() {
+    if (!validateAllForm()) {
+        return;
+    }
+
     const status = document.getElementById("report-status");
     if (status) status.innerText = "Генерация отчета...";
 
@@ -207,7 +462,7 @@ async function sendForm() {
         // Природные условия
         RELIEF_TYPE: document.getElementById("relief-type")?.value || "Равнинный",
         SOIL_TYPE: document.getElementById("soil-type")?.value || "Суглинок",
-        GROUNDWATER_LEVEL: document.getElementById("groundwater-level")?.value || "2.5 м",
+        GROUNDWATER_LEVEL: document.getElementById("groundwater-level")?.value.trim() || "",
         CLIMATE_ZONE: document.getElementById("climate-zone")?.value || "Умеренный",
 
         // Координаты объекта
@@ -216,16 +471,16 @@ async function sendForm() {
 
         // Характеристика системы
         OBJECT_TYPE: document.getElementById("object-type")?.value || "город",
-        SYSTEM_TYPE: document.getElementById("type-system")?.value || "горизонтальный",
-        PIPE_MATERIAL: document.getElementById("pipe-material")?.value || "Пластик ПВХ",
-        PIPE_DIAMETER: document.getElementById("pipe-diameter")?.value || "500 мм",
-        PIPE_DEPTH: document.getElementById("burial-depth")?.value || "2 м",
-        PIPE_LENGTH: document.getElementById("total-length")?.value || "1000 м",
-        PIPE_INSTALL_YEAR: parseInt(document.getElementById("laying-year")?.value) || 2010,
-        MANHOLE_COUNT: parseInt(document.getElementById("wells-count")?.value) || 10,
+        SYSTEM_TYPE: document.getElementById("type-system")?.value || "",
+        PIPE_MATERIAL: document.getElementById("pipe-material")?.value.trim() || "",
+        PIPE_DIAMETER: document.getElementById("pipe-diameter")?.value.trim() || "",
+        PIPE_DEPTH: document.getElementById("burial-depth")?.value.trim() || "",
+        PIPE_LENGTH: document.getElementById("total-length")?.value.trim() || "",
+        PIPE_INSTALL_YEAR: parseInt(document.getElementById("laying-year")?.value) || 0,
+        MANHOLE_COUNT: parseInt(document.getElementById("wells-count")?.value) || 0,
 
         // Мониторинг
-        MONITORING_POINT_COUNT: parseInt(document.getElementById("monitor-amount")?.value) || 5,
+        MONITORING_POINT_COUNT: parseInt(document.getElementById("monitor-amount")?.value) || 0,
         OBSERVATION_POINT: document.getElementById("observ-point")?.value || "Точка А",
         LATITUDE: parseFloat(document.getElementById("observ-coord-n")?.value) || 55.756,
         LONGITUDE: parseFloat(document.getElementById("observ-coord-e")?.value) || 37.618,

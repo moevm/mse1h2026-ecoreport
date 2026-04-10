@@ -48,7 +48,8 @@ class ReportGenerator:
             fontName="TimesNewRoman",
             fontSize=14,
             alignment=TA_CENTER,
-            leading=16
+            leading=16,
+            textColor=(0, 0, 0)
         )
 
         top = Paragraph(full_name, style)
@@ -152,13 +153,75 @@ class ReportGenerator:
         ]))
         return table
 
+    def has_system_characteristics(self, data_dict):
+        def has_positive_number(value):
+            if value is None:
+                return False
+            try:
+                return float(str(value).replace(',', '.')) > 0
+            except ValueError:
+                return False
+
+        text_values = [
+            data_dict.get('SYSTEM_TYPE'),
+            data_dict.get('PIPE_MATERIAL')
+        ]
+        if any(str(v).strip() for v in text_values):
+            return True
+
+        numeric_values = [
+            data_dict.get('PIPE_DIAMETER'),
+            data_dict.get('PIPE_DEPTH'),
+            data_dict.get('PIPE_LENGTH')
+        ]
+        if any(has_positive_number(v) for v in numeric_values):
+            return True
+
+        if has_positive_number(data_dict.get('PIPE_INSTALL_YEAR')):
+            return True
+
+        if has_positive_number(data_dict.get('MANHOLE_COUNT')):
+            return True
+
+        return False
+
+    def create_table_element(self, table_type, data_dict, normal_style):
+        if table_type == "SYSTEM_CHARACTERISTICS":
+            if self.has_system_characteristics(data_dict):
+                return self.create_system_characteristics_table(data_dict, normal_style)
+            return None
+
+        if table_type == "OBSERVATION_POINTS":
+            points = []
+            for item in data_dict.get("OBSERVATION_POINTS", []):
+                if not isinstance(item, dict):
+                    continue
+                points.append((
+                    str(item.get("observation_point") or item.get("name") or ""),
+                    item.get("latitude") if item.get("latitude") is not None else item.get("lat") or 0,
+                    item.get("longitude") if item.get("longitude") is not None else item.get("lon") or 0,
+                    str(item.get("medium_type") or item.get("type") or ""),
+                    str(item.get("description") or "")
+                ))
+            return monitored_points_table(points, fontname="TimesNewRoman", fontsize=12) if points else None
+
+        if table_type == "TEST_RESULTS":
+            results = data_dict.get("TEST_RESULTS", [])
+            return lab_test_results_table(results, fontname="TimesNewRoman", fontsize=12) if results else None
+
+        if table_type == "OBSERVATION_DYNAMICS":
+            dynamics = data_dict.get("OBSERVATION_DYNAMICS", [])
+            return observation_dynamics_table(dynamics, fontname="TimesNewRoman", fontsize=12) if dynamics else None
+
+        return None
+
 
     # section reader
     def read_section(self, file_path, title_style, normal_style, data_dict):
         elements = []
 
         if not os.path.exists(file_path):
-            elements.append(Paragraph("Текст раздела отсутствует.", normal_style))
+            elements.append(Paragraph("Текст раздела отсутствует", normal_style))
             return elements
 
         # Обработка специальных полей перед рендерингом
@@ -175,6 +238,7 @@ class ReportGenerator:
 
         buffer_list = []
         in_list = False
+        pending_right_para = None
 
         for line in rendered.splitlines():
             line = line.strip()
@@ -197,39 +261,23 @@ class ReportGenerator:
                 elements.append(Paragraph(line.replace("PARA:", "").strip(), style))
 
             elif line.startswith("RIGHT_PARA:"):
-                style = ParagraphStyle(
-                    name='right_para',
-                    parent=normal_style,
-                    alignment=TA_RIGHT
-                )
-                elements.append(Paragraph(line.replace("RIGHT_PARA:", "").strip(), style))
+                pending_right_para = line.replace("RIGHT_PARA:", "").strip()
 
             elif line.startswith("TABLE:"):
                 table_type = line.replace("TABLE:", "").strip()
-                if table_type == "SYSTEM_CHARACTERISTICS":
-                    elements.append(self.create_system_characteristics_table(data_dict, normal_style))
-                elif table_type == "OBSERVATION_POINTS":
-                    points = []
-                    for item in data_dict.get("OBSERVATION_POINTS", []):
-                        if not isinstance(item, dict):
-                            continue
-                        points.append((
-                            str(item.get("observation_point") or item.get("name") or ""),
-                            item.get("latitude") if item.get("latitude") is not None else item.get("lat") or 0,
-                            item.get("longitude") if item.get("longitude") is not None else item.get("lon") or 0,
-                            str(item.get("medium_type") or item.get("type") or ""),
-                            str(item.get("description") or "")
-                        ))
-                    if points:
-                        elements.append(monitored_points_table(points, fontname="TimesNewRoman", fontsize=12))
-                elif table_type == "TEST_RESULTS":
-                    results = data_dict.get("TEST_RESULTS", [])
-                    if results:
-                        elements.append(lab_test_results_table(results, fontname="TimesNewRoman", fontsize=12))
-                elif table_type == "OBSERVATION_DYNAMICS":
-                    dynamics = data_dict.get("OBSERVATION_DYNAMICS", [])
-                    if dynamics:
-                        elements.append(observation_dynamics_table(dynamics, fontname="TimesNewRoman", fontsize=12))
+                table_element = self.create_table_element(table_type, data_dict, normal_style)
+                if table_element:
+                    if pending_right_para is not None:
+                        style = ParagraphStyle(
+                            name='right_para',
+                            parent=normal_style,
+                            alignment=TA_RIGHT
+                        )
+                        elements.append(Paragraph(pending_right_para, style))
+                        pending_right_para = None
+                    elements.append(table_element)
+                else:
+                    pending_right_para = None
 
             elif line.startswith("LIST:"):
                 in_list = True
@@ -268,7 +316,8 @@ class ReportGenerator:
             fontName="TimesNewRoman",
             fontSize=14,
             leading=21,
-            alignment=TA_CENTER
+            alignment=TA_CENTER,
+            textColor=(0, 0, 0)
         )
 
         normal_style = ParagraphStyle(
@@ -285,6 +334,8 @@ class ReportGenerator:
         # титульник
         elements.append(Spacer(1, self.mm_to_pt(90)))
         elements.append(Paragraph("ОТЧЕТ ПО ЭКОЛОГИЧЕСКОЙ БЕЗОПАСНОСТИ", title_style))
+        elements.append(Paragraph("ДРЕНАЖНЫХ СИСТЕМ", title_style))
+        elements.append(Paragraph(f"ЗА {user_data.get('YEAR', '')} ГОД", title_style))
         elements.append(PageBreak())
 
         # разделы

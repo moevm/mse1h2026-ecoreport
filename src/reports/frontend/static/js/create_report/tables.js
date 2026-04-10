@@ -155,6 +155,15 @@ window.addEventListener("DOMContentLoaded", function () {
 
     const tbody = resultsTable.querySelector("tbody") || resultsTable.appendChild(document.createElement("tbody"));
 
+    // Нормативы для сравнения
+    const standards = {
+        "pH": { min: 6, max: 9, unit: "-" },
+        "Железо": { min: 0.27, max: 0.33, unit: "мг/л" },
+        "Марганец": { min: 0.085, max: 0.115, unit: "мг/л" },
+        "Нитраты": { min: 38.25, max: 51.75, unit: "мг/л" },
+        "Сульфаты": { min: 435, max: 565, unit: "мг/л" }
+    };
+
     resultButtons.forEach((button) => {
         if (!button.dataset.selected) {
             button.dataset.selected = "true";
@@ -189,6 +198,20 @@ window.addEventListener("DOMContentLoaded", function () {
         return data;
     }
 
+    function compareWithStandard(indicator, resultValue) {
+        const std = standards[indicator];
+        if (!std) return "нет данных";
+        
+        const result = parseFloat(resultValue);
+        if (isNaN(result)) return "";
+        
+        // Все показатели теперь имеют диапазон (min/max)
+        if (std.min !== undefined && std.max !== undefined) {
+            return result >= std.min && result <= std.max ? "да" : "нет";
+        }
+        return "";
+    }
+
     function buildRow(indicator, data) {
         const row = document.createElement("tr");
         row.dataset.indicator = indicator;
@@ -197,21 +220,52 @@ window.addEventListener("DOMContentLoaded", function () {
         indicatorCell.textContent = indicator;
         row.appendChild(indicatorCell);
 
-        const fields = [
-            { key: "Норматив", value: data?.["Норматив"] || "" },
-            { key: "Результат", value: data?.["Результат"] || "" },
-            { key: "Единицы измерения", value: data?.["Единицы измерения"] || "мг/л" },
-        ];
+        const std = standards[indicator];
+        
+        // Норматив
+        const standardCell = document.createElement("td");
+        const standardInput = document.createElement("input");
+        standardInput.type = "text";
+        standardInput.value = std ? `${std.min}-${std.max}` : "";
+        standardInput.dataset.field = "Норматив";
+        standardInput.readOnly = true; // Норматив только для чтения
+        standardCell.appendChild(standardInput);
+        row.appendChild(standardCell);
 
-        fields.forEach((field) => {
-            const cell = document.createElement("td");
-            const input = document.createElement("input");
-            input.type = "text";
-            input.value = field.value;
-            input.dataset.field = field.key;
-            cell.appendChild(input);
-            row.appendChild(cell);
-        });
+        // Результат
+        const resultCell = document.createElement("td");
+        const resultInput = document.createElement("input");
+        resultInput.type = "text";
+        resultInput.value = data?.["Результат"] || "";
+        resultInput.dataset.field = "Результат";
+        resultInput.addEventListener("change", updateCompliance);
+        resultCell.appendChild(resultInput);
+        row.appendChild(resultCell);
+
+        // Единицы измерения
+        const unitCell = document.createElement("td");
+        const unitInput = document.createElement("input");
+        unitInput.type = "text";
+        unitInput.value = std ? std.unit : "мг/л";
+        unitInput.dataset.field = "Единицы измерения";
+        unitInput.readOnly = true;
+        unitCell.appendChild(unitInput);
+        row.appendChild(unitCell);
+
+        // Соответствие
+        const complianceCell = document.createElement("td");
+        const complianceInput = document.createElement("input");
+        complianceInput.type = "text";
+        complianceInput.value = data?.["Соответствие"] || compareWithStandard(indicator, data?.["Результат"] || "");
+        complianceInput.dataset.field = "Соответствие";
+        complianceInput.readOnly = true;
+        complianceCell.appendChild(complianceInput);
+        row.appendChild(complianceCell);
+
+        function updateCompliance() {
+            const resultValue = resultInput.value;
+            complianceInput.value = compareWithStandard(indicator, resultValue);
+        }
 
         return row;
     }

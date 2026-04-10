@@ -11,7 +11,11 @@ from io import BytesIO
 from jinja2 import Template
 import os
 
-from reports.domain.generator_utils.report_utils.tables import monitored_points_table
+from reports.domain.generator_utils.report_utils.tables import (
+    monitored_points_table,
+    lab_test_results_table,
+    observation_dynamics_table
+)
 
 
 class ReportGenerator:
@@ -218,6 +222,14 @@ class ReportGenerator:
                         ))
                     if points:
                         elements.append(monitored_points_table(points, fontname="TimesNewRoman", fontsize=12))
+                elif table_type == "TEST_RESULTS":
+                    results = data_dict.get("TEST_RESULTS", [])
+                    if results:
+                        elements.append(lab_test_results_table(results, fontname="TimesNewRoman", fontsize=12))
+                elif table_type == "OBSERVATION_DYNAMICS":
+                    dynamics = data_dict.get("OBSERVATION_DYNAMICS", [])
+                    if dynamics:
+                        elements.append(observation_dynamics_table(dynamics, fontname="TimesNewRoman", fontsize=12))
 
             elif line.startswith("LIST:"):
                 in_list = True

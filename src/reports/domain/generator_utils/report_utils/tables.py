@@ -163,55 +163,83 @@ def monitored_points_table(points: list,
     return Table(data, col_widths, style=get_unified_table_style(fontname=fontname, fontsize=fontsize))
 
 
-def lab_test_results_table(ph: float, iron: float, mn: float, no3: float, so4: float,
-                           fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
+def lab_test_results_table(results: list, fontname: str = "TimesNewRoman", fontsize: int = 12) -> Table:
     """Создает таблицу "Результаты лабораторных анализов" (Таблица 3 из макета)
     Параметры:
-        ph: float - pH
-        iron: float - Железо
-        mn: float - Марганец
-        no3: float - Нитраты
-        so4: float - Сульфаты
-        fontname: str - Имя шрифта, зарегистрированного в ReportLab (для генерации отчета необохдимо зарегистрировать шрифт с кириллицей!!!)
+        results: list - список результатов в формате [{"indicator": "pH", "standard": "6-9", "result": 7.2, "unit": "-", "compliance": "да"}, ...]
+        fontname: str - Имя шрифта
         fontsize: int - размер шрифта
     Возвращает: ReportLab объект Table для включения в pdf отчет"""
-    par_style: ParagraphStyle = get_paragraph_style(fontname, fontsize)
-    par_style_justify: ParagraphStyle = get_paragraph_style(fontname, fontsize, TA_JUSTIFY)
-    header = ("Показатель", "Норматив", "Результат", "Ед. изм.", "Соответствие")
-    relative_error = 0.2
-    data = [header,
-            ("pH", "6-9", round(ph, 2), "-", "Соответсвует" if 6 <= ph <= 9 else "Не соответствует"),
-            ("Железо", 0.3, round(iron, 2), "мг/л", "Соответсвует" if abs(iron - 0.3)/0.3 <= relative_error else "Не соответствует"),
-            ("Марганец", 0.1, round(mn, 2), "мг/л", "Соответсвует" if abs(mn - 0.1)/0.1 <= relative_error else "Не соответствует"),
-            ("Нитраты", 45, round(no3, 2), "мг/л", "Соответсвует" if abs(no3 - 45)/45 <= relative_error else "Не соответствует"),
-            ("Сульфаты", 500, round(so4, 2), "мг/л", "Соответсвует" if abs(so4 - 500)/500 <= relative_error else "Не соответствует"),
-            ]
-    col_widths = [inch * 1, inch * 1, inch * 1.5, inch * 0.8, inch * 2]
-    return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
+    header_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
+    cell_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
+    
+    header = [
+        Paragraph("Показатель", header_style),
+        Paragraph("Норматив", header_style),
+        Paragraph("Результат", header_style),
+        Paragraph("Единицы измерения", header_style),
+        Paragraph("Соответствие", header_style)
+    ]
+    
+    data = [header]
+    for result in results:
+        indicator = str(result.get("indicator", ""))
+        standard = str(result.get("standard", ""))
+        result_val = str(result.get("result", ""))
+        unit = str(result.get("unit", "-"))
+        compliance = str(result.get("compliance", ""))
+        
+        data.append([
+            Paragraph(indicator, cell_style),
+            Paragraph(standard, cell_style),
+            Paragraph(result_val, cell_style),
+            Paragraph(unit, cell_style),
+            Paragraph(compliance, cell_style)
+        ])
+    
+    col_widths = [inch * 1.3, inch * 1.1, inch * 1.1, inch * 1.2, inch * 1.3]
+    return Table(data, col_widths, style=get_unified_table_style(fontname=fontname, fontsize=fontsize))
 
 
-def lab_dynamics(entries: list[tuple],
-                 fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
+def observation_dynamics_table(dynamics: list, fontname: str = "TimesNewRoman", fontsize: int = 12) -> Table:
     """Создает таблицу "Таблица динамики наблюдений" (Таблица 4 из макета)
     Параметры:
-        entries: list - надор наблюдений в виде списка кортежей вида:
-            date: Date - дата наблюдения в виде объекта date из datetime
-            ph: float - pH
-            iron: float - Железо
-            mn: float - Марганец
-            no3: float - Нитраты
-            so4: float - Сульфаты
-        fontname: str - Имя шрифта, зарегистрированного в ReportLab (для генерации отчета необохдимо зарегистрировать шрифт с кириллицей!!!)
+        dynamics: list - список наблюдений в формате [{"date": "01.01.2026", "pH": 7.2, "iron": 0.2, ...}, ...]
+        fontname: str - Имя шрифта
         fontsize: int - размер шрифта
     Возвращает: ReportLab объект Table для включения в pdf отчет"""
-    header = ("Дата", "pH", "Железо", "Марганец", "Нитраты", "Сульфаты")
-    data = [header,]
-    for i in range(len(entries)):
-        entry = entries[i]
-        date_i: date = entry[0]
-        data.append((date_i.strftime("%d.%m.%Y"), round(entry[1], 2), round(entry[2], 2), round(entry[3], 2), round(entry[4], 2), round(entry[5], 2)))
-    col_widths = [inch * 1, inch * 1.2, inch * 1.2, inch * 1.2, inch * 1.2, inch * 1.2]
-    return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
+    header_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
+    cell_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
+    
+    header = [
+        Paragraph("Дата", header_style),
+        Paragraph("pH", header_style),
+        Paragraph("Железо", header_style),
+        Paragraph("Марганец", header_style),
+        Paragraph("Нитраты", header_style),
+        Paragraph("Сульфаты", header_style)
+    ]
+    
+    data = [header]
+    for entry in dynamics:
+        date_str = str(entry.get("date", ""))
+        ph = str(entry.get("pH", entry.get("ph", "")))
+        iron = str(entry.get("iron", ""))
+        manganese = str(entry.get("manganese", ""))
+        nitrates = str(entry.get("nitrates", ""))
+        sulfates = str(entry.get("sulfates", ""))
+        
+        data.append([
+            Paragraph(date_str, cell_style),
+            Paragraph(ph, cell_style),
+            Paragraph(iron, cell_style),
+            Paragraph(manganese, cell_style),
+            Paragraph(nitrates, cell_style),
+            Paragraph(sulfates, cell_style)
+        ])
+    
+    col_widths = [inch * 1.0, inch * 1.1, inch * 1.1, inch * 1.1, inch * 1.1, inch * 1.1]
+    return Table(data, col_widths, style=get_unified_table_style(fontname=fontname, fontsize=fontsize))
 
 
 if __name__ == "__main__":

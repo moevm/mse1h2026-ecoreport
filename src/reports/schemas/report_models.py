@@ -62,8 +62,12 @@ class ReportInputData(BaseModel):
     RESULTS_NITRATES: float = Field(..., description="Текущее содержание нитратов")
     RESULTS_SULFATES: float = Field(..., description="Текущее содержание сульфатов")
     
+    # Результаты лабораторных анализов
+    TEST_RESULTS: List[Dict[str, Any]] = Field(default_factory=list, description="Таблица результатов лабораторных анализов")
+    
     # Динамика
     RESULTS_DYNAMIC: List[DynamicResult] = Field(default_factory=list, description="Динамика изменения показателей")
+    OBSERVATION_DYNAMICS: List[Dict[str, Any]] = Field(default_factory=list, description="Таблица динамики наблюдений")
     
     # Контактная информация
     ORGANIZATION_ADDRESS: str = Field(..., description="Юридический адрес организации")

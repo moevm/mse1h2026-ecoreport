@@ -73,6 +73,121 @@ function readObservationPoints() {
     return points;
 }
 
+function readTestResults() {
+    const table = document.getElementById("test_results_table");
+    const results = [];
+    if (!table) {
+        console.warn("test_results_table not found");
+        return results;
+    }
+
+    const tbody = table.querySelector("tbody");
+    if (!tbody) {
+        console.warn("test_results_table tbody not found");
+        return results;
+    }
+
+    const rows = tbody.querySelectorAll("tr");
+    console.log("Test results table rows found:", rows.length);
+
+    rows.forEach((row) => {
+        const indicator = row.dataset.indicator;
+        if (!indicator) {
+            console.log("Row skipped - no indicator:", row);
+            return; // Пропускаем строки без indicator
+        }
+        
+        // Ищем input элементы с data-field
+        const inputs = row.querySelectorAll("input[data-field]");
+        console.log(`Row for indicator "${indicator}" has ${inputs.length} inputs`);
+        
+        const result = {
+            indicator: indicator,
+            standard: "",
+            result: "",
+            unit: "",
+            compliance: ""
+        };
+        
+        inputs.forEach((input) => {
+            const field = input.dataset.field;
+            const value = input.value.trim();
+            console.log(`  Input field "${field}" = "${value}"`);
+            
+            if (field === "Норматив") result.standard = value;
+            else if (field === "Результат") result.result = parseFloat(value) || value;
+            else if (field === "Единицы измерения") result.unit = value || "";
+            else if (field === "Соответствие") result.compliance = value;
+        });
+        
+        console.log("Result object:", result);
+        
+        // Добавляем если есть индикатор
+        if (result.indicator) {
+            results.push(result);
+        }
+    });
+
+    console.log("Test results collected:", results);
+    return results;
+}
+
+function readObservationDynamics() {
+    const table = document.getElementById("observation_dynamics_table");
+    const dynamics = [];
+    if (!table) {
+        console.warn("observation_dynamics_table not found");
+        return dynamics;
+    }
+
+    const tbody = table.querySelector("tbody");
+    if (!tbody) {
+        console.warn("observation_dynamics_table tbody not found");
+        return dynamics;
+    }
+
+    const rows = tbody.querySelectorAll("tr");
+    console.log("Observation dynamics table rows found:", rows.length);
+
+    rows.forEach((row, rowIndex) => {
+        // Ищем input элементы с data-field
+        const inputs = row.querySelectorAll("input[data-field]");
+        console.log(`Row ${rowIndex} has ${inputs.length} inputs`);
+        
+        const entry = {
+            date: "",
+            pH: "",
+            iron: "",
+            manganese: "",
+            nitrates: "",
+            sulfates: ""
+        };
+        
+        inputs.forEach((input) => {
+            const field = input.dataset.field;
+            const value = input.value.trim();
+            console.log(`  Input field "${field}" = "${value}"`);
+            
+            if (field === "Дата") entry.date = value;
+            else if (field === "pH") entry.pH = parseFloat(value) || value;
+            else if (field === "Железо") entry.iron = parseFloat(value) || value;
+            else if (field === "Марганец") entry.manganese = parseFloat(value) || value;
+            else if (field === "Нитраты") entry.nitrates = parseFloat(value) || value;
+            else if (field === "Сульфаты") entry.sulfates = parseFloat(value) || value;
+        });
+        
+        console.log("Entry object:", entry);
+        
+        // Добавляем если есть дата
+        if (entry.date) {
+            dynamics.push(entry);
+        }
+    });
+
+    console.log("Observation dynamics collected:", dynamics);
+    return dynamics;
+}
+
 async function sendForm() {
     const status = document.getElementById("report-status");
     if (status) status.innerText = "Генерация отчета...";
@@ -82,9 +197,9 @@ async function sendForm() {
         // Информация об объекте
         FULL_OBJECT_NAME: document.getElementById("full-object-name")?.value || "Объект по умолчанию",
         SHORT_OBJECT_NAME: document.getElementById("short-object-name")?.value || "Объект",
-        YEAR: parseInt(document.getElementById("report-year")?.value) || 2026,
+        YEAR: parseInt(document.getElementById("observation-year")?.value) || 2026,
         ORGANIZATION_NAME: document.getElementById("organization-name")?.value || "Организация",
-        REGION: document.getElementById("region")?.value || "Регион",
+        REGION: document.getElementById("org-region")?.value || "Регион",
 
         // Нормативные документы (из localStorage, как делает gost.js)
         DOCUMENTS_GOST: JSON.parse(localStorage.getItem("gost_list") || '[]'),
@@ -126,17 +241,25 @@ async function sendForm() {
         RESULTS_NITRATES: 10,
         RESULTS_SULFATES: 15,
 
-        // Динамика (пустой список для примера, т.к. сбор из таблицы сложен)
+        // Результаты лабораторных анализов
+        TEST_RESULTS: readTestResults(),
+
+        // Динамика
         RESULTS_DYNAMIC: [],
+        OBSERVATION_DYNAMICS: readObservationDynamics(),
 
         // Контактная информация
-        ORGANIZATION_ADDRESS: document.getElementById("org-address")?.value || "Адрес",
+        ORGANIZATION_ADDRESS: document.getElementById("organization-adress")?.value || "Адрес",
         ORGANIZATION_PHONE: document.getElementById("org-phone")?.value || "Телефон",
-        ORGANIZATION_EMAIL: document.getElementById("org-email")?.value || "Email",
+        ORGANIZATION_EMAIL: document.getElementById("email")?.value || "Email",
         RESPONSIBLE_NAME: document.getElementById("resp-name")?.value || "Ответственный",
-        RESPONSIBLE_POSITION: document.getElementById("resp-pos")?.value || "Должность",
+        RESPONSIBLE_POSITION: document.getElementById("job-title")?.value || "Должность",
         REPORT_DATE: document.getElementById("report-date")?.value || new Date().toLocaleDateString()
     };
+
+    console.log("=== FINAL CHECK BEFORE SENDING ===");
+    console.log("TEST_RESULTS:", data.TEST_RESULTS);
+    console.log("OBSERVATION_DYNAMICS:", data.OBSERVATION_DYNAMICS);
 
     try {
         const response = await fetch("/generate-report", {
@@ -146,6 +269,9 @@ async function sendForm() {
             },
             body: JSON.stringify(data)
         });
+
+        console.log("Payload sent to server:", data);
+        console.log("Server response status:", response.status);
 
         const result = await response.json();
 

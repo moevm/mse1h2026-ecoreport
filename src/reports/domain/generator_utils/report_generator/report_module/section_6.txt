@@ -14,6 +14,8 @@ PARA: Отбор проб осуществляется в контрольных
 
 PARA: Количество точек наблюдения: {{ MONITORING_POINT_COUNT }}
 
+RIGHT_PARA: Таблица 2. Координаты точек наблюдения
+
 TABLE: OBSERVATION_POINTS
 
 PARA: Периодичность мониторинга: {{ OBSERVATION_FREQUENCY }}

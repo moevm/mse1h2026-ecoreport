@@ -36,10 +36,17 @@ async function uploadFile() {
 function readObservationPoints() {
     const table = document.getElementById("observation_points_table");
     const points = [];
-    if (!table) return points;
+    if (!table) {
+        console.warn("observation_points_table not found");
+        return points;
+    }
 
-    const tbody = table.tBodies[0];
-    const rows = tbody ? Array.from(tbody.rows) : Array.from(table.querySelectorAll("tr")).slice(1);
+    // Получаем ВСЕ строки в таблице (не только из tbody)
+    const rows = Array.from(table.querySelectorAll("tr")).filter(row => {
+        const cells = row.querySelectorAll("td");
+        return cells.length >= 5; // Пропускаем заголовки
+    });
+
     const parseNumber = (text) => {
         const value = text.trim().replace(',', '.');
         const number = Number(value);
@@ -47,18 +54,22 @@ function readObservationPoints() {
     };
 
     rows.forEach((row) => {
-        const cells = row.querySelectorAll("td, th");
-        if (cells.length < 5) return;
-
-        points.push({
-            observation_point: cells[0].textContent.trim(),
-            latitude: parseNumber(cells[1].textContent),
-            longitude: parseNumber(cells[2].textContent),
-            medium_type: cells[3].textContent.trim(),
-            description: cells[4].textContent.trim(),
-        });
+        const cells = row.querySelectorAll("td");
+        if (cells.length < 6) return; // Теперь нужно 6 ячеек (№ + 5 данных)
+        
+        const point = {
+            observation_point: cells[1].textContent.trim(),
+            latitude: parseNumber(cells[2].textContent),
+            longitude: parseNumber(cells[3].textContent),
+            medium_type: cells[4].textContent.trim(),
+            description: cells[5].textContent.trim(),
+        };
+        if (point.observation_point || point.medium_type || point.description) {
+            points.push(point);
+        }
     });
 
+    console.log("Observation points collected:", points);
     return points;
 }
 
@@ -161,24 +172,26 @@ window.addEventListener('load', function () {
     const bog_extra = document.getElementById("bog-extra");
     const urban_extra = document.getElementById("urban-extra");
     const protected_extra = document.getElementById("protected-extra");
+    
+    if (!site_type_input) return; // Защита от null
+    
     site_type_input.addEventListener('input', function() {
-        bog_extra.hidden = true;
-        urban_extra.hidden = true;
-        protected_extra.hidden = true;
+        if (bog_extra) bog_extra.hidden = true;
+        if (urban_extra) urban_extra.hidden = true;
+        if (protected_extra) protected_extra.hidden = true;
+        
         switch (site_type_input.value){
             case "bog":
-                bog_extra.hidden = false;
+                if (bog_extra) bog_extra.hidden = false;
                 break;
             case "urban":
-                urban_extra.hidden = false;
+                if (urban_extra) urban_extra.hidden = false;
                 break;
             case "protected":
-                protected_extra.hidden = false;
+                if (protected_extra) protected_extra.hidden = false;
                 break;
             default:
                 break;
-    
         }
-    
     });
-})
+});

@@ -21,8 +21,16 @@ window.addEventListener("DOMContentLoaded", function () {
         const hasValue = values.some((value) => value.length > 0);
         if (!hasValue) return;
 
-        const tbody = targetTable.querySelector("tbody") || targetTable.appendChild(document.createElement("tbody"));
+        const tbody = targetTable.querySelector("tbody");
+        if (!tbody) return;  // Дополнительная проверка
+        
+        const rowCount = tbody.querySelectorAll("tr").length + 1;
         const row = document.createElement("tr");
+
+        // Добавлить номер ряда
+        const numCell = document.createElement("td");
+        numCell.textContent = rowCount;
+        row.appendChild(numCell);
 
         values.forEach((value) => {
             const cell = document.createElement("td");

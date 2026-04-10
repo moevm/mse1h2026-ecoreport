@@ -5,6 +5,47 @@ from reportlab.lib.units import inch
 from datetime import date
 
 
+def get_unified_table_style(fontname: str = "TimesNewRoman", fontsize: int = 12) -> TableStyle:
+    """Гнуфициранный стиль для всех таблиц отчёта.
+    
+    Параметры:
+        fontname: str - Имя шрифта
+        fontsize: int - размер шрифта
+    Возвращает: TableStyle объект"""
+    return TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)),  # серый в заголовке
+        ('TEXTCOLOR', (0, 0), (-1, -1), (0, 0, 0)),  # чёрный текст всюду
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # центровка
+        ('FONTNAME', (0, 0), (-1, -1), fontname),
+        ('FONTSIZE', (0, 0), (-1, -1), fontsize),
+        ('GRID', (0, 0), (-1, -1), 0.8, (0, 0, 0)),  # границы
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # вертикальная центровка
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ])
+
+
+def get_unified_paragraph_style(fontname: str = "TimesNewRoman", fontsize: int = 12, 
+                                 alignment=TA_CENTER, firstLineIndent: int = 0) -> ParagraphStyle:
+    """Неути для таблиц
+    
+    Параметры:
+        fontname: str - Имя шрифта
+        fontsize: int - размер шрифта
+        alignment - выравнивание
+        firstLineIndent: int - отступ первой строки"""
+    return ParagraphStyle(
+        name='table_unified',
+        fontName=fontname,
+        fontSize=fontsize,
+        alignment=alignment,
+        textColor=(0, 0, 0),
+        firstLineIndent=firstLineIndent
+    )
+
+
 def get_table_style(fontname: str = "TimesNewRoman", fontsize: int = 14) -> TableStyle:
     """Создает объект стиля таблицы для вставки в PDF отчет.
 
@@ -86,28 +127,40 @@ def _parse_coordinate(value):
 
 
 def monitored_points_table(points: list,
-                           fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
+                           fontname: str = "TimesNewRoman", fontsize: int = 12) -> Table:
     """Создает таблицу "Координаты точек наблюдения" (Таблица 2 из макета)
     Параметры:
         points: список точек наблюдения в формате [(Имя, Широта, Долгота, Тип среды, Описание), ...]
         fontname: str - Имя шрифта, зарегистрированного в ReportLab (для генерации отчета необохдимо зарегистрировать шрифт с кириллицей!!!)
         fontsize: int - размер шрифта
     Возвращает: ReportLab объект Table для включения в pdf отчет"""
-    par_style: ParagraphStyle = get_paragraph_style(fontname, fontsize)
-    par_style_justify: ParagraphStyle = get_paragraph_style(fontname, fontsize, TA_JUSTIFY)
-    header = ("№", Paragraph("Точка наблюдения", par_style), "Широта", "Долгота", "Тип среды", "Описание")
-    data = [header,]
+    header_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
+    cell_style = get_unified_paragraph_style(fontname, fontsize, alignment=TA_CENTER, firstLineIndent=0)
+    
+    header = [
+        Paragraph("№", header_style),
+        Paragraph("Точка наблюдения", header_style),
+        Paragraph("Широта", header_style),
+        Paragraph("Долгота", header_style),
+        Paragraph("Тип среды", header_style),
+        Paragraph("Описание", header_style)
+    ]
+    
+    data = [header]
     for i, point in enumerate(points):
-        data.append((
-            i + 1,
-            Paragraph(str(point[0]), par_style),
-            Paragraph(str(_parse_coordinate(point[1])), par_style),
-            Paragraph(str(_parse_coordinate(point[2])), par_style),
-            Paragraph(str(point[3]), par_style),
-            Paragraph(str(point[4]), par_style_justify)
-        ))
+        latitude = _parse_coordinate(point[1])
+        longitude = _parse_coordinate(point[2])
+        data.append([
+            Paragraph(str(i + 1), cell_style),
+            Paragraph(str(point[0]), cell_style),
+            Paragraph(str(latitude), cell_style),
+            Paragraph(str(longitude), cell_style),
+            Paragraph(str(point[3]), cell_style),
+            Paragraph(str(point[4]), cell_style)
+        ])
+    
     col_widths = [inch * 0.5, inch * 1.3, inch * 1.2, inch * 1.2, inch * 1.3]
-    return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
+    return Table(data, col_widths, style=get_unified_table_style(fontname=fontname, fontsize=fontsize))
 
 
 def lab_test_results_table(ph: float, iron: float, mn: float, no3: float, so4: float,

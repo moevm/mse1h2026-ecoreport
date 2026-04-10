@@ -216,7 +216,8 @@ class ReportGenerator:
                             str(item.get("medium_type") or item.get("type") or ""),
                             str(item.get("description") or "")
                         ))
-                    elements.append(monitored_points_table(points, fontname="TimesNewRoman", fontsize=12))
+                    if points:
+                        elements.append(monitored_points_table(points, fontname="TimesNewRoman", fontsize=12))
 
             elif line.startswith("LIST:"):
                 in_list = True

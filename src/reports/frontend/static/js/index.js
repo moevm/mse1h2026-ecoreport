@@ -33,6 +33,35 @@ async function uploadFile() {
     }
 }
 
+function readObservationPoints() {
+    const table = document.getElementById("observation_points_table");
+    const points = [];
+    if (!table) return points;
+
+    const tbody = table.tBodies[0];
+    const rows = tbody ? Array.from(tbody.rows) : Array.from(table.querySelectorAll("tr")).slice(1);
+    const parseNumber = (text) => {
+        const value = text.trim().replace(',', '.');
+        const number = Number(value);
+        return Number.isFinite(number) ? number : text.trim();
+    };
+
+    rows.forEach((row) => {
+        const cells = row.querySelectorAll("td, th");
+        if (cells.length < 5) return;
+
+        points.push({
+            observation_point: cells[0].textContent.trim(),
+            latitude: parseNumber(cells[1].textContent),
+            longitude: parseNumber(cells[2].textContent),
+            medium_type: cells[3].textContent.trim(),
+            description: cells[4].textContent.trim(),
+        });
+    });
+
+    return points;
+}
+
 async function sendForm() {
     const status = document.getElementById("report-status");
     if (status) status.innerText = "Генерация отчета...";
@@ -61,13 +90,13 @@ async function sendForm() {
 
         // Характеристика системы
         OBJECT_TYPE: document.getElementById("object-type")?.value || "город",
-        SYSTEM_TYPE: document.getElementById("system-type")?.value || "Дренажная",
+        SYSTEM_TYPE: document.getElementById("type-system")?.value || "горизонтальный",
         PIPE_MATERIAL: document.getElementById("pipe-material")?.value || "Пластик ПВХ",
         PIPE_DIAMETER: document.getElementById("pipe-diameter")?.value || "500 мм",
-        PIPE_DEPTH: document.getElementById("pipe-depth")?.value || "2 м",
-        PIPE_LENGTH: document.getElementById("pipe-length")?.value || "1000 м",
-        PIPE_INSTALL_YEAR: parseInt(document.getElementById("pipe-install-year")?.value) || 2010,
-        MANHOLE_COUNT: parseInt(document.getElementById("manhole-count")?.value) || 10,
+        PIPE_DEPTH: document.getElementById("burial-depth")?.value || "2 м",
+        PIPE_LENGTH: document.getElementById("total-length")?.value || "1000 м",
+        PIPE_INSTALL_YEAR: parseInt(document.getElementById("laying-year")?.value) || 2010,
+        MANHOLE_COUNT: parseInt(document.getElementById("wells-count")?.value) || 10,
 
         // Мониторинг
         MONITORING_POINT_COUNT: parseInt(document.getElementById("monitor-amount")?.value) || 5,
@@ -77,6 +106,7 @@ async function sendForm() {
         MEDIUM_TYPE: document.getElementById("eco-type")?.value || "Вода",
         DESCRIPTION: document.getElementById("description")?.value || "Контроль качества",
         OBSERVATION_FREQUENCY: document.getElementById("observ-period")?.value || "Ежемесячно",
+        OBSERVATION_POINTS: readObservationPoints(),
 
         // Текущие результаты (упрощенный сбор, т.к. в форме они в таблице)
         RESULTS_PH: 7.1,

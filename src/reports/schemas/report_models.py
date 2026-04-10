@@ -52,6 +52,7 @@ class ReportInputData(BaseModel):
     LONGITUDE: float = Field(..., description="Долгота точки наблюдения")
     MEDIUM_TYPE: str = Field(..., description="Тип контролируемой среды (например, вода)")
     DESCRIPTION: str = Field(..., description="Описание точки/объекта мониторинга")
+    OBSERVATION_POINTS: List[Dict[str, Any]] = Field(default_factory=list, description="Список точек наблюдения для таблицы")
     OBSERVATION_FREQUENCY: str = Field(..., description="Периодичность наблюдений")
     
     # Текущие результаты

@@ -76,6 +76,15 @@ def main_system_specifications_table(system_type: str, pipe_material: str, pipe_
 
 
 
+def _parse_coordinate(value):
+    if value is None or str(value).strip() == "":
+        return "-"
+    try:
+        return round(float(str(value).replace(",", ".")), 7)
+    except (ValueError, TypeError):
+        return str(value)
+
+
 def monitored_points_table(points: list,
                            fontname: str = "TimesNewRoman", fontsize: int = 14) -> Table:
     """Создает таблицу "Координаты точек наблюдения" (Таблица 2 из макета)
@@ -88,10 +97,16 @@ def monitored_points_table(points: list,
     par_style_justify: ParagraphStyle = get_paragraph_style(fontname, fontsize, TA_JUSTIFY)
     header = ("№", Paragraph("Точка наблюдения", par_style), "Широта", "Долгота", "Тип среды", "Описание")
     data = [header,]
-    for i in range(len(points)):
-        point = points[i]
-        data.append((i+1, Paragraph(point[0], par_style), round(point[1], 7), round(point[2], 7), Paragraph(point[3], par_style), Paragraph(point[4], par_style_justify)))
-    col_widths = [inch * 0.5, inch * 1.5, inch * 1, inch * 1, inch * 2]
+    for i, point in enumerate(points):
+        data.append((
+            i + 1,
+            Paragraph(str(point[0]), par_style),
+            Paragraph(str(_parse_coordinate(point[1])), par_style),
+            Paragraph(str(_parse_coordinate(point[2])), par_style),
+            Paragraph(str(point[3]), par_style),
+            Paragraph(str(point[4]), par_style_justify)
+        ))
+    col_widths = [inch * 0.5, inch * 1.3, inch * 1.2, inch * 1.2, inch * 1.3]
     return Table(data, col_widths, style=get_table_style(fontname=fontname, fontsize=fontsize))
 
 

@@ -1,15 +1,17 @@
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer,
-    PageBreak, ListFlowable, ListItem
+    PageBreak, ListFlowable, ListItem, Table, TableStyle
 )
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 from jinja2 import Template
 import os
+
+from reports.domain.generator_utils.report_utils.tables import monitored_points_table
 
 
 class ReportGenerator:
@@ -72,7 +74,7 @@ class ReportGenerator:
                 name='list_item',
                 parent=normal_style,
                 firstLineIndent=0,
-                leftIndent=10
+                leftIndent=0
             ))
             list_items.append(ListItem(p))
 
@@ -81,8 +83,70 @@ class ReportGenerator:
             bulletType='bullet',
             bulletFontName='TimesNewRoman',
             bulletFontSize=12,
-            leftIndent=self.FIRST_LINE_INDENT + 12.5,
+            leftIndent=10,
+            bulletIndent=0
         )
+
+    # table builder
+    def create_system_characteristics_table(self, data_dict, normal_style):
+        header_style = ParagraphStyle(
+            name='table_header',
+            parent=normal_style,
+            firstLineIndent=0,
+            alignment=TA_CENTER,
+            fontName='TimesNewRoman',
+            fontSize=12,
+            leading=14,
+            spaceAfter=4,
+            spaceBefore=4,
+            textColor=(0, 0, 0)
+        )
+
+        table_text_style = ParagraphStyle(
+            name='table_text',
+            parent=normal_style,
+            firstLineIndent=0,
+            alignment=TA_CENTER,
+            fontName='TimesNewRoman',
+            fontSize=12,
+            textColor=(0, 0, 0)
+        )
+
+        value_style = ParagraphStyle(
+            name='table_value',
+            parent=table_text_style,
+            alignment=TA_CENTER,
+            fontName='TimesNewRoman',
+            fontSize=12,
+            textColor=(0, 0, 0)
+        )
+
+        data = [
+            [Paragraph("Параметр", header_style), Paragraph("Значение", header_style), Paragraph("Единицы измерения", header_style)],
+            [Paragraph("Тип дренажной системы", table_text_style), Paragraph(str(data_dict.get("SYSTEM_TYPE", "Не указано")), value_style), "-"],
+            [Paragraph("Материал труб", table_text_style), Paragraph(str(data_dict.get("PIPE_MATERIAL", "Не указано")), value_style), "-"],
+            [Paragraph("Диаметр труб", table_text_style), Paragraph(str(data_dict.get("PIPE_DIAMETER", "Не указано")), value_style), "мм"],
+            [Paragraph("Глубина заложения", table_text_style), Paragraph(str(data_dict.get("PIPE_DEPTH", "Не указано")), value_style), "м"],
+            [Paragraph("Общая протяженность", table_text_style), Paragraph(str(data_dict.get("PIPE_LENGTH", "Не указано")), value_style), "м"],
+            [Paragraph("Год ввода в эксплуатацию", table_text_style), Paragraph(str(data_dict.get("PIPE_INSTALL_YEAR", "Не указано")), value_style), "-"],
+            [Paragraph("Количество колодцев", table_text_style), Paragraph(str(data_dict.get("MANHOLE_COUNT", "Не указано")), value_style), "шт"],
+        ]
+
+        table = Table(data, colWidths=[self.mm_to_pt(66), self.mm_to_pt(53), self.mm_to_pt(50)])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)),
+            ('TEXTCOLOR', (0, 0), (-1, -1), (0, 0, 0)),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'TimesNewRoman'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 0.8, (0, 0, 0)),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        return table
 
 
     # section reader
@@ -93,10 +157,17 @@ class ReportGenerator:
             elements.append(Paragraph("Текст раздела отсутствует.", normal_style))
             return elements
 
+        # Обработка специальных полей перед рендерингом
+        processed_data = data_dict.copy()
+        
+        # Преобразуем DOCUMENTS_GOST из списка в строку для отображения в LIST
+        if isinstance(processed_data.get("DOCUMENTS_GOST"), list):
+            processed_data["DOCUMENTS_GOST"] = "\n".join(processed_data["DOCUMENTS_GOST"])
+
         with open(file_path, "r", encoding="utf-8") as f:
             template = Template(f.read())
 
-        rendered = template.render(**data_dict)
+        rendered = template.render(**processed_data)
 
         buffer_list = []
         in_list = False
@@ -120,6 +191,32 @@ class ReportGenerator:
                     firstLineIndent=self.FIRST_LINE_INDENT
                 )
                 elements.append(Paragraph(line.replace("PARA:", "").strip(), style))
+
+            elif line.startswith("RIGHT_PARA:"):
+                style = ParagraphStyle(
+                    name='right_para',
+                    parent=normal_style,
+                    alignment=TA_RIGHT
+                )
+                elements.append(Paragraph(line.replace("RIGHT_PARA:", "").strip(), style))
+
+            elif line.startswith("TABLE:"):
+                table_type = line.replace("TABLE:", "").strip()
+                if table_type == "SYSTEM_CHARACTERISTICS":
+                    elements.append(self.create_system_characteristics_table(data_dict, normal_style))
+                elif table_type == "OBSERVATION_POINTS":
+                    points = []
+                    for item in data_dict.get("OBSERVATION_POINTS", []):
+                        if not isinstance(item, dict):
+                            continue
+                        points.append((
+                            str(item.get("observation_point") or item.get("name") or ""),
+                            item.get("latitude") if item.get("latitude") is not None else item.get("lat") or 0,
+                            item.get("longitude") if item.get("longitude") is not None else item.get("lon") or 0,
+                            str(item.get("medium_type") or item.get("type") or ""),
+                            str(item.get("description") or "")
+                        ))
+                    elements.append(monitored_points_table(points, fontname="TimesNewRoman", fontsize=12))
 
             elif line.startswith("LIST:"):
                 in_list = True

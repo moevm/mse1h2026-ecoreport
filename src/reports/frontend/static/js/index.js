@@ -239,6 +239,7 @@ window.addEventListener("load", function () {
     attachValidationRule("laying-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
     attachValidationRule("wells-count", validatePositiveInteger, "Введите целое положительное число");
     attachValidationRule("monitor-amount", validatePositiveInteger, "Введите целое положительное число");
+    attachValidationRule("observation-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
 
     document.addEventListener("input", function (event) {
         const target = event.target;

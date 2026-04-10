@@ -157,11 +157,11 @@ window.addEventListener("DOMContentLoaded", function () {
 
     // Нормативы для сравнения
     const standards = {
-        "pH": { min: 6, max: 9, unit: "-" },
+        "pH": { min: 6.00, max: 9.00, unit: "-" },
         "Железо": { min: 0.27, max: 0.33, unit: "мг/л" },
         "Марганец": { min: 0.085, max: 0.115, unit: "мг/л" },
         "Нитраты": { min: 38.25, max: 51.75, unit: "мг/л" },
-        "Сульфаты": { min: 435, max: 565, unit: "мг/л" }
+        "Сульфаты": { min: 435.00, max: 565.00, unit: "мг/л" }
     };
 
     resultButtons.forEach((button) => {

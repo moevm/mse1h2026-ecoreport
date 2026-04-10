@@ -202,6 +202,9 @@ function validateMetadataFields() {
         { id: "burial-depth", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
         { id: "laying-year", validator: validateYear, hint: `Введите год не больше ${new Date().getFullYear()}` },
         { id: "wells-count", validator: validatePositiveInteger, hint: "Введите целое положительное число" },
+        { id: "org-phone", validator: validatePhone, hint: "Введите корректный номер телефона" },
+        { id: "email", validator: validateEmail, hint: "Введите корректный email" },
+        { id: "report-date", validator: validateReportDate, hint: "Дата не может быть позже сегодняшнего дня" },
         { id: "monitor-amount", validator: validatePositiveInteger, hint: "Введите целое положительное число" }
     ];
 
@@ -231,6 +234,68 @@ function validateAllForm() {
     return valid;
 }
 
+
+function validateEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function validatePhone(value) {
+    const digits = value.replace(/\D/g, "").replace(/^8/, "7");
+    return digits.length === 11 && digits.startsWith("7");
+}
+
+function validateReportDate(value) {
+    if (!value) return false;
+
+    // строго ISO формат
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+    const date = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return date <= today;
+}
+
+function formatPhone(value) {
+    const digits = value.replace(/\D/g, "").replace(/^8/, "7").slice(0, 11);
+
+    let result = "+7";
+
+    if (digits.length > 1) {
+        const d = digits.slice(1);
+
+        if (d.length > 0) result += " (" + d.slice(0, 3);
+        if (d.length >= 3) result += ") ";
+
+        if (d.length >= 4) result += d.slice(3, 6);
+        if (d.length >= 6) result += "-" + d.slice(6, 8);
+        if (d.length >= 8) result += "-" + d.slice(8, 10);
+    }
+
+    return result;
+}
+
+window.addEventListener("load", function () {
+    const phoneInput = document.getElementById("org-phone");
+    if (!phoneInput) return;
+
+    phoneInput.addEventListener("input", function () {
+        const start = phoneInput.selectionStart;
+
+        const oldValue = phoneInput.value;
+        const newValue = formatPhone(oldValue);
+
+        phoneInput.value = newValue;
+
+        // нормальный возврат курсора (упрощённый, но рабочий)
+        const diff = newValue.length - oldValue.length;
+        const newPos = Math.max(0, start + diff);
+
+        phoneInput.setSelectionRange(newPos, newPos);
+    });
+});
+
 window.addEventListener("load", function () {
     attachValidationRule("groundwater-level", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
     attachValidationRule("pipe-diameter", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
@@ -240,7 +305,10 @@ window.addEventListener("load", function () {
     attachValidationRule("wells-count", validatePositiveInteger, "Введите целое положительное число");
     attachValidationRule("monitor-amount", validatePositiveInteger, "Введите целое положительное число");
     attachValidationRule("observation-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
-
+    attachValidationRule("org-phone", validatePhone, "Введите номер в формате +7 (999) 999-99-99");
+    attachValidationRule("email",validateEmail,"Введите корректный email (example@mail.com)");
+    attachValidationRule("report-date",validateReportDate,"Некорректный формат даты");
+   
     document.addEventListener("input", function (event) {
         const target = event.target;
         if (!(target instanceof HTMLInputElement)) return;
@@ -510,7 +578,7 @@ async function sendForm() {
         ORGANIZATION_EMAIL: document.getElementById("email")?.value || "Email",
         RESPONSIBLE_NAME: document.getElementById("resp-name")?.value || "Ответственный",
         RESPONSIBLE_POSITION: document.getElementById("job-title")?.value || "Должность",
-        REPORT_DATE: document.getElementById("report-date")?.value || new Date().toLocaleDateString()
+        REPORT_DATE: document.getElementById("report-date")?.value || new Date().toISOString().split("T")[0]
     };
 
     console.log("=== FINAL CHECK BEFORE SENDING ===");

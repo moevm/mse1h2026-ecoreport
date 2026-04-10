@@ -2,6 +2,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer,
     PageBreak, ListFlowable, ListItem, Table, TableStyle
 )
+from datetime import datetime
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
@@ -10,13 +11,11 @@ from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 from jinja2 import Template
 import os
-
 from reports.domain.generator_utils.report_utils.tables import (
     monitored_points_table,
     lab_test_results_table,
     observation_dynamics_table
 )
-
 
 class ReportGenerator:
     def __init__(self):
@@ -38,6 +37,17 @@ class ReportGenerator:
         return mm * 2.83464567
 
 
+    def format_date_ddmmyyyy(self, value):
+        if not value:
+            return ""
+
+        try:
+            # ожидаем формат от фронта: YYYY-MM-DD
+            dt = datetime.strptime(value, "%Y-%m-%d")
+            return dt.strftime("%d.%m.%Y")
+        except Exception:
+            return value
+    
     # header/footer
     def header_footer_title(self, canvas, doc, full_name, short_name):
         canvas.saveState()
@@ -301,6 +311,11 @@ class ReportGenerator:
 
     def generate(self, user_data) -> bytes:
         buffer = BytesIO()
+
+        user_data = user_data.copy()
+        user_data["REPORT_DATE"] = self.format_date_ddmmyyyy(
+            user_data.get("REPORT_DATE")
+        )
 
         doc = SimpleDocTemplate(
             buffer,

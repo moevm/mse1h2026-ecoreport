@@ -2,8 +2,17 @@ from reportlab.platypus import Table, TableStyle, Paragraph
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
-from datetime import date
+from datetime import datetime, date
 
+def format_date(value):
+    try:
+        if isinstance(value, (datetime, date)):
+            return value.strftime("%d.%m.%Y")
+        # если строка типа 2026-04-03
+        dt = datetime.strptime(str(value), "%Y-%m-%d")
+        return dt.strftime("%d.%m.%Y")
+    except Exception:
+        return str(value)
 
 def get_unified_table_style(fontname: str = "TimesNewRoman", fontsize: int = 12) -> TableStyle:
     """Гнуфициранный стиль для всех таблиц отчёта.
@@ -163,10 +172,16 @@ def monitored_points_table(points: list,
     return Table(data, col_widths, style=get_unified_table_style(fontname=fontname, fontsize=fontsize))
 
 
+def format_number(value):
+    try:
+        return f"{float(value):.2f}"
+    except (TypeError, ValueError):
+        return ""
+    
 def lab_test_results_table(results: list, fontname: str = "TimesNewRoman", fontsize: int = 12) -> Table:
     """Создает таблицу "Результаты лабораторных анализов" (Таблица 3 из макета)
     Параметры:
-        results: list - список результатов в формате [{"indicator": "pH", "standard": "6-9", "result": 7.2, "unit": "-", "compliance": "да"}, ...]
+        results: list - список результатов в формате [{"indicator": "pH", "standard": "6.00 - 9.00", "result": 7.2, "unit": "-", "compliance": "да"}, ...]
         fontname: str - Имя шрифта
         fontsize: int - размер шрифта
     Возвращает: ReportLab объект Table для включения в pdf отчет"""
@@ -185,7 +200,7 @@ def lab_test_results_table(results: list, fontname: str = "TimesNewRoman", fonts
     for result in results:
         indicator = str(result.get("indicator", ""))
         standard = str(result.get("standard", ""))
-        result_val = str(result.get("result", ""))
+        result_val = format_number(result.get("result", ""))
         unit = str(result.get("unit", "-"))
         compliance = str(result.get("compliance", ""))
         
@@ -200,6 +215,8 @@ def lab_test_results_table(results: list, fontname: str = "TimesNewRoman", fonts
     col_widths = [inch * 1.3, inch * 1.1, inch * 1.1, inch * 1.2, inch * 1.3]
     return Table(data, col_widths, style=get_unified_table_style(fontname=fontname, fontsize=fontsize))
 
+
+NUMERIC_FIELDS = {"pH", "iron", "manganese", "nitrates", "sulfates"}
 
 def observation_dynamics_table(dynamics: list, fontname: str = "TimesNewRoman", fontsize: int = 12) -> Table:
     """Создает таблицу "Таблица динамики наблюдений" (Таблица 4 из макета)
@@ -247,9 +264,14 @@ def observation_dynamics_table(dynamics: list, fontname: str = "TimesNewRoman", 
         row = []
         for key, _ in columns:
             if key == "date":
-                value = str(entry.get("date", ""))
+                value = format_date(entry.get("date", ""))
+            
+            elif key in NUMERIC_FIELDS:
+                value = format_number(entry.get(key, ""))
+            
             else:
                 value = str(entry.get(key, ""))
+            
             row.append(Paragraph(value, cell_style))
         data.append(row)
 

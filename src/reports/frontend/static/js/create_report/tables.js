@@ -225,10 +225,19 @@ window.addEventListener("DOMContentLoaded", function () {
         // Норматив
         const standardCell = document.createElement("td");
         const standardInput = document.createElement("input");
+
         standardInput.type = "text";
-        standardInput.value = std ? `${std.min}-${std.max}` : "";
+        standardInput.readOnly = true;
         standardInput.dataset.field = "Норматив";
-        standardInput.readOnly = true; // Норматив только для чтения
+
+        if (std) {
+            const min = std.min.toFixed(2);
+            const max = std.max.toFixed(2);
+            standardInput.value = `${min} - ${max}`;
+        } else {
+            standardInput.value = "";
+        }
+
         standardCell.appendChild(standardInput);
         row.appendChild(standardCell);
 

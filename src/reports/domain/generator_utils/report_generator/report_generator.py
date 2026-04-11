@@ -18,6 +18,7 @@ from reports.domain.generator_utils.report_utils.tables import (
 )
 
 class ReportGenerator:
+    """ Генератор PDF-отчетов """
     def __init__(self):
         self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -32,23 +33,22 @@ class ReportGenerator:
         self.BOTTOM_MARGIN = self.mm_to_pt(20)
         self.FIRST_LINE_INDENT = self.mm_to_pt(12.5)
 
-
+    # конвертация мм в пункты 
     def mm_to_pt(self, mm):
         return mm * 2.83464567
 
-
+    # преобразование даты из формата YYYY-MM-DD в DD.MM.YYYY
     def format_date_ddmmyyyy(self, value):
         if not value:
             return ""
 
         try:
-            # ожидаем формат от фронта: YYYY-MM-DD
             dt = datetime.strptime(value, "%Y-%m-%d")
             return dt.strftime("%d.%m.%Y")
         except Exception:
             return value
     
-    # header/footer
+    # верхний/нижний колонтитулы на титульной странице
     def header_footer_title(self, canvas, doc, full_name, short_name):
         canvas.saveState()
         width, height = A4
@@ -72,6 +72,7 @@ class ReportGenerator:
 
         canvas.restoreState()
 
+    # нижний колонтитул на остальных страницах (нумерация страниц)
     def header_footer_main(self, canvas, doc):
         canvas.saveState()
         if canvas.getPageNumber() > 1:
@@ -80,7 +81,7 @@ class ReportGenerator:
             canvas.drawCentredString(width / 2, self.mm_to_pt(10), str(canvas.getPageNumber()))
         canvas.restoreState()
 
-    # list builder
+    # создание маркированных списков
     def create_list(self, items, normal_style):
         list_items = []
 
@@ -102,8 +103,9 @@ class ReportGenerator:
             bulletIndent=0
         )
 
-    # table builder
+    # создание таблицы характеристики системы
     def create_system_characteristics_table(self, data_dict, normal_style):
+        # стиль для заголовков таблицы
         header_style = ParagraphStyle(
             name='table_header',
             parent=normal_style,
@@ -117,6 +119,7 @@ class ReportGenerator:
             textColor=(0, 0, 0)
         )
 
+        # стиль для текста в ячейках
         table_text_style = ParagraphStyle(
             name='table_text',
             parent=normal_style,
@@ -127,6 +130,7 @@ class ReportGenerator:
             textColor=(0, 0, 0)
         )
 
+        # стиль для значений в ячейках
         value_style = ParagraphStyle(
             name='table_value',
             parent=table_text_style,
@@ -136,6 +140,7 @@ class ReportGenerator:
             textColor=(0, 0, 0)
         )
 
+        # данные таблицы
         data = [
             [Paragraph("Параметр", header_style), Paragraph("Значение", header_style), Paragraph("Единицы измерения", header_style)],
             [Paragraph("Тип дренажной системы", table_text_style), Paragraph(str(data_dict.get("SYSTEM_TYPE", "Не указано")), value_style), "-"],
@@ -147,7 +152,10 @@ class ReportGenerator:
             [Paragraph("Количество колодцев", table_text_style), Paragraph(str(data_dict.get("MANHOLE_COUNT", "Не указано")), value_style), "шт"],
         ]
 
+        # создание таблицы с заданными данными и стилем
         table = Table(data, colWidths=[self.mm_to_pt(66), self.mm_to_pt(53), self.mm_to_pt(50)])
+        
+        # применение стиля к таблице
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)),
             ('TEXTCOLOR', (0, 0), (-1, -1), (0, 0, 0)),
@@ -163,7 +171,9 @@ class ReportGenerator:
         ]))
         return table
 
+    # проверка наличия данных для раздела "Характеристики системы"
     def has_system_characteristics(self, data_dict):
+        # проверка наличия положительных числовых значений
         def has_positive_number(value):
             if value is None:
                 return False
@@ -179,6 +189,7 @@ class ReportGenerator:
         if any(str(v).strip() for v in text_values):
             return True
 
+        # проверка числовых полей
         numeric_values = [
             data_dict.get('PIPE_DIAMETER'),
             data_dict.get('PIPE_DEPTH'),
@@ -195,12 +206,15 @@ class ReportGenerator:
 
         return False
 
+    # создание таблиц для разделов "Контрольные точки", "Результаты лабораторных исследований" и "Динамика наблюдений"
     def create_table_element(self, table_type, data_dict, normal_style):
+        # таблица "Характеристики системы"
         if table_type == "SYSTEM_CHARACTERISTICS":
             if self.has_system_characteristics(data_dict):
                 return self.create_system_characteristics_table(data_dict, normal_style)
             return None
 
+        # таблица "Контрольные точки"
         if table_type == "OBSERVATION_POINTS":
             points = []
             for item in data_dict.get("OBSERVATION_POINTS", []):
@@ -215,10 +229,12 @@ class ReportGenerator:
                 ))
             return monitored_points_table(points, fontname="TimesNewRoman", fontsize=12) if points else None
 
+        # таблица "Результаты лабораторных исследований"
         if table_type == "TEST_RESULTS":
             results = data_dict.get("TEST_RESULTS", [])
             return lab_test_results_table(results, fontname="TimesNewRoman", fontsize=12) if results else None
 
+        # таблица "Динамика наблюдений"
         if table_type == "OBSERVATION_DYNAMICS":
             dynamics = data_dict.get("OBSERVATION_DYNAMICS", [])
             return observation_dynamics_table(dynamics, fontname="TimesNewRoman", fontsize=12) if dynamics else None
@@ -226,7 +242,7 @@ class ReportGenerator:
         return None
 
 
-    # section reader
+    # чтение и обработка шаблонов разделов
     def read_section(self, file_path, title_style, normal_style, data_dict):
         elements = []
 
@@ -234,10 +250,10 @@ class ReportGenerator:
             elements.append(Paragraph("Текст раздела отсутствует", normal_style))
             return elements
 
-        # Обработка специальных полей перед рендерингом
+        # обработка специальных полей перед рендерингом
         processed_data = data_dict.copy()
         
-        # Преобразуем DOCUMENTS_GOST из списка в строку для отображения в LIST
+        # преобразование DOCUMENTS_GOST из списка в строку для отображения в LIST
         if isinstance(processed_data.get("DOCUMENTS_GOST"), list):
             processed_data["DOCUMENTS_GOST"] = "\n".join(processed_data["DOCUMENTS_GOST"])
 
@@ -309,14 +325,17 @@ class ReportGenerator:
 
         return elements
 
+    # основная функция генерации отчета
     def generate(self, user_data) -> bytes:
         buffer = BytesIO()
 
+        # форматирование даты
         user_data = user_data.copy()
         user_data["REPORT_DATE"] = self.format_date_ddmmyyyy(
             user_data.get("REPORT_DATE")
         )
 
+        # создание документа
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
@@ -326,6 +345,7 @@ class ReportGenerator:
             bottomMargin=self.BOTTOM_MARGIN
         )
 
+        # стиль для заголовков
         title_style = ParagraphStyle(
             name="title",
             fontName="TimesNewRoman",
@@ -335,6 +355,7 @@ class ReportGenerator:
             textColor=(0, 0, 0)
         )
 
+        # стиль для основного текста
         normal_style = ParagraphStyle(
             name="normal",
             fontName="TimesNewRoman",

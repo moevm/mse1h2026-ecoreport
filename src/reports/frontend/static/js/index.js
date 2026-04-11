@@ -33,6 +33,7 @@ async function uploadFile() {
     }
 }
 
+// функция для установки ошибки поля
 function setFieldError(input, message) {
     if (!input) return;
     input.classList.add("invalid-field");
@@ -48,6 +49,7 @@ function setFieldError(input, message) {
     error.textContent = message;
 }
 
+// функция для очистки ошибок поля
 function clearFieldError(input) {
     if (!input) return;
     input.classList.remove("invalid-field");
@@ -59,15 +61,18 @@ function clearFieldError(input) {
     }
 }
 
+// функция для валидации положительного числа с двумя десятичными знаками
 function validatePositiveTwoDecimals(value) {
     const normalized = value.trim().replace(',', '.');
     return /^\d+\.\d{2}$/.test(normalized) && parseFloat(normalized) > 0;
 }
 
+// функция для валидации целого положительного числа
 function validatePositiveInteger(value) {
     return /^[1-9]\d*$/.test(value.trim());
 }
 
+// функция для валидации года (целое положительное число, не больше текущего года)
 function validateYear(value) {
     const normalized = value.trim();
     const year = parseInt(normalized, 10);
@@ -75,6 +80,7 @@ function validateYear(value) {
     return /^[1-9]\d*$/.test(normalized) && year <= currentYear;
 }
 
+// функция для валидации даты (не в будущем)
 function validateDateNotFuture(value) {
     if (!value) return false;
     const date = new Date(value);
@@ -83,6 +89,7 @@ function validateDateNotFuture(value) {
     return !Number.isNaN(date.getTime()) && date <= today;
 }
 
+// функция для валидации всех полей формы с помощью заданных правил
 function validateFieldInput(field, validator, hint) {
     if (!field) return true;
     const value = field.value.trim();
@@ -99,12 +106,14 @@ function validateFieldInput(field, validator, hint) {
     return valid;
 }
 
+// функция для привязки валидации к полю по его ID
 function attachValidationRule(id, validator, hint) {
     const field = document.getElementById(id);
     if (!field) return;
     field.addEventListener("input", () => validateFieldInput(field, validator, hint));
 }
 
+// функция для валидации полей результатов тестов в таблице
 function validateTestResultsInput(field) {
     if (!field) return true;
     const value = field.value.trim();
@@ -120,6 +129,7 @@ function validateTestResultsInput(field) {
     return true;
 }
 
+// функция для валидации полей динамики наблюдений в таблице
 function validateObservationDynamicsInput(field) {
     if (!field) return true;
     const fieldName = field.dataset.field;
@@ -150,6 +160,7 @@ function validateObservationDynamicsInput(field) {
     return true;
 }
 
+// общая функция для валидации всех полей таблицы результатов тестов
 function validateTestResultsTable() {
     const table = document.getElementById("test_results_table");
     if (!table) return true;
@@ -163,6 +174,7 @@ function validateTestResultsTable() {
     return valid;
 }
 
+// общая функция для валидации всех полей таблицы динамики наблюдений
 function validateObservationDynamicsTable() {
     const table = document.getElementById("observation_dynamics_table");
     if (!table) return true;
@@ -194,6 +206,7 @@ function validateObservationDynamicsTable() {
     return valid;
 }
 
+// функция для валидации полей метаданных отчета
 function validateMetadataFields() {
     const rules = [
         { id: "groundwater-level", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
@@ -202,8 +215,9 @@ function validateMetadataFields() {
         { id: "burial-depth", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
         { id: "laying-year", validator: validateYear, hint: `Введите год не больше ${new Date().getFullYear()}` },
         { id: "wells-count", validator: validatePositiveInteger, hint: "Введите целое положительное число" },
+        { id: "report-year", validator: validateYear, hint: `Введите год не больше ${new Date().getFullYear()}` },
         { id: "org-phone", validator: validatePhone, hint: "Введите корректный номер телефона" },
-        { id: "email", validator: validateEmail, hint: "Введите корректный email" },
+        { id: "org-email", validator: validateEmail, hint: "Введите корректный email" },
         { id: "report-date", validator: validateReportDate, hint: "Дата не может быть позже сегодняшнего дня" },
         { id: "monitor-amount", validator: validatePositiveInteger, hint: "Введите целое положительное число" }
     ];
@@ -218,6 +232,7 @@ function validateMetadataFields() {
     return valid;
 }
 
+// функция для общей валидации всех полей формы перед отправкой
 function validateAllForm() {
     let valid = true;
     valid = validateMetadataFields() && valid;
@@ -234,16 +249,18 @@ function validateAllForm() {
     return valid;
 }
 
-
+// функция для валидации почты
 function validateEmail(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+// функция для валидации телефона
 function validatePhone(value) {
     const digits = value.replace(/\D/g, "").replace(/^8/, "7");
     return digits.length === 11 && digits.startsWith("7");
 }
 
+// функция для валидации даты отчета (не в будущем)
 function validateReportDate(value) {
     if (!value) return false;
 
@@ -257,6 +274,7 @@ function validateReportDate(value) {
     return date <= today;
 }
 
+// функция для форматирования телефонного номера в процессе ввода
 function formatPhone(value) {
     const digits = value.replace(/\D/g, "").replace(/^8/, "7").slice(0, 11);
 
@@ -304,9 +322,9 @@ window.addEventListener("load", function () {
     attachValidationRule("laying-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
     attachValidationRule("wells-count", validatePositiveInteger, "Введите целое положительное число");
     attachValidationRule("monitor-amount", validatePositiveInteger, "Введите целое положительное число");
-    attachValidationRule("observation-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
+    attachValidationRule("report-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
     attachValidationRule("org-phone", validatePhone, "Введите номер в формате +7 (999) 999-99-99");
-    attachValidationRule("email",validateEmail,"Введите корректный email (example@mail.com)");
+    attachValidationRule("org-email",validateEmail,"Введите корректный email (example@mail.com)");
     attachValidationRule("report-date",validateReportDate,"Некорректный формат даты");
    
     document.addEventListener("input", function (event) {
@@ -329,6 +347,7 @@ window.addEventListener("load", function () {
     });
 });
 
+// функция для чтения данных из таблицы пунктов наблюдения
 function readObservationPoints() {
     const table = document.getElementById("observation_points_table");
     const points = [];
@@ -337,12 +356,13 @@ function readObservationPoints() {
         return points;
     }
 
-    // Получаем все строки в таблице (не только из tbody)
+    // все строки в таблице (не только из tbody)
     const rows = Array.from(table.querySelectorAll("tr")).filter(row => {
         const cells = row.querySelectorAll("td");
-        return cells.length >= 5; // Пропускаем заголовки
+        return cells.length >= 5; // пропуск заголовков и пустых строк
     });
 
+    // парсинг числовых значений с учетом возможных запятых и пробелов
     const parseNumber = (text) => {
         const value = text.trim().replace(',', '.');
         const number = Number(value);
@@ -369,6 +389,7 @@ function readObservationPoints() {
     return points;
 }
 
+// функция для чтения данных из таблицы результатов тестов
 function readTestResults() {
     const table = document.getElementById("test_results_table");
     const results = [];
@@ -390,10 +411,9 @@ function readTestResults() {
         const indicator = row.dataset.indicator;
         if (!indicator) {
             console.log("Row skipped - no indicator:", row);
-            return; // Пропускаем строки без indicator
+            return; // пропуск строк без indicator
         }
-        
-        // Ищем input элементы с data-field
+         
         const inputs = row.querySelectorAll("input[data-field]");
         console.log(`Row for indicator "${indicator}" has ${inputs.length} inputs`);
         
@@ -433,6 +453,7 @@ function readTestResults() {
     return results;
 }
 
+// функция для чтения данных из таблицы динамики наблюдений
 function readObservationDynamics() {
     const table = document.getElementById("observation_dynamics_table");
     const dynamics = [];
@@ -459,7 +480,6 @@ function readObservationDynamics() {
     };
 
     rows.forEach((row, rowIndex) => {
-        // Ищем input элементы с data-field
         const inputs = row.querySelectorAll("input[data-field]");
         console.log(`Row ${rowIndex} has ${inputs.length} inputs`);
         
@@ -516,39 +536,39 @@ async function sendForm() {
     const status = document.getElementById("report-status");
     if (status) status.innerText = "Генерация отчета...";
 
-    // Сбор данных из всех известных полей по их ID (на основе ReportInputData)
+    // сбор данных из всех известных полей по их ID
     const data = {
-        // Информация об объекте
+        // информация об объекте
         FULL_OBJECT_NAME: document.getElementById("full-object-name")?.value || "Объект по умолчанию",
         SHORT_OBJECT_NAME: document.getElementById("short-object-name")?.value || "Объект",
-        YEAR: parseInt(document.getElementById("observation-year")?.value) || 2026,
+        YEAR: parseInt(document.getElementById("report-year")?.value) || 2026,
         ORGANIZATION_NAME: document.getElementById("organization-name")?.value || "Организация",
-        REGION: document.getElementById("org-region")?.value || "Регион",
+        REGION: document.getElementById("region")?.value || "Регион",
 
-        // Нормативные документы (из localStorage, как делает gost.js)
+        // нормативные документы (из localStorage)
         DOCUMENTS_GOST: JSON.parse(localStorage.getItem("gost_list") || '[]'),
 
-        // Природные условия
+        // природные условия
         RELIEF_TYPE: document.getElementById("relief-type")?.value || "Равнинный",
         SOIL_TYPE: document.getElementById("soil-type")?.value || "Суглинок",
-        GROUNDWATER_LEVEL: document.getElementById("groundwater-level")?.value.trim() || "",
+        GROUNDWATER_LEVEL: (document.getElementById("groundwater-level")?.value.trim() || "").replace(',', '.'),
         CLIMATE_ZONE: document.getElementById("climate-zone")?.value || "Умеренный",
 
-        // Координаты объекта
+        // координаты объекта
         COORDINATES_LATITUDE: parseFloat(document.getElementById("coord-n")?.value) || 55.75,
         COORDINATES_LONGITUDE: parseFloat(document.getElementById("coord-e")?.value) || 37.61,
 
-        // Характеристика системы
+        // характеристика системы
         OBJECT_TYPE: document.getElementById("object-type")?.value || "город",
         SYSTEM_TYPE: document.getElementById("type-system")?.value || "",
         PIPE_MATERIAL: document.getElementById("pipe-material")?.value.trim() || "",
-        PIPE_DIAMETER: document.getElementById("pipe-diameter")?.value.trim() || "",
-        PIPE_DEPTH: document.getElementById("burial-depth")?.value.trim() || "",
-        PIPE_LENGTH: document.getElementById("total-length")?.value.trim() || "",
+        PIPE_DIAMETER: (document.getElementById("pipe-diameter")?.value.trim() || "").replace(',', '.'),
+        PIPE_DEPTH: (document.getElementById("burial-depth")?.value.trim() || "").replace(',', '.'),
+        PIPE_LENGTH: (document.getElementById("total-length")?.value.trim() || "").replace(',', '.'),
         PIPE_INSTALL_YEAR: parseInt(document.getElementById("laying-year")?.value) || 0,
         MANHOLE_COUNT: parseInt(document.getElementById("wells-count")?.value) || 0,
 
-        // Мониторинг
+        // мониторинг
         MONITORING_POINT_COUNT: parseInt(document.getElementById("monitor-amount")?.value) || 0,
         OBSERVATION_POINT: document.getElementById("observ-point")?.value || "Точка А",
         LATITUDE: parseFloat(document.getElementById("observ-coord-n")?.value) || 55.756,
@@ -558,30 +578,30 @@ async function sendForm() {
         OBSERVATION_FREQUENCY: document.getElementById("observ-period")?.value || "Ежемесячно",
         OBSERVATION_POINTS: readObservationPoints(),
 
-        // Текущие результаты (упрощенный сбор, т.к. в форме они в таблице)
+        // текущие результаты (упрощенный сбор, т.к. в форме они в таблице)
         RESULTS_PH: 7.1,
         RESULTS_IRON: 0.2,
         RESULTS_MANGANESE: 0.05,
         RESULTS_NITRATES: 10,
         RESULTS_SULFATES: 15,
 
-        // Результаты лабораторных анализов
+        // результаты лабораторных анализов
         TEST_RESULTS: readTestResults(),
 
-        // Динамика
+        // динамика
         RESULTS_DYNAMIC: [],
         OBSERVATION_DYNAMICS: readObservationDynamics(),
 
-        // Контактная информация
-        ORGANIZATION_ADDRESS: document.getElementById("organization-adress")?.value || "Адрес",
+        // контактная информация
+        ORGANIZATION_ADDRESS: document.getElementById("org-address")?.value || "Адрес",
         ORGANIZATION_PHONE: document.getElementById("org-phone")?.value || "Телефон",
-        ORGANIZATION_EMAIL: document.getElementById("email")?.value || "Email",
+        ORGANIZATION_EMAIL: document.getElementById("org-email")?.value || "Email",
         RESPONSIBLE_NAME: document.getElementById("resp-name")?.value || "Ответственный",
-        RESPONSIBLE_POSITION: document.getElementById("job-title")?.value || "Должность",
+        RESPONSIBLE_POSITION: document.getElementById("resp-pos")?.value || "Должность",
         REPORT_DATE: document.getElementById("report-date")?.value || new Date().toISOString().split("T")[0]
     };
 
-    console.log("=== FINAL CHECK BEFORE SENDING ===");
+    console.log("FINAL CHECK BEFORE SENDING");
     console.log("TEST_RESULTS:", data.TEST_RESULTS);
     console.log("OBSERVATION_DYNAMICS:", data.OBSERVATION_DYNAMICS);
 
@@ -623,7 +643,7 @@ window.addEventListener('load', function () {
     const urban_extra = document.getElementById("urban-extra");
     const protected_extra = document.getElementById("protected-extra");
     
-    if (!site_type_input) return; // Защита от null
+    if (!site_type_input) return; // защита от null
     
     site_type_input.addEventListener('input', function() {
         if (bog_extra) bog_extra.hidden = true;

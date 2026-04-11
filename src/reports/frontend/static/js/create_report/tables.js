@@ -22,12 +22,12 @@ window.addEventListener("DOMContentLoaded", function () {
         if (!hasValue) return;
 
         const tbody = targetTable.querySelector("tbody");
-        if (!tbody) return;  // Дополнительная проверка
+        if (!tbody) return;  // дополнительная проверка на наличие tbody
         
         const rowCount = tbody.querySelectorAll("tr").length + 1;
         const row = document.createElement("tr");
 
-        // Добавлить номер ряда
+        // добавление номера строки в первую ячейку
         const numCell = document.createElement("td");
         numCell.textContent = rowCount;
         row.appendChild(numCell);
@@ -155,7 +155,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
     const tbody = resultsTable.querySelector("tbody") || resultsTable.appendChild(document.createElement("tbody"));
 
-    // Нормативы для сравнения
+    // нормативы для сравнения
     const standards = {
         "pH": { min: 6.00, max: 9.00, unit: "-" },
         "Железо": { min: 0.27, max: 0.33, unit: "мг/л" },
@@ -198,6 +198,7 @@ window.addEventListener("DOMContentLoaded", function () {
         return data;
     }
 
+    // функция для сравнения результата с нормативом
     function compareWithStandard(indicator, resultValue) {
         const std = standards[indicator];
         if (!std) return "нет данных";
@@ -205,7 +206,6 @@ window.addEventListener("DOMContentLoaded", function () {
         const result = parseFloat(resultValue);
         if (isNaN(result)) return "";
         
-        // Все показатели теперь имеют диапазон (min/max)
         if (std.min !== undefined && std.max !== undefined) {
             return result >= std.min && result <= std.max ? "да" : "нет";
         }
@@ -222,7 +222,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
         const std = standards[indicator];
         
-        // Норматив
+        // норматив
         const standardCell = document.createElement("td");
         const standardInput = document.createElement("input");
 
@@ -241,7 +241,7 @@ window.addEventListener("DOMContentLoaded", function () {
         standardCell.appendChild(standardInput);
         row.appendChild(standardCell);
 
-        // Результат
+        // результат
         const resultCell = document.createElement("td");
         const resultInput = document.createElement("input");
         resultInput.type = "text";
@@ -251,7 +251,7 @@ window.addEventListener("DOMContentLoaded", function () {
         resultCell.appendChild(resultInput);
         row.appendChild(resultCell);
 
-        // Единицы измерения
+        // единицы измерения
         const unitCell = document.createElement("td");
         const unitInput = document.createElement("input");
         unitInput.type = "text";
@@ -261,7 +261,7 @@ window.addEventListener("DOMContentLoaded", function () {
         unitCell.appendChild(unitInput);
         row.appendChild(unitCell);
 
-        // Соответствие
+        // соответствие
         const complianceCell = document.createElement("td");
         const complianceInput = document.createElement("input");
         complianceInput.type = "text";

@@ -16,7 +16,7 @@ RIGHT_PARA: Таблица 3. Результаты лабораторных ан
 
 TABLE: TEST_RESULTS
 
-RIGHT_PARA: Таблица 4. Таблица динамики наблюдений
+RIGHT_PARA: Таблица 4. Динамика наблюдений
 
 TABLE: OBSERVATION_DYNAMICS
 

@@ -24,10 +24,10 @@ window.addEventListener("DOMContentLoaded", function () {
 		});
 	});
 
-	// Обработка поля "Другое"
+	// обработка поля "Другое"
 	const otherInput = document.getElementById("gost-other");
 	if (otherInput) {
-		// Загрузить сохраненное значение
+		// загрузка сохраненного значения
 		const savedOther = localStorage.getItem("gost_other") || "";
 		otherInput.value = savedOther;
 		if (savedOther.trim()) {
@@ -36,7 +36,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
 		otherInput.addEventListener("input", function() {
 			const value = this.value.trim();
-			// Удалить предыдущее значение из списка
+			// удаление предыдущего значения из списка, если оно было
 			const prev = localStorage.getItem("gost_other") || "";
 			if (prev.trim()) {
 				gost_list.delete(prev.trim());

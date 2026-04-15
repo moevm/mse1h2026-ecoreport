@@ -3,14 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/documents.css') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/topbar.css') }}">
     <link rel="icon" href="{{ request.url_for('static', path='images/eco-house.png') }}" type="image/png">
     <title>Документы</title>
 </head>
 <body>
     {% include "topbar.html" %}
-    <main class="page-content">
-        <h1>Документы</h1>
+    <main class="page">
+        <section class="page__container">
+            <h1 class="title">Отчеты</h1>
+
+            <section class="list">
+                {% if reports %}
+                    {% for report in reports %}
+                        <article class="card">
+                            <div class="card__summary">
+                                <div class="card__summary_info">
+                                    <div>
+                                        <h2 class="card__title">{{ report.title }}</h2>
+                                        <p class="card__date">Дата создания: {{ report.last_modified }}</p>
+                                    </div>
+                                    <div class="card__meta">
+                                        <p>Название организации</p>
+                                        <p>Название объекта</p>
+                                    </div>
+                                </div>
+                                <p class="card__description">Краткое описание отчета...</p>
+                            </div>
+
+                            <aside class="card__side">
+                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.pdf) }}">Скачать PDF</a>
+                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.docx) }}">Скачать DOCX</a>
+                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.geojson) }}">Скачать GEOJSON</a>
+                            </aside>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="reports-empty">Отчетов пока нет.</div>
+                {% endif %}
+            </section>
+        </section>
     </main>
 </body>
 </html>

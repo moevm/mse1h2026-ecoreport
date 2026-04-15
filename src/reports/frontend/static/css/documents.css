@@ -1,0 +1,138 @@
+:root {
+    --nr-accent: #2A4D88;
+    --nr-secondary: #B1BBC8;
+    --nr-button: #7C94B8;
+    --nr-secondary-half: rgba(177, 187, 200, 0.3);
+    --nr-title-bg: #B1BBC8;
+}
+
+.page {
+    min-height: calc(100vh - 3.5em);
+    padding: 1.5em;
+}
+
+.page__container {
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5em;
+}
+
+.title {
+    margin: 0;
+    padding: 0.2em;
+    border-radius: 40px;
+    background: var(--nr-title-bg);
+    color: #ffffff;
+    font-size: 2em;
+    font-weight: 800;
+    text-align: center;
+}
+
+.list {
+    display: grid;
+    gap: 1em;
+}
+
+.card {
+    display: grid;
+    grid-template-columns: 70% 30%;
+    background: #ffffff;
+    border: 2.5px dashed var(--nr-accent);
+    border-radius: 18px;
+}
+
+.card__summary {
+    display: grid;
+    grid-template-rows: repeat(2, 50%);
+    padding: 1em;
+}
+
+.card__summary_info {
+    display: grid;
+    grid-template-columns: repeat(2, 50%);
+    margin-bottom: 1em;
+}
+
+.card__title {
+    margin: 0;
+    color: var(--nr-accent);
+    font-size: 1.3em;
+    font-weight: 700;
+}
+
+.card__date {
+    margin: 0.55em 0 0;
+    color: #5f6c7a;
+    font-size: 0.95em;
+}
+
+.card__side {
+    border-left: 2.5px dashed var(--nr-accent);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55em;
+    padding: 0 1em;
+}
+
+.card__meta p {
+    margin: 0;
+    color: #253346;
+}
+
+.card__meta p + p {
+    margin-top: 0.55em;
+}
+
+.card__button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    background: var(--nr-secondary);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 0.55em 0.8em;
+    font-weight: 600;
+    transition: filter 0.2s ease;
+}
+
+.card__button:hover {
+    filter: brightness(0.9);
+}
+
+.card__description {
+    margin: 0;
+    color: #2f3d4e;
+    background: var(--nr-secondary-half);
+    border-radius: 12px;
+    padding: 0.9em 1em;
+    line-height: 1.45;
+}
+
+.reports-empty {
+    color: #4b6079;
+    font-size: 1.05em;
+    text-align: center;
+    padding: 1.2em;
+    background: #ffffff;
+    border: 2.5px dashed var(--nr-accent);
+    border-radius: 14px;
+}
+
+@media (max-width: 900px) {
+    .card {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "summary"
+            "side"
+            "description";
+    }
+
+    .card__side {
+        border-left: none;
+        border-top: 2px dashed var(--nr-secondary);
+        padding-left: 0;
+        padding-top: 1em;
+    }
+}

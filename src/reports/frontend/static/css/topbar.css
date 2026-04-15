@@ -1,8 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Pacifico&display=swap");
 
 :root {
-    --topbar-bg: #fff
+    --topbar-bg: #fff;
     --topbar-border: #b8d6be;
+    --nr-secondary: #B1BBC8;
+    --nr-button: #7C94B8;
     --topbar-shadow: rgba(23, 57, 36, 0.14);
     --icon-bg: rgba(255, 255, 255, 0.72);
     --icon-bg-hover: rgba(255, 255, 255, 0.95);
@@ -74,6 +76,61 @@ body {
     border-radius: 50%;
 }
 
+.report-toast-container {
+    position: fixed;
+    right: 1em;
+    bottom: 1em;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55em;
+    pointer-events: none;
+}
+
+.report-toast {
+    width: 40vh;
+    padding: 1em;
+    border-radius: 12px;
+    background: var(--primary-color);
+    transform: translateY(1em);
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+}
+
+.report-toast--visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.report-toast__title {
+    margin: 0 24px 8px 0;
+    font-size: 16px;
+    color: #fff;
+}
+
+.report-toast__link {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.report-toast__link:hover {
+    text-decoration: underline;
+}
+
+.report-toast__close {
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+}
+
 @media (max-width: 700px) {
     .topbar {
         grid-template-columns: auto 1fr auto;
@@ -89,5 +146,15 @@ body {
     .topbar__avatar {
         width: 36px;
         height: 36px;
+    }
+
+    .report-toast-container {
+        right: 10px;
+        left: 10px;
+        bottom: 10px;
+    }
+
+    .report-toast {
+        width: 100%;
     }
 }

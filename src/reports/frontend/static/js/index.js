@@ -536,7 +536,7 @@ async function sendForm() {
     const status = document.getElementById("report-status");
     if (status) status.innerText = "Генерация отчета...";
 
-    // сбор данных из всех известных полей по их ID
+    // Cбор данных из всех известных полей по их ID
     const data = {
         // информация об объекте
         FULL_OBJECT_NAME: document.getElementById("full-object-name")?.value || "Объект по умолчанию",
@@ -606,16 +606,13 @@ async function sendForm() {
     console.log("OBSERVATION_DYNAMICS:", data.OBSERVATION_DYNAMICS);
 
     try {
-        const response = await fetch("/generate-report", {
+        await fetch("/generate-report", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         });
-
-        console.log("Payload sent to server:", data);
-        console.log("Server response status:", response.status);
 
         const result = await response.json();
 
@@ -636,32 +633,3 @@ async function sendForm() {
         status.innerText = "Ошибка соединения: " + error.message;
     }
 }
-
-window.addEventListener('load', function () {
-    const site_type_input = document.getElementById("site-type");
-    const bog_extra = document.getElementById("bog-extra");
-    const urban_extra = document.getElementById("urban-extra");
-    const protected_extra = document.getElementById("protected-extra");
-    
-    if (!site_type_input) return; // защита от null
-    
-    site_type_input.addEventListener('input', function() {
-        if (bog_extra) bog_extra.hidden = true;
-        if (urban_extra) urban_extra.hidden = true;
-        if (protected_extra) protected_extra.hidden = true;
-        
-        switch (site_type_input.value){
-            case "bog":
-                if (bog_extra) bog_extra.hidden = false;
-                break;
-            case "urban":
-                if (urban_extra) urban_extra.hidden = false;
-                break;
-            case "protected":
-                if (protected_extra) protected_extra.hidden = false;
-                break;
-            default:
-                break;
-        }
-    });
-});

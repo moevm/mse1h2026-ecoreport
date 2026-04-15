@@ -243,6 +243,19 @@ input[type="file"] {
     box-sizing: border-box;
 }
 
+.invalid-field {
+    border: 1px solid #e74c3c !important;
+    background: rgba(231, 76, 60, 0.08) !important;
+}
+
+.field-error {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.9rem;
+    color: #e74c3c;
+    text-align: left;
+}
+
 .action__container {
     display: grid;
     gap: 1rem;

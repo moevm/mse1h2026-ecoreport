@@ -23,4 +23,29 @@ window.addEventListener("DOMContentLoaded", function () {
             localStorage.setItem("gost_list", JSON.stringify([...gost_list]));
 		});
 	});
+
+	// обработка поля "Другое"
+	const otherInput = document.getElementById("gost-other");
+	if (otherInput) {
+		// загрузка сохраненного значения
+		const savedOther = localStorage.getItem("gost_other") || "";
+		otherInput.value = savedOther;
+		if (savedOther.trim()) {
+			gost_list.add(savedOther.trim());
+		}
+
+		otherInput.addEventListener("input", function() {
+			const value = this.value.trim();
+			// удаление предыдущего значения из списка, если оно было
+			const prev = localStorage.getItem("gost_other") || "";
+			if (prev.trim()) {
+				gost_list.delete(prev.trim());
+			}
+			localStorage.setItem("gost_other", value);
+			if (value) {
+				gost_list.add(value);
+			}
+			localStorage.setItem("gost_list", JSON.stringify([...gost_list]));
+		});
+	}
 });

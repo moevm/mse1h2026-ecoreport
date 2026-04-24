@@ -8,14 +8,15 @@ from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfutils import readJPEGInfo
 from datetime import datetime, date
 
-# форматирование числовых значений для таблиц
+
 def format_number(value):
     try:
         return float(value)
     except (TypeError, ValueError):
         return 0
 
-def create_image_through_buffer(figure: plt.Figure) -> Image:
+
+def create_image_through_buffer(figure: plt.Figure, width: float = 5.5) -> Image:
     """Сохраняет фигуру matplotlib в буфер и считывает его для создания ReportLab.platypus.Image"""
     image = BytesIO()
     figure.savefig(image, format="jpg")
@@ -24,7 +25,7 @@ def create_image_through_buffer(figure: plt.Figure) -> Image:
     imageWidth = info[0]
     imageHeight = info[1]
     proportions = imageHeight / imageWidth
-    return Image(image, width=inch*5.5, height=inch*5.5*proportions)
+    return Image(image, width=inch * width, height=inch * width * proportions)
 
 
 def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], metric: str):
@@ -32,10 +33,9 @@ def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], m
     Создает график динамики измерения по датам для вставки в pdf отчет.
 
     Параметры:
-        dynamics: list[dict] - Набор измерений
-        dates: list[date] - Набор дат измерений
-        label: str - Заголовок для оси измерений
-        norm: float - Значение норматива (если линию рисовать не нужно, оставить как 0)
+        results: list[dict] - Набор данных из формы результата лаб. исследований (используется для получения норм и единиц изм.)
+        dynamics: list[dict] - Набор данных из формы динамики наблюдений
+        metric: str - название меры для представления в графике
     Возвращает:
         Объект ReportLab.platypus.Image для включения в pdf отчет
     """
@@ -81,20 +81,19 @@ def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], m
                 low_bound, high_bound = map(format_number, standard.split(' - '))
             unit = str(result.get("unit", ""))
 
-
     for entry in simple_dynamics:
         row = []
         date = entry.get("date", "")
         if not date:
             continue
         date = datetime.strptime(date, "%Y-%m-%d")
-        value = format_number(entry.get(metric,"-1"))
+        value = format_number(entry.get(metric, "-1"))
         if value <= 0:
             continue
         measurements.append(value)
         dates.append(date2num(date))
 
-    if len(dates) == 0 or len(measurements) == 0:
+    if len(dates) <= 1 or len(measurements) <= 1:
         return
 
     zipped = list(zip(dates, measurements))
@@ -102,7 +101,6 @@ def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], m
     dates, measurements = list(zip(*zipped))
 
     fig, ax = plt.subplots()
-    fig.tight_layout()
     ax.plot(dates, measurements, color='blue', marker='o', label="Динамика наблюдений")
     if low_bound != 0:
         ax.hlines(low_bound, 0, 1, colors='#4CBA76', transform=ax.get_yaxis_transform(), label="Нижняя граница нормы")
@@ -123,14 +121,7 @@ def comparison_bar_chart(results: list[dict]) -> Image:
     Создает столбчатый график измерений концентрации для вставки в pdf отчет.
 
     Параметры:
-        iron: float - Железо
-        mn: float - Марганец
-        no3: float - Нитраты
-        so4: float - Сульфаты
-        norm_iron: float - Норматив железа
-        norm_mn: float - Норматив марганца
-        norm_no3: float - Норматив нитратов
-        norm_so4: float - Норматив сульфатов
+        results: list[dict] - Набор данных из формы результата лаб. исследований
     Возвращает:
         Объект ReportLab.platypus.Image для включения в pdf отчет
     """
@@ -154,11 +145,10 @@ def comparison_bar_chart(results: list[dict]) -> Image:
         measure_data["Нижняя граница нормы"].append(low_bound)
         measure_data["Верхняя граница нормы"].append(high_bound)
 
-
     fig, ax = plt.subplots()
-    fig.tight_layout()
+
     x = np.arange(len(measurements))
-    width = 0.25
+    width = 0.32
     multiplier = 0
     #Чтобы большая разница между разными показателями не приводила к очень маленьким столбцам на графике
     ax.set_yscale('log')
@@ -179,9 +169,9 @@ def comparison_bar_chart(results: list[dict]) -> Image:
     ax.set_xticks(x + width, measurements)
     ax.tick_params(right=False, left=False, axis='y', length=0, which='both')
     ax.set_yticks([])
-    #fig.set_figwidth(6)
+    fig.set_figwidth(9)
 
-    return create_image_through_buffer(fig)
+    return create_image_through_buffer(fig, width=8)
 
 
 if __name__ == "__main__":
@@ -192,9 +182,9 @@ if __name__ == "__main__":
     doc = SimpleDocTemplate("graph_test.pdf")
 
     dates, measurements = list(), list()
-    for i in range(1,10):
-        measure = randint(2,8) + random()
-        day = date(2026,1,i)
+    for i in range(1, 10):
+        measure = randint(2, 8) + random()
+        day = date(2026, 1, i)
         dates.append(day)
         measurements.append(measure)
 

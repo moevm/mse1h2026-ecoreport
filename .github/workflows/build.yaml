@@ -1,6 +1,11 @@
 name: CI
 
-on: pull_request
+on: 
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ '**' ]
+
 
 jobs:
   build:
@@ -28,7 +33,7 @@ jobs:
       - name: Run docker-compose
         run: |
           docker compose up -d
-          sleep 25
+          sleep 15
           docker compose ps
 
       - name: Run tests
@@ -41,4 +46,3 @@ jobs:
           curl --fail http://localhost:9001 || exit 1
           echo "Проверка RabbitMQ..."
           curl --fail http://localhost:15672 || exit 1
-          

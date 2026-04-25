@@ -1,0 +1,44 @@
+name: CI
+
+on: pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env files from secrets
+        run: |
+          mkdir -p src/env
+          echo "${{ secrets.ENV_RABBITMQ }}"  > src/env/rabbitmq.env
+          echo "${{ secrets.ENV_MINIO }}"     > src/env/minio.env
+          echo "${{ secrets.ENV_POSTGRES }}"  > src/env/postgres.env
+          echo "${{ secrets.ENV_APP }}"       > src/env/app.env
+          echo "${{ secrets.ENV_FRONTEND }}"  > src/env/frontend.env
+
+      # - name: Copy .env_example to .env
+      #   run: cp .env_example .env
+
+      - name: Build images
+        run: docker compose build
+          
+      - name: Run docker-compose
+        run: |
+          docker compose up -d
+          sleep 25
+          docker compose ps
+
+      - name: Run tests
+        run: |
+          echo "Проверка главной страницы..."
+          curl --fail http://localhost:8080 || exit 1
+          echo "Проверка Swagger..."
+          curl --fail http://localhost:8080/docs || exit 1
+          echo "Проверка MinIO..."
+          curl --fail http://localhost:9001 || exit 1
+          echo "Проверка RabbitMQ..."
+          curl --fail http://localhost:15672 || exit 1
+          

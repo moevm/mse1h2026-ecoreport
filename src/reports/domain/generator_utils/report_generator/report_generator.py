@@ -286,6 +286,7 @@ class ReportGenerator:
         in_list = False
         pending_right_para = None
         pending_center_para = None
+        pending_graph_desc = None
 
         for line in rendered.splitlines():
             line = line.strip()
@@ -313,6 +314,9 @@ class ReportGenerator:
             elif line.startswith("CENTER_PARA:"):
                 pending_center_para = line.replace("CENTER_PARA:", "").strip()
 
+            elif line.startswith("GRAPH_DESC:"):
+                pending_graph_desc = line.replace("GRAPH_DESC:", "").strip()
+
             elif line.startswith("TABLE:"):
                 table_type = line.replace("TABLE:", "").strip()
                 table_element = self.create_table_element(table_type, data_dict, normal_style)
@@ -333,8 +337,15 @@ class ReportGenerator:
                 graph_type = line.replace("GRAPH:", "").strip()
                 graph_element = self.create_graph_element(graph_type, data_dict, normal_style)
                 if graph_element:
-                    elements.append(Spacer(72, 24))
                     group = [graph_element]
+                    if pending_graph_desc:
+                        style = ParagraphStyle(
+                            name='para',
+                            parent=normal_style,
+                            firstLineIndent=self.FIRST_LINE_INDENT
+                        )
+                        group.insert(0, Paragraph(pending_graph_desc, style))
+                        pending_graph_desc = None
                     if pending_center_para is not None:
                         style = ParagraphStyle(
                             name='center_para',

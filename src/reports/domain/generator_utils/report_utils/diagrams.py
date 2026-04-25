@@ -1,7 +1,7 @@
 from reportlab.platypus import Image
 from datetime import date
 import matplotlib.pyplot as plt
-from matplotlib.dates import ConciseDateFormatter, date2num
+from matplotlib.dates import AutoDateFormatter, date2num
 from io import BytesIO
 import numpy as np
 from reportlab.lib.units import inch
@@ -108,11 +108,15 @@ def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], m
         ax.hlines(high_bound, 0, 1, colors='#618071', transform=ax.get_yaxis_transform(), label="Верхняя граница нормы")
 
     ax.set_xlim(dates[0], dates[-1])
-    ax.xaxis.set_major_formatter(ConciseDateFormatter(ax.xaxis.get_major_locator()))
+    ax.xaxis.set_major_formatter(AutoDateFormatter(ax.xaxis.get_major_locator()))
     ax.grid(True)
+    for label in ax.get_xticklabels():
+        label.set_rotation(30)
+        label.set_horizontalalignment('right')
     if metric:
         ax.set_ylabel(f"{selected_metric_label}, {unit}" if unit not in "-" else selected_metric_label)
     ax.legend()
+    fig.tight_layout()
 
     return create_image_through_buffer(fig)
 

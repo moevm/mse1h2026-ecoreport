@@ -633,3 +633,33 @@ async function sendForm() {
         status.innerText = "Ошибка соединения: " + error.message;
     }
 }
+
+function clearAllFormFields() {
+    console.log("Start clearing forms");
+
+    const allInputs = document.querySelectorAll('#create-report-form input, #create-report-form select');
+    allInputs.forEach(field => {
+        if (field.type === 'button' || field. type === 'submit' || field.type === 'hidden') {
+            return;
+        }
+
+        if (field.tagName === 'SELECT') {
+            field.selectedIndex = 0;
+        } else {
+            field.value = '';
+        }
+    }); 
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const clearButton = document.getElementById('clear-form-button');
+
+    if (clearButton) {
+        clearButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            clearAllFormFields();
+        });
+    } else {
+        console.warn("Кнопка 'Очистить поля' не найдена");
+    }
+});

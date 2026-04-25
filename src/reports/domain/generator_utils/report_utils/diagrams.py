@@ -107,6 +107,7 @@ def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], m
     if high_bound != 0:
         ax.hlines(high_bound, 0, 1, colors='#618071', transform=ax.get_yaxis_transform(), label="Верхняя граница нормы")
 
+    ax.set_xlim(dates[0], dates[-1])
     ax.xaxis.set_major_formatter(ConciseDateFormatter(ax.xaxis.get_major_locator()))
     ax.grid(True)
     if metric:
@@ -131,6 +132,7 @@ def comparison_bar_chart(results: list[dict]) -> Image:
         "Результат наблюдения": list(),
         "Верхняя граница нормы": list()
     }
+    bar_colors = list()
 
     for result in results:
         indicator = str(result.get("indicator", ""))
@@ -144,6 +146,7 @@ def comparison_bar_chart(results: list[dict]) -> Image:
         measure_data["Результат наблюдения"].append(result_val)
         measure_data["Нижняя граница нормы"].append(low_bound)
         measure_data["Верхняя граница нормы"].append(high_bound)
+        bar_colors.append("#4CBA76" if low_bound <= result_val <= high_bound else "#96281A")
 
     fig, ax = plt.subplots()
 
@@ -156,11 +159,11 @@ def comparison_bar_chart(results: list[dict]) -> Image:
     for attribute, measurement in measure_data.items():
         offset = width * multiplier
         if attribute == "Результат наблюдения":
-            color = "#14824E"
+            color = bar_colors
         elif attribute == "Верхняя граница нормы":
-            color = "#618071"
+            color = "#362727"
         else:
-            color = "#4CBA76"
+            color = "#4E5755"
         rects = ax.bar(x + offset, measurement, width, label=attribute, color=color)
         ax.bar_label(rects, padding=2)
         multiplier += 1
@@ -172,23 +175,3 @@ def comparison_bar_chart(results: list[dict]) -> Image:
     fig.set_figwidth(9)
 
     return create_image_through_buffer(fig, width=8)
-
-
-if __name__ == "__main__":
-    #Пример создания графа
-    from reportlab.platypus import SimpleDocTemplate
-    from random import randint, random
-
-    doc = SimpleDocTemplate("graph_test.pdf")
-
-    dates, measurements = list(), list()
-    for i in range(1, 10):
-        measure = randint(2, 8) + random()
-        day = date(2026, 1, i)
-        dates.append(day)
-        measurements.append(measure)
-
-    plot = concentration_dynamics_lineplot(measurements, dates, label="Марганец, мг/л", norm=5.0)
-    chart = comparison_bar_chart(1, 1, 50, 390)
-
-    doc.build([plot, chart])

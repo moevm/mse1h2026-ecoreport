@@ -1,5 +1,5 @@
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer,
+    SimpleDocTemplate, Paragraph, Spacer, KeepTogether,
     PageBreak, ListFlowable, ListItem, Table, TableStyle
 )
 from datetime import datetime
@@ -334,16 +334,18 @@ class ReportGenerator:
                 graph_element = self.create_graph_element(graph_type, data_dict, normal_style)
                 if graph_element:
                     elements.append(Spacer(72, 24))
-                    elements.append(graph_element)
+                    group = [graph_element]
                     if pending_center_para is not None:
                         style = ParagraphStyle(
                             name='center_para',
                             parent=normal_style,
                             alignment=TA_CENTER
                         )
-                        elements.append(Paragraph(pending_center_para, style))
+
+                        group.append(Paragraph(pending_center_para, style))
                         pending_center_para = None
-                    elements.append(Spacer(72, 24))
+                    group.append(Spacer(72, 24))
+                    elements.append(KeepTogether(group))
                 else:
                     pending_center_para = None
 

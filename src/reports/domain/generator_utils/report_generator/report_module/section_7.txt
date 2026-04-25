@@ -20,29 +20,29 @@ RIGHT_PARA: Таблица 4. Динамика наблюдений
 
 TABLE: OBSERVATION_DYNAMICS
 
-CENTER_PARA: Рисунок 1. Сравнение концентраций загрязняющих веществ
-
-GRAPH: TEST_RESULTS
-
-CENTER_PARA: Рисунок 2. Динамика показателя pH дренажных вод
+CENTER_PARA: Рисунок 1. Динамика показателя pH дренажных вод
 
 GRAPH: OBSERVATION_DYNAMICS: pH
 
-CENTER_PARA: Рисунок 3. Концентрация железа в дренажных водах
+CENTER_PARA: Рисунок 2. Концентрация железа в дренажных водах
 
 GRAPH: OBSERVATION_DYNAMICS: iron
 
-CENTER_PARA: Рисунок 4. Концентрация марганца в дренажных водах
+CENTER_PARA: Рисунок 3. Концентрация марганца в дренажных водах
 
 GRAPH: OBSERVATION_DYNAMICS: manganese
 
-CENTER_PARA: Рисунок 5. Концентрация нитратов в дренажных водах
+CENTER_PARA: Рисунок 4. Концентрация нитратов в дренажных водах
 
 GRAPH: OBSERVATION_DYNAMICS: nitrates
 
-CENTER_PARA: Рисунок 6. Концентрация сульфатов в дренажных водах
+CENTER_PARA: Рисунок 5. Концентрация сульфатов в дренажных водах
 
 GRAPH: OBSERVATION_DYNAMICS: sulfates
+
+CENTER_PARA: Рисунок 6. Сравнение концентраций загрязняющих веществ
+
+GRAPH: TEST_RESULTS
 
 PARA: Полученные показатели сопоставлены с установленными нормативами качества окружающей среды.
 

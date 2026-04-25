@@ -636,19 +636,43 @@ async function sendForm() {
 
 function clearAllFormFields() {
     console.log("Start clearing forms");
+    const regularFields = document.querySelectorAll(`
+        input:not([type="button"]):not([type="submit"]):not([type="hidden"]),
+        select
+    `);
 
-    const allInputs = document.querySelectorAll('#create-report-form input, #create-report-form select');
-    allInputs.forEach(field => {
-        if (field.type === 'button' || field. type === 'submit' || field.type === 'hidden') {
-            return;
-        }
+    regularFields.forEach(field => {
+        if (field.closest('table')) return;
 
         if (field.tagName === 'SELECT') {
             field.selectedIndex = 0;
         } else {
             field.value = '';
         }
-    }); 
+    });
+
+    const pointsTbody = document.querySelector('#observation_points_table tbody');
+    if (pointsTbody) {
+        pointsTbody.innerHTML = '';
+    }
+
+    const testResultsTbody = document.querySelector('#test_results_table tbody');
+    if (testResultsTbody) {
+        const resultInputs = testResultsTbody.querySelectorAll('input[data-field="Результат"]');
+        resultInputs.forEach(input => {
+            input.value = '';
+
+            if (oldValue !== '') {
+                const changeEvent = new Event('change', { bubbles: true });
+                input.dispatchEvent(changeEvent);
+            }
+        });
+    }
+
+    const dynamicsTbody = document.querySelector('#observation_dynamics_table tbody');
+    if (dynamicsTbody) {
+        dynamicsTbody.innerHTML = '';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {

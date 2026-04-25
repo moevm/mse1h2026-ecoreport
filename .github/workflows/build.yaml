@@ -1,23 +1,37 @@
+# Имя, которое отображается во вкладке Actions на GitHub
 name: CI
 
-on: 
+# Когда запускать:
+on:
+  # 1. При создании Pull Request в ветку main.
   pull_request:
     branches: [ main ]
+
+  # 2. При пуше в любую ветку (временно для удобства отладки)
   push:
     branches: [ '**' ]
 
 
 jobs:
   build:
+    # Запускаем на последней стабильной Ubuntu
     runs-on: ubuntu-22.04
 
     steps:
+      # Шаг 1. Клонирование репозитория
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Шаг 2. Создание env-файлов из GitHub Secrets
+      # ----------------------------------------------------------
+      # docker-compose ожидает файлы окружения в папке src/env.
+      # Вместо того, чтобы хранить их в репозитории, создаём их
+      # из секретов, заданных в настройках репозитория.
       - name: Create .env files from secrets
+
+        # создаём папку, если её нет
         run: |
-          mkdir -p src/env
+          mkdir -p src/env 
           echo "${{ secrets.ENV_RABBITMQ }}"  > src/env/rabbitmq.env
           echo "${{ secrets.ENV_MINIO }}"     > src/env/minio.env
           echo "${{ secrets.ENV_POSTGRES }}"  > src/env/postgres.env
@@ -27,15 +41,23 @@ jobs:
       # - name: Copy .env_example to .env
       #   run: cp .env_example .env
 
+
+      # Шаг 3. Сборка Docker-образов
       - name: Build images
         run: docker compose build
-          
+      
+      # Шаг 4. Запуск всех сервисов
       - name: Run docker-compose
         run: |
           docker compose up -d
           sleep 15
           docker compose ps
 
+      # Шаг 5. Проверка доступности сервисов
+      # ----------------------------------------------------------
+      # Флаг --fail говорит curl завершаться с ошибкой,
+      # если сервер вернёт HTTP-статус 4xx или 5xx.
+      # Если любой из запросов падает, workflow помечается красным.
       - name: Run tests
         run: |
           echo "Проверка главной страницы..."

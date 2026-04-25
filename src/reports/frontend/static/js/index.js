@@ -697,15 +697,25 @@ function clearAllFormFields() {
     // 4. Сброс синих кнопок (pH, Железо, Марганец и т.д.)
     const toggleButtons = document.querySelectorAll('.list_element:not(#gost_list .list_element)');
     toggleButtons.forEach(button => {
-        button.dataset.selected = "true";
+        button.dataset.selected = "false";
         button.classList.add('list_element--active');
     });
+    toggleButtons.forEach(button => button.click());
 
     // 5. Очистка ошибок валидации
     document.querySelectorAll('.invalid-field').forEach(el => {
         el.classList.remove('invalid-field');
     });
     document.querySelectorAll('.field-error').forEach(el => el.remove());
+
+    // 6. Очистка карт
+    ['coord-n', 'coord-e', 'observ-coord-n', 'observ-coord-e'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = '';
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
 }
 
 

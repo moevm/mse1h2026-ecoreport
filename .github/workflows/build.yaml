@@ -7,11 +7,6 @@ on:
   pull_request:
     branches: [ main ]
 
-  # 2. При пуше в любую ветку (временно для удобства отладки)
-  push:
-    branches: [ '**' ]
-
-
 jobs:
   build:
     # Запускаем на последней стабильной Ubuntu

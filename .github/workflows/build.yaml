@@ -49,7 +49,7 @@ jobs:
       # Шаг 5. Ждем поднятия FastAPI
       - name: Wait for application
         run: |
-          curl --fail --retry 15 --retry-delay 4 http://localhost:8080/docs || exit 1
+          curl --fail --retry 20 --retry-all-errors --retry-delay 3 http://localhost:8080/docs || exit 1
 
       # Шаг 6. Проверка доступности сервисов
       # ----------------------------------------------------------

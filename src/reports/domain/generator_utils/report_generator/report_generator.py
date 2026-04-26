@@ -1,5 +1,5 @@
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer,
+    SimpleDocTemplate, Paragraph, Spacer, KeepTogether,
     PageBreak, ListFlowable, ListItem, Table, TableStyle
 )
 from datetime import datetime
@@ -15,6 +15,11 @@ from reports.domain.generator_utils.report_utils.tables import (
     monitored_points_table,
     lab_test_results_table,
     observation_dynamics_table
+)
+
+from reports.domain.generator_utils.report_utils.diagrams import (
+    comparison_bar_chart,
+    concentration_dynamics_lineplot
 )
 
 class ReportGenerator:
@@ -241,6 +246,21 @@ class ReportGenerator:
 
         return None
 
+    def create_graph_element(self, graph_type, data_dict, normal_style):
+        # график "Сравнение концентраций загрязняющих веществ"
+        if graph_type == "TEST_RESULTS":
+            results = data_dict.get("TEST_RESULTS", [])
+            return comparison_bar_chart(results) if results else None
+
+        # таблица "Динамика наблюдений"
+        if "OBSERVATION_DYNAMICS" in graph_type:
+            dynamics = data_dict.get("OBSERVATION_DYNAMICS", [])
+            metric = graph_type.replace("OBSERVATION_DYNAMICS: ", "").strip()
+            results = data_dict.get("TEST_RESULTS", [])
+            return concentration_dynamics_lineplot(results, dynamics, metric) if dynamics else None
+
+        return None
+
 
     # чтение и обработка шаблонов разделов
     def read_section(self, file_path, title_style, normal_style, data_dict):
@@ -265,6 +285,8 @@ class ReportGenerator:
         buffer_list = []
         in_list = False
         pending_right_para = None
+        pending_center_para = None
+        pending_graph_desc = None
 
         for line in rendered.splitlines():
             line = line.strip()
@@ -289,6 +311,12 @@ class ReportGenerator:
             elif line.startswith("RIGHT_PARA:"):
                 pending_right_para = line.replace("RIGHT_PARA:", "").strip()
 
+            elif line.startswith("CENTER_PARA:"):
+                pending_center_para = line.replace("CENTER_PARA:", "").strip()
+
+            elif line.startswith("GRAPH_DESC:"):
+                pending_graph_desc = line.replace("GRAPH_DESC:", "").strip()
+
             elif line.startswith("TABLE:"):
                 table_type = line.replace("TABLE:", "").strip()
                 table_element = self.create_table_element(table_type, data_dict, normal_style)
@@ -304,6 +332,33 @@ class ReportGenerator:
                     elements.append(table_element)
                 else:
                     pending_right_para = None
+
+            elif line.startswith("GRAPH:"):
+                graph_type = line.replace("GRAPH:", "").strip()
+                graph_element = self.create_graph_element(graph_type, data_dict, normal_style)
+                if graph_element:
+                    group = [graph_element]
+                    if pending_graph_desc:
+                        style = ParagraphStyle(
+                            name='para',
+                            parent=normal_style,
+                            firstLineIndent=self.FIRST_LINE_INDENT
+                        )
+                        group.insert(0, Paragraph(pending_graph_desc, style))
+                        pending_graph_desc = None
+                    if pending_center_para is not None:
+                        style = ParagraphStyle(
+                            name='center_para',
+                            parent=normal_style,
+                            alignment=TA_CENTER
+                        )
+
+                        group.append(Paragraph(pending_center_para, style))
+                        pending_center_para = None
+                    group.append(Spacer(72, 24))
+                    elements.append(KeepTogether(group))
+                else:
+                    pending_center_para = None
 
             elif line.startswith("LIST:"):
                 in_list = True

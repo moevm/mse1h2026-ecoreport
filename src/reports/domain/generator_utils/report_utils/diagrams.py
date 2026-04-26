@@ -48,6 +48,17 @@ def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], m
         ("sulfates", "Сульфаты")
     ])
 
+    metric_default = {
+        "pH": ("6.00 - 9.00", "-"),
+        "iron": ("0.27 - 0.33", "мг/л"),
+        "manganese": ("0.09 - 0.12", "мг/л"),
+        "nitrates": ("38.25 - 51.75", "мг/л"),
+        "sulfates": ("435.00 - 565.00", "мг/л")
+    }
+
+    default_standard = metric_default[metric][0]
+    default_unit = metric_default[metric][1]
+
     selected_metric_label = metric_labels.get(metric, "")
 
     def to_simple_dict(item):
@@ -75,11 +86,15 @@ def concentration_dynamics_lineplot(results: list[dict], dynamics: list[dict], m
     for result in results:
         indicator = str(result.get("indicator", ""))
         if indicator.lower() == selected_metric_label.lower():
-            standard = result.get("standard", "")
-            low_bound, high_bound = 0, 0
-            if standard:
-                low_bound, high_bound = map(format_number, standard.split(' - '))
-            unit = str(result.get("unit", ""))
+            standard = result.get("standard", default_standard).strip()
+            unit = str(result.get("unit", default_unit)).strip()
+
+    if len(standard) == 0:
+        standard = default_standard
+    if standard:
+        low_bound, high_bound = map(format_number, standard.split(' - '))
+    if len(unit) == 0:
+        unit = default_unit
 
     for entry in simple_dynamics:
         row = []

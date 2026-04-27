@@ -23,7 +23,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
         const tbody = targetTable.querySelector("tbody");
         if (!tbody) return;  // дополнительная проверка на наличие tbody
-        
+
         const rowCount = tbody.querySelectorAll("tr").length + 1;
         const row = document.createElement("tr");
 
@@ -202,15 +202,19 @@ window.addEventListener("DOMContentLoaded", function () {
     function compareWithStandard(indicator, resultValue) {
         const std = standards[indicator];
         if (!std) return "нет данных";
-        
-        const result = parseFloat(resultValue);
+
+        // заменяем запятую на точку для корректного парсинга
+        const normalized = String(resultValue).replace(',', '.');
+        const result = parseFloat(normalized);
         if (isNaN(result)) return "";
-        
+
         if (std.min !== undefined && std.max !== undefined) {
             return result >= std.min && result <= std.max ? "да" : "нет";
         }
         return "";
     }
+
+    window.compareWithStandard = compareWithStandard;
 
     function buildRow(indicator, data) {
         const row = document.createElement("tr");
@@ -221,7 +225,7 @@ window.addEventListener("DOMContentLoaded", function () {
         row.appendChild(indicatorCell);
 
         const std = standards[indicator];
-        
+
         // норматив
         const standardCell = document.createElement("td");
         const standardInput = document.createElement("input");

@@ -1,9 +1,23 @@
+"""
+Тесты генерации отчёта через POST /generate-report.
+
+Основной сценарий: валидные данные → 201 Created + report_id.
+Негативные сценарии: пустое тело, отсутствие обязательных полей,
+неверные типы данных.
+"""
+
 import uuid
 
 
 class TestGenerateReport:
+    """
+    Интеграционные тесты эндпоинта генерации отчета. Проверяем валидацию данных и публикацию в RabbitMQ.
+    """
 
     def test_status_201_with_valid_data(self, client, valid_report_payload):
+        """
+        Отправка валидного JSON. Проверяем, что сообщение ушло в RabbitMQ и вернулся UUID отчета.
+        """
         response = client.post("/generate-report", json=valid_report_payload)
         
         assert response.status_code == 201, (
@@ -41,6 +55,10 @@ class TestGenerateReport:
             assert False, f"report_id не является валидным UUID: {report_id}"
 
     def test_rejected_with_empty_body(self, client):
+        """
+        Пустой JSON {} должен быть отклонён.
+        Pydantic валидирует обязательные поля.
+        """
         response = client.post("/generate-report", json={})
 
         assert response.status_code >= 400, (
@@ -49,6 +67,9 @@ class TestGenerateReport:
         )
 
     def test_rejected_with_missing_required_field(self, client, valid_report_payload):
+        """
+        Проверка валидации: удаляем обязательное поле и ждем ошибку
+        """
         payload = valid_report_payload.copy()
         del payload["FULL_OBJECT_NAME"]
 
@@ -65,6 +86,9 @@ class TestGenerateReport:
     )
 
     def test_rejected_with_invalid_type(self, client, valid_report_payload):
+        """
+        Проверка типов Pydantic: передаем строку вместо числа
+        """
         payload = valid_report_payload.copy()
         payload["YEAR"] = "не число"
 

@@ -1,3 +1,7 @@
+"""
+Функциональные-тесты страницы создания отчёта (/create) через Playwright.
+"""
+
 import pytest
 import re 
 
@@ -6,13 +10,24 @@ pytestmark = pytest.mark.functional
 
 
 class TestCreateReport:
-        
+    """Тесты страницы /create"""
+
     def test_page_loads(self, page):
+        """
+        Проверяем, что Jinja2 отрендерил HTML и страница вообще доступна пользователю
+        """
+
         page.goto("/create")
         assert page.locator("h1.title", has_text="Новый отчет").is_visible()
 
         
     def test_validation_error_on_empty_submit(self, page):
+        """
+        Тестируем фронтенд-валидацию (JavaScript)
+        Пользователь жмет кнопку отправки пустой формы -> JS должен заблокировать 
+        отправку и показать красные спаны (.field-error)
+        """
+
         page.goto("/create")
         page.locator("button", has_text="Сгенерировать отчет").click()
             
@@ -23,8 +38,15 @@ class TestCreateReport:
 
 
     def test_create_report_success(self, page, valid_report_payload):
+        """
+        Сквозной тест успешного сценария:
+        1. Заполняем форму валидными данными.
+        2. Жмем кнопку.
+        3. Убеждаемся, что браузер реально отправил POST-запрос к бэкенду.
+        """
         page.goto("/create")
 
+        # Маппинг: связываем id HTML-элемента с ключом из тестовых данных
         input_mapping = {
             "#full-object-name": "FULL_OBJECT_NAME",
             "#short-object-name": "SHORT_OBJECT_NAME",
@@ -68,24 +90,29 @@ class TestCreateReport:
             "#climate-zone": "CLIMATE_ZONE",
         }
 
+        # Печатаем текст во все инпуты на странице
         for html_id, json_key in input_mapping.items():
             value_to_type = str(valid_report_payload[json_key])
             page.fill(html_id, value_to_type)
         
+        # Выбираем нужные элементы в выпадающих списках (dropdown)
         for html_id, json_key in select_mapping.items():
             value_to_select = str(valid_report_payload[json_key])
             page.select_option(html_id, value_to_select)
 
+        # Заполняем  таблицу
         for indicator, json_key in table_mapping.items():
             value_to_fill = str(valid_report_payload[json_key])
             locator = f"tr[data-indicator='{indicator}'] input[data-field='Результат']"
             page.locator(locator).fill(value_to_fill)
 
+        # Ставим listener POST-запрос на /generate-report
         with page.expect_response(lambda response: "/generate-report" in response.url and response.request.method == "POST") as response_info:
             page.locator("button", has_text="Сгенерировать отчет").click()
 
-        
+        # Достаем пойманный ответ от бэкенда
         response = response_info.value
+        
         assert response.status == 201, f"Бэкенд вернул ошибку: {response.status}"
 
         json_data = response.json()

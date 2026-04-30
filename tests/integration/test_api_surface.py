@@ -1,7 +1,19 @@
+"""
+Проверяем, что инфрастукртура поднялась, основные страницы живы.
+"""
+
 import pytest
 
 
 def _assert_page_is_alive(response, url_name):
+    """
+    Вспомогательная функция для проверки для HTML-страниц.
+
+    Проверяет:
+    1. HTTP 200 — страница доступна
+    2. Content-Type начинается с text/html — это действительно страница,
+    3. Тело не пустое — шаблон отрендерился
+    """
     assert response.status_code == 200, (
         f"Эндпоинт '{url_name}' вернул {response.status_code} вместо 200. "
         f"Если 500 — смотри логи приложения (lifespan, подключение к БД/MinIO)."
@@ -20,12 +32,16 @@ def _assert_page_is_alive(response, url_name):
 
 
 class TestMainPage:
+    """Главная страница /"""
+
     def test_status_200(self, client):
         response = client.get("/")
         _assert_page_is_alive(response, "/")
 
 
 class TestCreatePage:
+    """Страница создания отчёта /create"""
+
     def test_status_200(self, client):
         response = client.get("/create")
         _assert_page_is_alive(response, "/create")
@@ -39,6 +55,8 @@ class TestCreatePage:
 
 
 class TestDocumentsPage:
+    """Страница списка отчётов /documents"""
+
     def test_status_200(self, client):
         response = client.get("/documents")
         _assert_page_is_alive(response, "/documents")
@@ -51,12 +69,16 @@ class TestDocumentsPage:
 
 
 class TestSettingsPage:
+    """Страница настроек /settings"""
+
     def test_status_200(self, client):
         response = client.get("/settings")
         _assert_page_is_alive(response, "/settings")
 
 
 class TestSwaggerUI:
+    """Документация API /docs (автоматически генерируется FastAPI)"""
+
     def test_status_200(self, client):
         response = client.get("/docs")
         _assert_page_is_alive(response, "/docs")

@@ -1,3 +1,7 @@
+"""
+Общие фикстуры для интеграционных и функциональных тестов.
+"""
+
 import io
 import os
 import pytest
@@ -10,12 +14,23 @@ from reports.core.config import settings
 
 @pytest.fixture
 def client():
+    """
+    Фикстура клиента FastAPI.
+    Использует TestClient, который позволяет делать запросы к API
+    напрямую, минуя реальную сеть. При старте TestClient автоматически
+    выполняется блок lifespan (подключение к БД, RabbitMQ, MinIO).
+    """
     app = create_app()
     with TestClient(app) as test_client:
         yield test_client
 
 @pytest.fixture
 def valid_report_payload():
+    """
+    Минимальный валидный набор данных.
+    Используется как для отправки сырого JSON в интеграционных тестах,
+    так и для заполнения полей в браузере в функциональных тестах.
+    """
     return {
         "FULL_OBJECT_NAME": "Тестовый объект полное название",
         "SHORT_OBJECT_NAME": "Тестовый объект",
@@ -62,8 +77,14 @@ def valid_report_payload():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def existing_report_id():
+    """
+    Фикстура подготовки данных.
+    Перед запуском тестов на скачивание, эта функция напрямую подключается
+    к MinIO и кладет туда фейковый PDF-файл.
+    После завершения теста (yield) файл удаляется, чтобы не мусорить в базе.
+    """
     report_id = "test-report-fixture"
     bucket_name = settings.MINIO_BUCKET_NAME
     object_name = f"{report_id}.pdf"

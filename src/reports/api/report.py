@@ -134,7 +134,7 @@ async def download_file(id: str,
         result: bytes = await use_case.execute(id)
         return Response(content=result, media_type="application/pdf")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @reports_router.get("/download-file/{object_name:path}",
@@ -155,7 +155,7 @@ async def download_object_file(object_name: str, repository: FromDishka[MinioRep
     try:
         result = repository.get_object(object_name)
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
     return Response(
         content=result,

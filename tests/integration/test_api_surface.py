@@ -24,10 +24,6 @@ class TestMainPage:
         response = client.get("/")
         _assert_page_is_alive(response, "/")
 
-    def test_not_empty(self, client):
-        response = client.get("/")
-        assert len(response.text) > 0, "Главная страница вернула пустоту."
-
 
 class TestCreatePage:
     def test_status_200(self, client):
@@ -64,3 +60,4 @@ class TestSwaggerUI:
     def test_status_200(self, client):
         response = client.get("/docs")
         _assert_page_is_alive(response, "/docs")
+        

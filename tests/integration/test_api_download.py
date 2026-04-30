@@ -55,3 +55,4 @@ class TestDownloadFileByName:
         assert response.status_code >= 400, (
             f"Сейчас код возвращает 500. Получили {response.status_code}. "
         )
+        

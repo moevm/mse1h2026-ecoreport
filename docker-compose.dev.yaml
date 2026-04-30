@@ -1,0 +1,114 @@
+name: ecoreport-test
+
+services:
+  rabbitmq:
+    image: rabbitmq:4.2.5-management-alpine
+    container_name: ecoreport-test-rabbitmq
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    env_file:
+      - src/env/rabbitmq.env
+    volumes:
+      - rabbitmq_test_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
+    container_name: ecoreport-test-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    env_file:
+      - src/env/minio.env
+    volumes:
+      - minio_test_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16.13-alpine3.23
+    container_name: ecoreport-test-postgres
+    ports:
+      - "5433:5432"
+    env_file:
+      - src/env/postgres.env
+    environment:
+      - POSTGRES_DB=ecoreport_test
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ecoreport_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  webapp:
+    build: .
+    container_name: ecoreport-test-app
+    ports:
+      - "8081:8080"
+    env_file:
+      - src/env/app.env
+      - src/env/rabbitmq.env
+      - src/env/minio.env
+      - src/env/postgres.env
+      - src/env/frontend.env
+    environment:
+      - POSTGRES_DB=ecoreport_test
+      - POSTGRES_HOST=postgres
+      - RABBITMQ_HOST=rabbitmq
+      - MINIO_HOST=minio
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ecoreport-test-runner
+    env_file:
+      - src/env/app.env
+      - src/env/rabbitmq.env
+      - src/env/minio.env
+      - src/env/postgres.env
+      - src/env/frontend.env
+    environment:
+      - POSTGRES_DB=ecoreport_test
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - APP_URL=http://webapp:8080
+    depends_on:
+      webapp:
+        condition: service_started
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini
+    command: >
+      sh -c "
+        pytest tests/integration -v --tb=short &&
+        pytest tests/functional -v --tb=short -m functional
+      "
+
+volumes:
+  rabbitmq_test_data:
+  minio_test_data:
+  postgres_test_data:

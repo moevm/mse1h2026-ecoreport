@@ -1,4 +1,5 @@
 import io
+import os
 import pytest
 from fastapi.testclient import TestClient
 from minio import Minio
@@ -42,11 +43,11 @@ def valid_report_payload():
         "MEDIUM_TYPE": "Вода",
         "DESCRIPTION": "Контроль качества",
         "OBSERVATION_FREQUENCY": "Ежемесячно",
-        "RESULTS_PH": 7.1,
-        "RESULTS_IRON": 0.2,
-        "RESULTS_MANGANESE": 0.05,
-        "RESULTS_NITRATES": 10.0,
-        "RESULTS_SULFATES": 15.0,
+        "RESULTS_PH": "7.10",
+        "RESULTS_IRON": "0.20",
+        "RESULTS_MANGANESE": "0.05",
+        "RESULTS_NITRATES": "10.00",
+        "RESULTS_SULFATES": "15.00",
         "ORGANIZATION_ADDRESS": "г. Москва, ул. Тестовая, 1",
         "ORGANIZATION_PHONE": "+7 (999) 123-45-67",
         "ORGANIZATION_EMAIL": "test@example.com",

@@ -1,0 +1,44 @@
+# Имя, которое отображается во вкладке Actions на GitHub
+name: Auto Tests
+
+# Запускаем при пулл-реквестах в main
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+      # Шаг 1. Клонирование репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Шаг 2. Создание env-файлов из GitHub Secret
+      - name: Create .env files from secrets
+        run: |
+          mkdir -p src/env 
+          echo "${{ secrets.ENV_RABBITMQ }}"  > src/env/rabbitmq.env
+          echo "${{ secrets.ENV_MINIO }}"     > src/env/minio.env
+          echo "${{ secrets.ENV_POSTGRES }}"  > src/env/postgres.env
+          echo "${{ secrets.ENV_APP }}"       > src/env/app.env
+          echo "${{ secrets.ENV_FRONTEND }}"  > src/env/frontend.env
+
+      # Шаг 3. Сборка тестовой инфраструктуры
+      - name: Build test images
+        run: docker compose -f docker-compose.dev.yaml build
+
+      # Шаг 4. Запуск тестов
+      - name: Run Integration and Functional Tests
+        run: docker compose -f docker-compose.dev.yaml run --rm test-runner
+
+      # Шаг 5. Вывод логов при падении
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.dev.yaml logs --no-color --tail=200
+
+      # Шаг 6. Очистка инфраструктуры
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.dev.yaml down -v

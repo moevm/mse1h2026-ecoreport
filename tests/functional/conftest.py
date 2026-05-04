@@ -61,4 +61,4 @@ def base_url():
     #     env_vars = dotenv_values("src/env/app.env")
     #     port = env_vars.get("APP_PORT", "8080")
     
-    return os.getenv("APP_URL", f"http://localhost:8081")
+    return os.getenv("APP_URL", f"http://localhost:8080")

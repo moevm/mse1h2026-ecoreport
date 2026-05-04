@@ -27,18 +27,18 @@ jobs:
 
       # Шаг 3. Сборка тестовой инфраструктуры
       - name: Build test images
-        run: docker compose -f docker-compose.dev.yaml build
+        run: docker compose -f docker-compose.yaml -f docker-compose.test.yaml build
 
       # Шаг 4. Запуск тестов
       - name: Run Integration and Functional Tests
-        run: docker compose -f docker-compose.dev.yaml run --rm test-runner
+        run: docker compose -f docker-compose.yaml -f docker-compose.test.yaml up --abort-on-container-exit test-runner
 
       # Шаг 5. Вывод логов при падении
       - name: Dump logs on failure
         if: failure()
-        run: docker compose -f docker-compose.dev.yaml logs --no-color --tail=200
+        run: docker compose -f docker-compose.yaml -f docker-compose.test.yaml logs --no-color --tail=200
 
       # Шаг 6. Очистка инфраструктуры
       - name: Tear down
         if: always()
-        run: docker compose -f docker-compose.dev.yaml down -v
+        run: docker compose -f docker-compose.yaml -f docker-compose.test.yaml down -v

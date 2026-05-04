@@ -716,6 +716,15 @@ function clearAllFormFields() {
             el.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
+
+    // 7. Очистка полей ввода точки наблюдения (внутри таблицы add_observation_point)
+    const observationInputIds = ["observ-point", "observ-coord-n", "observ-coord-e", "eco-type", "description"];
+    observationInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = '';
+        }
+    });
 }
 
 

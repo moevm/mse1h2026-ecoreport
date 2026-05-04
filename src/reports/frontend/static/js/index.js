@@ -306,7 +306,7 @@ window.addEventListener("load", function () {
 
         phoneInput.value = newValue;
 
-        // нормальный возврат курсора (упрощённый, но рабочий)
+        // возврат курсора 
         const diff = newValue.length - oldValue.length;
         const newPos = Math.max(0, start + diff);
 
@@ -324,20 +324,54 @@ window.addEventListener("load", function () {
     attachValidationRule("monitor-amount", validatePositiveInteger, "Введите целое положительное число");
     attachValidationRule("report-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
     attachValidationRule("org-phone", validatePhone, "Введите номер в формате +7 (999) 999-99-99");
-    attachValidationRule("org-email",validateEmail,"Введите корректный email (example@mail.com)");
-    attachValidationRule("report-date",validateReportDate,"Некорректный формат даты");
-   
+    attachValidationRule("org-email", validateEmail, "Введите корректный email (example@mail.com)");
+    attachValidationRule("report-date", validateReportDate, "Некорректный формат даты");
+
     document.addEventListener("input", function (event) {
         const target = event.target;
         if (!(target instanceof HTMLInputElement)) return;
+
+        // обработка полей "Результат" в таблице тестов
         if (target.closest("#test_results_table") && target.dataset.field === "Результат") {
+            // замена запятой на точки прямо в поле ввода
+            const oldValue = target.value;
+            const newValue = oldValue.replace(/,/g, '.');
+            if (newValue !== oldValue) {
+                // сохранение позиции курсора
+                const cursorPos = target.selectionStart;
+                target.value = newValue;
+                target.setSelectionRange(cursorPos, cursorPos);
+            }
+
+            // валидация введенного значения
             validateTestResultsInput(target);
+
+            // автоматическое обновление ячейки "Соответствие" в той же строке
+            const row = target.closest("tr");
+            if (row && row.dataset.indicator) {
+                const complianceInput = row.querySelector("input[data-field='Соответствие']");
+                if (complianceInput) {
+                    complianceInput.value = compareWithStandard(row.dataset.indicator, target.value);
+                }
+            }
         }
+
+        // обработка полей динамики наблюдений
         if (target.closest("#observation_dynamics_table") && target.dataset.field && target.dataset.field !== "Дата") {
+            // замена запятой на точку
+            const oldValue = target.value;
+            const newValue = oldValue.replace(/,/g, '.');
+            if (newValue !== oldValue) {
+                const cursorPos = target.selectionStart;
+                target.value = newValue;
+                target.setSelectionRange(cursorPos, cursorPos);
+            }
+            // валидация введенного значения
             validateObservationDynamicsInput(target);
         }
     });
 
+    // отдельный обработчик change для поля "Дата" в таблице динамика наблюдений
     document.addEventListener("change", function (event) {
         const target = event.target;
         if (!(target instanceof HTMLInputElement)) return;
@@ -345,9 +379,10 @@ window.addEventListener("load", function () {
             validateObservationDynamicsInput(target);
         }
     });
+
 });
 
-// функция для чтения данных из таблицы пунктов наблюдения
+// функция для чтения данных из таблицы наблюдения
 function readObservationPoints() {
     const table = document.getElementById("observation_points_table");
     const points = [];
@@ -371,8 +406,8 @@ function readObservationPoints() {
 
     rows.forEach((row) => {
         const cells = row.querySelectorAll("td");
-        if (cells.length < 6) return; 
-        
+        if (cells.length < 6) return;
+
         const point = {
             observation_point: cells[1].textContent.trim(),
             latitude: parseNumber(cells[2].textContent),
@@ -413,10 +448,10 @@ function readTestResults() {
             console.log("Row skipped - no indicator:", row);
             return; // пропуск строк без indicator
         }
-         
+
         const inputs = row.querySelectorAll("input[data-field]");
         console.log(`Row for indicator "${indicator}" has ${inputs.length} inputs`);
-        
+
         const result = {
             indicator: indicator,
             standard: "",
@@ -424,20 +459,20 @@ function readTestResults() {
             unit: "",
             compliance: ""
         };
-        
+
         inputs.forEach((input) => {
             const field = input.dataset.field;
             const value = input.value.trim();
             console.log(`  Input field "${field}" = "${value}"`);
-            
+
             if (field === "Норматив") result.standard = value;
             else if (field === "Результат") result.result = value;
             else if (field === "Единицы измерения") result.unit = value || "";
             else if (field === "Соответствие") result.compliance = value;
         });
-        
+
         console.log("Result object:", result);
-        
+
         const maybeResult = typeof result.result === "string" ? result.result.trim() : String(result.result).trim();
         if (result.indicator && maybeResult !== "") {
             const normalized = maybeResult.replace(',', '.');
@@ -482,14 +517,14 @@ function readObservationDynamics() {
     rows.forEach((row, rowIndex) => {
         const inputs = row.querySelectorAll("input[data-field]");
         console.log(`Row ${rowIndex} has ${inputs.length} inputs`);
-        
+
         const entry = { date: "" };
-        
+
         inputs.forEach((input) => {
             const field = input.dataset.field;
             const value = input.value.trim();
             console.log(`  Input field "${field}" = "${value}"`);
-            
+
             if (field === "Дата") {
                 entry.date = value;
             } else {
@@ -497,7 +532,7 @@ function readObservationDynamics() {
                 entry[key] = value;
             }
         });
-        
+
         console.log("Entry object:", entry);
 
         const metrics = ["pH", "iron", "manganese", "nitrates", "sulfates"];
@@ -536,7 +571,7 @@ async function sendForm() {
     const status = document.getElementById("report-status");
     if (status) status.innerText = "Генерация отчета...";
 
-    // Cбор данных из всех известных полей по их ID
+    // сбор данных из всех известных полей по их ID
     const data = {
         // информация об объекте
         FULL_OBJECT_NAME: document.getElementById("full-object-name")?.value || "Объект по умолчанию",

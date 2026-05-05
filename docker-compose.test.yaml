@@ -1,0 +1,43 @@
+# override для docker-compose.yaml
+
+services:
+  postgres:
+    environment:
+      - POSTGRES_DB=ecoreport_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ecoreport_test"]
+
+  app:
+    container_name: webapp
+    environment:
+      - POSTGRES_DB=ecoreport_test
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: ecoreport-test-runner
+    env_file:
+      - src/env/app.env
+      - src/env/rabbitmq.env
+      - src/env/minio.env
+      - src/env/postgres.env
+      - src/env/frontend.env
+    environment:
+      - POSTGRES_DB=ecoreport_test
+      - POSTGRES_HOST=postgres
+      - RABBITMQ_HOST=rabbitmq
+      - MINIO_HOST=minio
+      - APP_URL=http://webapp:8080
+    depends_on:
+      app:
+        condition: service_started
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini
+    command: >
+      sh -c "
+        pytest tests/integration -v --tb=short &&
+        pytest tests/functional -v --tb=short -m functional
+      "

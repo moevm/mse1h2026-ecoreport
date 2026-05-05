@@ -1,0 +1,25 @@
+# Имя workflow, отображается в Actions
+name: 'Check for merge conflicts'
+
+# Запускается при каждом пуше в любую ветку
+on: [push]
+
+jobs:
+  find_conflicts:
+    runs-on: ubuntu-22.04
+
+    # Используем готовый Action для автоматической проверки конфликтов
+    steps:
+      - uses: mschilde/auto-label-merge-conflicts@master
+        with:
+          # При наличии конфликтов вешается label "has conflicts"
+          CONFLICT_LABEL_NAME: "has conflicts"
+
+           # Токен для доступа к API GitHub (автоматически предоставляется)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Максимальное количество попыток проверки
+          MAX_RETRIES: 5
+
+          # Пауза между попытками в миллисекундах
+          WAIT_MS: 5000

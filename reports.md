@@ -123,7 +123,7 @@
 [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/3)
 
 ## Итерация №3
-### [Презентация]()
+### [Презентация](docs/EcoReport_Sprint_3_Presentation.pdf)
 
 ### [Инструкция к запуску](docs/run-instruction/instruction.md)
 

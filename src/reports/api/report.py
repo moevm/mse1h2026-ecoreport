@@ -1,6 +1,8 @@
 import uuid
 import asyncio
 import json
+import pydantic
+
 from datetime import timedelta, timezone
 from os.path import splitext
 
@@ -132,7 +134,7 @@ async def download_file(id: str,
         result: bytes = await use_case.execute(id)
         return Response(content=result, media_type="application/pdf")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @reports_router.get("/download-file/{object_name:path}",
@@ -153,7 +155,7 @@ async def download_object_file(object_name: str, repository: FromDishka[MinioRep
     try:
         result = repository.get_object(object_name)
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
     return Response(
         content=result,
@@ -182,8 +184,16 @@ async def generate_report(payload: dict,
         message = ReportInputData(**payload, user_id=user_id, report_id=report_id)
         await use_case.execute(message=message)
         return {"status": "success", "report_id": report_id}
+    except pydantic.ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=exc.errors()
+        )
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        ) from e
 
 
 @reports_router.get("/events/report-ready")

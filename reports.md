@@ -131,10 +131,10 @@
 [демо1]()
 ### Запланированные задачи
 - Разработать прототип приложения
-- [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/2)
+- [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/3)
 ### Выполненные задачи
 - Разработан прототип с базовым функционалом
-[см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/2)
-### Задачи на следующую итерацию
 [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/3)
+### Задачи на следующую итерацию
+[см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/4)
 

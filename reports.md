@@ -128,7 +128,7 @@
 ### [Инструкция к запуску](docs/run-instruction/instruction.md)
 
 ### Скринкасты
-[демо1]()
+[демо2](docs/demo2.zip)
 ### Запланированные задачи
 - Разработать прототип приложения
 - [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/3)

@@ -118,17 +118,17 @@ class TestResults(Base):
     results_sulfates: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
 
 
-class ObservationDinamic(Base):
-    __tablename__ = "observation_dinamic"
+class ObservationDynamic(Base):
+    __tablename__ = "observation_dynamic"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     file_id: Mapped[Optional[int]] = mapped_column(ForeignKey("file.id"), nullable=True)
-    dinamic_ph: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
-    dinamic_iron: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
-    dinamic_manganese: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
-    dinamic_nitrates: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
-    dinamic_sulfates: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
-    dinamic_data: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    dynamic_ph: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
+    dynamic_iron: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
+    dynamic_manganese: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
+    dynamic_nitrates: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
+    dynamic_sulfates: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
+    dynamic_data: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
 
     file: Mapped[Optional["File"]] = relationship()
 

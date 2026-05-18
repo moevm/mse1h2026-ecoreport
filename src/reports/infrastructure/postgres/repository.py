@@ -1,29 +1,145 @@
-from typing import Type
-from reports.infrastructure.postgres.models import Report
+from typing import Type, Optional
+from reports.infrastructure.postgres.models import (
+    Report, User, DocumentsGost, ObservationPoint, TestResults, ObservationDynamic
+)
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert, values
-from reports.schemas.report_models import GeneratedReportData
+from sqlalchemy import select, insert, update, delete
+from reports.schemas.report_models import (
+    GeneratedReportData,
+    UserCreate, UserUpdate,
+    DocumentsGostCreate, DocumentsGostUpdate,
+    ObservationPointCreate, ObservationPointUpdate,
+    TestResultsCreate, TestResultsUpdate,
+    ObservationDynamicCreate, ObservationDynamicUpdate
+)
 
 class ReportsRepository:
     _collection: Type[Report] = Report
 
-    async def add_report(self, data: GeneratedReportData,
-                        session: AsyncSession) -> None:
+    async def add_report(self, data: GeneratedReportData, session: AsyncSession) -> None:
         values_data = data.model_dump()
         query = insert(self._collection).values(values_data)
         await session.execute(query)
 
-    async def get_all_reports_id(self, user_id: str,
-                                session: AsyncSession) -> list[str]:
+    async def get_all_reports_id(self, user_id: str, session: AsyncSession) -> list[str]:
         query = select(self._collection).where(self._collection.user_id == user_id)
         result = (await session.scalars(query)).all()
         return [obj.file_id for obj in result]
 
-    async def get_latest_report_id(self, user_id: str,
-                                session: AsyncSession) -> str:
+    async def get_latest_report_id(self, user_id: str, session: AsyncSession) -> str:
         query = (select(self._collection)
                 .where(self._collection.user_id == user_id)
                 .order_by(self._collection.created_at.desc())
                 .limit(1))
         result = (await session.execute(query)).one()
         return result.file_id
+
+
+class UserRepository:
+    _collection: Type[User] = User
+
+    async def add(self, data: UserCreate, session: AsyncSession) -> int:
+        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection.id)
+        result = await session.execute(query)
+        return result.scalar_one()
+
+    async def get_by_id(self, record_id: int, session: AsyncSession) -> Optional[User]:
+        query = select(self._collection).where(self._collection.id == record_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def update(self, record_id: int, data: UserUpdate, session: AsyncSession) -> None:
+        query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
+        await session.execute(query)
+
+    async def delete(self, record_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.id == record_id)
+        await session.execute(query)
+
+
+class DocumentsGostRepository:
+    _collection: Type[DocumentsGost] = DocumentsGost
+
+    async def add(self, data: DocumentsGostCreate, session: AsyncSession) -> int:
+        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection.id)
+        result = await session.execute(query)
+        return result.scalar_one()
+
+    async def get_by_id(self, record_id: int, session: AsyncSession) -> Optional[DocumentsGost]:
+        query = select(self._collection).where(self._collection.id == record_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def update(self, record_id: int, data: DocumentsGostUpdate, session: AsyncSession) -> None:
+        query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
+        await session.execute(query)
+
+    async def delete(self, record_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.id == record_id)
+        await session.execute(query)
+
+
+class ObservationPointRepository:
+    _collection: Type[ObservationPoint] = ObservationPoint
+
+    async def add(self, data: ObservationPointCreate, session: AsyncSession) -> int:
+        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection.id)
+        result = await session.execute(query)
+        return result.scalar_one()
+
+    async def get_by_id(self, record_id: int, session: AsyncSession) -> Optional[ObservationPoint]:
+        query = select(self._collection).where(self._collection.id == record_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def update(self, record_id: int, data: ObservationPointUpdate, session: AsyncSession) -> None:
+        query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
+        await session.execute(query)
+
+    async def delete(self, record_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.id == record_id)
+        await session.execute(query)
+
+
+class TestResultsRepository:
+    _collection: Type[TestResults] = TestResults
+
+    async def add(self, data: TestResultsCreate, session: AsyncSession) -> int:
+        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection.id)
+        result = await session.execute(query)
+        return result.scalar_one()
+
+    async def get_by_id(self, record_id: int, session: AsyncSession) -> Optional[TestResults]:
+        query = select(self._collection).where(self._collection.id == record_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def update(self, record_id: int, data: TestResultsUpdate, session: AsyncSession) -> None:
+        query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
+        await session.execute(query)
+
+    async def delete(self, record_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.id == record_id)
+        await session.execute(query)
+
+
+class ObservationDynamicRepository:
+    _collection: Type[ObservationDynamic] = ObservationDynamic
+
+    async def add(self, data: ObservationDynamicCreate, session: AsyncSession) -> int:
+        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection.id)
+        result = await session.execute(query)
+        return result.scalar_one()
+
+    async def get_by_id(self, record_id: int, session: AsyncSession) -> Optional[ObservationDynamic]:
+        query = select(self._collection).where(self._collection.id == record_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def update(self, record_id: int, data: ObservationDynamicUpdate, session: AsyncSession) -> None:
+        query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
+        await session.execute(query)
+
+    async def delete(self, record_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.id == record_id)
+        await session.execute(query)

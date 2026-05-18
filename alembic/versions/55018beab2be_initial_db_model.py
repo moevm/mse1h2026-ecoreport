@@ -99,15 +99,15 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['test_results_id'], ['test_results.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('observation_dinamic',
+    op.create_table('observation_dynamic',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('file_id', sa.Integer(), nullable=True),
-        sa.Column('dinamic_ph', sa.Numeric(precision=10, scale=4), nullable=True),
-        sa.Column('dinamic_iron', sa.Numeric(precision=10, scale=4), nullable=True),
-        sa.Column('dinamic_manganese', sa.Numeric(precision=10, scale=4), nullable=True),
-        sa.Column('dinamic_nitrates', sa.Numeric(precision=10, scale=4), nullable=True),
-        sa.Column('dinamic_sulfates', sa.Numeric(precision=10, scale=4), nullable=True),
-        sa.Column('dinamic_data', sa.Date(), nullable=True),
+        sa.Column('dynamic_ph', sa.Numeric(precision=10, scale=4), nullable=True),
+        sa.Column('dynamic_iron', sa.Numeric(precision=10, scale=4), nullable=True),
+        sa.Column('dynamic_manganese', sa.Numeric(precision=10, scale=4), nullable=True),
+        sa.Column('dynamic_nitrates', sa.Numeric(precision=10, scale=4), nullable=True),
+        sa.Column('dynamic_sulfates', sa.Numeric(precision=10, scale=4), nullable=True),
+        sa.Column('dynamic_data', sa.Date(), nullable=True),
         sa.ForeignKeyConstraint(['file_id'], ['file.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -144,7 +144,7 @@ def downgrade() -> None:
             postgresql_using="user_id::varchar")
     op.drop_column('reports', 'file_id')
     op.drop_table('observation_point')
-    op.drop_table('observation_dinamic')
+    op.drop_table('observation_dynamic')
     op.drop_table('file')
     op.drop_table('user')
     op.drop_table('test_results')

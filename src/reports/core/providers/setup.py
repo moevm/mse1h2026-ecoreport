@@ -7,10 +7,15 @@ from reports.domain.use_cases.download_report import DownloadReportUseCase
 from reports.domain.use_cases.generate_report import GenerateReportUseCase
 from reports.domain.use_cases.new_report_generation import NewReportGenerateUseCase
 from reports.domain.use_cases.save_report import SaveDataUseCase
+from reports.domain.use_cases.update_report import UpdateDataUseCase
+from reports.domain.use_cases.delete_report import DeleteDataUseCase
 from reports.infrastructure.minio.repository import MinioRepository
 from reports.infrastructure.minio.client import MinioClient
 from reports.infrastructure.postgres.database import Database
-from reports.infrastructure.postgres.repository import ReportsRepository
+from reports.infrastructure.postgres.repository import (
+    ReportsRepository, FileRepository, DocumentsGostRepository,
+    TestResultsRepository, ObservationPointRepository, ObservationDynamicRepository
+)
 from reports.infrastructure.rabbitmq.broker import broker
 from reports.infrastructure.rabbitmq.publisher import RabbitPublisher
 from reports.domain.generator_utils.report_generator.report_generator import ReportGenerator
@@ -48,6 +53,26 @@ class RepositoryProvider(Provider):
         return ReportsRepository()
 
     @provide
+    def get_file_repository(self) -> FileRepository:
+        return FileRepository()
+
+    @provide
+    def get_documents_gost_repository(self) -> DocumentsGostRepository:
+        return DocumentsGostRepository()
+
+    @provide
+    def get_test_results_repository(self) -> TestResultsRepository:
+        return TestResultsRepository()
+
+    @provide
+    def get_observation_point_repository(self) -> ObservationPointRepository:
+        return ObservationPointRepository()
+
+    @provide
+    def get_observation_dynamic_repository(self) -> ObservationDynamicRepository:
+        return ObservationDynamicRepository()
+
+    @provide
     def get_minio_repository(self, client: Minio) -> MinioRepository:
         return MinioRepository(client)
 
@@ -78,8 +103,44 @@ class UseCaseProvider(Provider):
         return GenerateReportUseCase(publisher, generator, repository)
 
     @provide
-    def get_save_data_use_case(self, repository: ReportsRepository, database: Database) -> SaveDataUseCase:
-        return SaveDataUseCase(repository, database)
+    def get_save_data_use_case(self,
+                               postgres_repository: ReportsRepository,
+                               database: Database,
+                               file_repository: FileRepository,
+                               documents_gost_repository: DocumentsGostRepository,
+                               test_results_repository: TestResultsRepository,
+                               observation_point_repository: ObservationPointRepository,
+                               observation_dynamic_repository: ObservationDynamicRepository) -> SaveDataUseCase:
+        return SaveDataUseCase(
+            postgres_repository, database, file_repository, documents_gost_repository,
+            test_results_repository, observation_point_repository, observation_dynamic_repository
+        )
+
+    @provide
+    def get_update_data_use_case(self,
+                                 database: Database,
+                                 file_repository: FileRepository,
+                                 documents_gost_repository: DocumentsGostRepository,
+                                 test_results_repository: TestResultsRepository,
+                                 observation_point_repository: ObservationPointRepository,
+                                 observation_dynamic_repository: ObservationDynamicRepository) -> UpdateDataUseCase:
+        return UpdateDataUseCase(
+            database, file_repository, documents_gost_repository,
+            test_results_repository, observation_point_repository, observation_dynamic_repository
+        )
+
+    @provide
+    def get_delete_data_use_case(self,
+                                 database: Database,
+                                 file_repository: FileRepository,
+                                 documents_gost_repository: DocumentsGostRepository,
+                                 test_results_repository: TestResultsRepository,
+                                 observation_point_repository: ObservationPointRepository,
+                                 observation_dynamic_repository: ObservationDynamicRepository) -> DeleteDataUseCase:
+        return DeleteDataUseCase(
+            database, file_repository, documents_gost_repository,
+            test_results_repository, observation_point_repository, observation_dynamic_repository
+        )
 
     @provide
     def get_download_report_use_case(self, repository: MinioRepository) -> DownloadReportUseCase:

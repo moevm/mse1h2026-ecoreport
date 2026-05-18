@@ -4,15 +4,14 @@ from reports.infrastructure.postgres.repository import (
     TestResultsRepository, ObservationPointRepository, ObservationDynamicRepository
 )
 from reports.schemas.report_models import (
-    ReportInputData, FileCreate, DocumentsGostCreate, TestResultsCreate,
+    ReportInputData, FileUpdate, DocumentsGostUpdate, TestResultsUpdate,
     ObservationPointCreate, ObservationDynamicCreate, GeneratedReportData
 )
 from datetime import datetime
 
-class SaveDataUseCase:
+class UpdateDataUseCase:
     def __init__(
         self, 
-        postgres_repository: ReportsRepository, 
         database: Database,
         file_repository: FileRepository,
         documents_gost_repository: DocumentsGostRepository,
@@ -20,7 +19,6 @@ class SaveDataUseCase:
         observation_point_repository: ObservationPointRepository,
         observation_dynamic_repository: ObservationDynamicRepository
     ):
-        self._postgres_repository = postgres_repository
         self._database = database
         self._file_repository = file_repository
         self._documents_gost_repository = documents_gost_repository
@@ -28,28 +26,37 @@ class SaveDataUseCase:
         self._observation_point_repository = observation_point_repository
         self._observation_dynamic_repository = observation_dynamic_repository
 
-    async def execute(self, data: ReportInputData):
+    async def execute(self, file_id: int, data: ReportInputData):
         async with self._database.session() as session:
             try:
-                gost_data = DocumentsGostCreate(description=",".join(data.DOCUMENTS_GOST))
-                gost_id = await self._documents_gost_repository.add(gost_data, session)
+                # Retrieve existing file to get GOST and TestResults IDs
+                existing_file = await self._file_repository.get_by_id(file_id, session)
+                if not existing_file:
+                    raise ValueError(f"File with id {file_id} not found")
 
-                test_results_data = TestResultsCreate(
-                    results_ph=data.RESULTS_PH,
-                    results_iron=data.RESULTS_IRON,
-                    results_manganese=data.RESULTS_MANGANESE,
-                    results_nitrates=data.RESULTS_NITRATES,
-                    results_sulfates=data.RESULTS_SULFATES
-                )
-                test_results_id = await self._test_results_repository.add(test_results_data, session)
+                # Update GOST
+                if existing_file.gost_id:
+                    gost_data = DocumentsGostUpdate(description=",".join(data.DOCUMENTS_GOST))
+                    await self._documents_gost_repository.update(existing_file.gost_id, gost_data, session)
 
-                file_data = FileCreate(
+                # Update TestResults
+                if existing_file.test_results_id:
+                    test_results_data = TestResultsUpdate(
+                        results_ph=data.RESULTS_PH,
+                        results_iron=data.RESULTS_IRON,
+                        results_manganese=data.RESULTS_MANGANESE,
+                        results_nitrates=data.RESULTS_NITRATES,
+                        results_sulfates=data.RESULTS_SULFATES
+                    )
+                    await self._test_results_repository.update(existing_file.test_results_id, test_results_data, session)
+
+                # Update File
+                file_data = FileUpdate(
                     full_object_name=data.FULL_OBJECT_NAME,
                     short_object_name=data.SHORT_OBJECT_NAME,
                     organization_name=data.ORGANIZATION_NAME,
                     region=data.REGION,
                     year=datetime.strptime(str(data.YEAR), "%Y").date() if data.YEAR else None,
-                    gost_id=gost_id,
                     relief_type=data.RELIEF_TYPE,
                     soil_type=data.SOIL_TYPE,
                     climate_zone=data.CLIMATE_ZONE,
@@ -65,15 +72,16 @@ class SaveDataUseCase:
                     manhole_count=data.MANHOLE_COUNT,
                     monitoring_point_count=data.MONITORING_POINT_COUNT,
                     observation_frequency=data.OBSERVATION_FREQUENCY,
-                    test_results_id=test_results_id,
                     organization_address=data.ORGANIZATION_ADDRESS,
                     organization_phone=data.ORGANIZATION_PHONE,
                     organization_email=data.ORGANIZATION_EMAIL,
                     responsible_name=data.RESPONSIBLE_NAME,
                     responsible_position=data.RESPONSIBLE_POSITION
                 )
-                file_id = await self._file_repository.add(file_data, session)
+                await self._file_repository.update(file_id, file_data, session)
 
+                # Update Collection (Delete and Recreate)
+                await self._observation_point_repository.delete_by_file_id(file_id, session)
                 for pt in data.OBSERVATION_POINTS:
                     point_data = ObservationPointCreate(
                         file_id=file_id,
@@ -85,6 +93,7 @@ class SaveDataUseCase:
                     )
                     await self._observation_point_repository.add(point_data, session)
 
+                await self._observation_dynamic_repository.delete_by_file_id(file_id, session)
                 for dyn in data.RESULTS_DYNAMIC:
                     dyn_data = ObservationDynamicCreate(
                         file_id=file_id,
@@ -95,12 +104,6 @@ class SaveDataUseCase:
                         dynamic_sulfates=dyn.sulfates
                     )
                     await self._observation_dynamic_repository.add(dyn_data, session)
-
-                report_data = GeneratedReportData(
-                    user_id=data.user_id,
-                    file_name=str(file_id) 
-                )
-                await self._postgres_repository.add_report(report_data, session)
                 
                 await session.commit()
             except Exception as e:

@@ -1,12 +1,13 @@
 from typing import Type, Optional
 from reports.infrastructure.postgres.models import (
-    Report, User, DocumentsGost, ObservationPoint, TestResults, ObservationDynamic
+    Report, User, File, DocumentsGost, ObservationPoint, TestResults, ObservationDynamic
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, update, delete
 from reports.schemas.report_models import (
     GeneratedReportData,
     UserCreate, UserUpdate,
+    FileCreate, FileUpdate,
     DocumentsGostCreate, DocumentsGostUpdate,
     ObservationPointCreate, ObservationPointUpdate,
     TestResultsCreate, TestResultsUpdate,
@@ -100,6 +101,10 @@ class ObservationPointRepository:
         query = delete(self._collection).where(self._collection.id == record_id)
         await session.execute(query)
 
+    async def delete_by_file_id(self, file_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.file_id == file_id)
+        await session.execute(query)
+
 
 class TestResultsRepository:
     _collection: Type[TestResults] = TestResults
@@ -137,6 +142,32 @@ class ObservationDynamicRepository:
         return result.scalar_one_or_none()
 
     async def update(self, record_id: int, data: ObservationDynamicUpdate, session: AsyncSession) -> None:
+        query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
+        await session.execute(query)
+
+    async def delete(self, record_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.id == record_id)
+        await session.execute(query)
+
+    async def delete_by_file_id(self, file_id: int, session: AsyncSession) -> None:
+        query = delete(self._collection).where(self._collection.file_id == file_id)
+        await session.execute(query)
+
+
+class FileRepository:
+    _collection: Type[File] = File
+
+    async def add(self, data: FileCreate, session: AsyncSession) -> int:
+        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection.id)
+        result = await session.execute(query)
+        return result.scalar_one()
+
+    async def get_by_id(self, record_id: int, session: AsyncSession) -> Optional[File]:
+        query = select(self._collection).where(self._collection.id == record_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def update(self, record_id: int, data: FileUpdate, session: AsyncSession) -> None:
         query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
         await session.execute(query)
 

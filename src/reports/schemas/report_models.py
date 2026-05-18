@@ -16,6 +16,43 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     pass
 
+class FileBase(BaseModel):
+    full_object_name: Optional[str] = None
+    short_object_name: Optional[str] = None
+    organization_name: Optional[str] = None
+    region: Optional[str] = None
+    year: Optional[date] = None
+    gost_id: Optional[int] = None
+    relief_type: Optional[str] = None
+    soil_type: Optional[str] = None
+    groundwater_level: Optional[Decimal] = None
+    climate_zone: Optional[str] = None
+    coordinates_latitude: Optional[Decimal] = None
+    coordinates_longitude: Optional[Decimal] = None
+    object_type: Optional[str] = None
+    system_type: Optional[str] = None
+    pipe_material: Optional[str] = None
+    pipe_diameter: Optional[Decimal] = None
+    pipe_depth: Optional[Decimal] = None
+    pipe_length: Optional[Decimal] = None
+    pipe_install_year: Optional[date] = None
+    manhole_count: Optional[int] = None
+    monitoring_point_count: Optional[int] = None
+    observation_frequency: Optional[str] = None
+    test_results_id: Optional[int] = None
+    organization_address: Optional[str] = None
+    organization_phone: Optional[str] = None
+    organization_email: Optional[str] = None
+    responsible_name: Optional[str] = None
+    responsible_position: Optional[str] = None
+    report_date: Optional[date] = None
+
+class FileCreate(FileBase):
+    pass
+
+class FileUpdate(FileBase):
+    pass
+
 class DocumentsGostBase(BaseModel):
     gost_r_72274_2025: Optional[bool] = None
     gost_1811_2019: Optional[bool] = None

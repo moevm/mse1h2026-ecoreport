@@ -16,6 +16,9 @@ import os
 from reports.domain.use_cases.download_report import DownloadReportUseCase
 from reports.domain.use_cases.generate_report import GenerateReportUseCase
 from reports.domain.use_cases.new_report_generation import NewReportGenerateUseCase
+from reports.domain.use_cases.save_report import SaveDataUseCase
+from reports.domain.use_cases.update_report import UpdateDataUseCase
+from reports.domain.use_cases.delete_report import DeleteDataUseCase
 from reports.infrastructure.minio.repository import MinioRepository
 from reports.infrastructure.websocket.report_notifications import report_notification_hub
 from reports.schemas.report_models import ReportInputData
@@ -225,3 +228,65 @@ async def report_ready_events(request: Request):
             "X-Accel-Buffering": "no",
         },
     )
+
+@reports_router.post("/save-report-data", status_code=status.HTTP_201_CREATED)
+@inject
+async def save_report_data(payload: dict, use_case: FromDishka[SaveDataUseCase]):
+    try:
+        user_id = "1" # TODO: integrate auth
+        report_id = str(uuid.uuid4())
+        message = ReportInputData(**payload, user_id=user_id, report_id=report_id)
+        await use_case.execute(data=message)
+        return {"status": "success", "message": "Report data saved successfully."}
+    except pydantic.ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=exc.errors()
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@reports_router.put("/update-report-data/{file_id}", status_code=status.HTTP_200_OK)
+@inject
+async def update_report_data(file_id: int, payload: dict, use_case: FromDishka[UpdateDataUseCase]):
+    try:
+        user_id = "1" # TODO: integrate auth
+        report_id = str(uuid.uuid4())
+        message = ReportInputData(**payload, user_id=user_id, report_id=report_id)
+        await use_case.execute(file_id=file_id, data=message)
+        return {"status": "success", "message": "Report data updated successfully."}
+    except pydantic.ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=exc.errors()
+        )
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(val_err)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@reports_router.delete("/delete-report-data/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+async def delete_report_data(file_id: int, use_case: FromDishka[DeleteDataUseCase]):
+    try:
+        await use_case.execute(file_id=file_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(val_err)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )

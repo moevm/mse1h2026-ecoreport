@@ -1,65 +1,92 @@
 import geojson
 
 
-POLLUTION_THRESHOLD = 10.0 #нужный порог выставить
 GREEN_HEX = "#30DB30"
 RED_HEX = "#DB3030"
 
+# RGB компоненты зелёного и красного для градиента
+_GREEN_RGB = (0x30, 0xDB, 0x30)  # (48, 219, 48)
+_RED_RGB   = (0xDB, 0x30, 0x30)  # (219, 48, 48)
 
-def feature_data_point(longitude: float, latitude: float, pollution_level: float) -> geojson.Feature:
-    '''
-    create a GeoJSON Feature object representing a Point with included data, such as the color to display based on pollution level
-
-    :type longitude: float
-    :type latitude: float
-    :type pollution_level: float
-    :return:
-    :rtype: geojson.Feature
-    '''
-
-    color_hex: str = GREEN_HEX if pollution_level < POLLUTION_THRESHOLD else RED_HEX
-    properties: dict = {"pollution_level": pollution_level, "marker-color": color_hex}
-    new_point: geojson.Point = geojson.Point((longitude, latitude))
-    new_feature: geojson.Feature = geojson.Feature(geometry=new_point, properties=properties)
-    return new_feature
+# соответствие отображаемых названий показателей ключам свойств GeoJSON
+_INDICATOR_KEY_MAP = {
+    "pH":       "pH",
+    "Железо":   "iron",
+    "Марганец": "manganese",
+    "Нитраты":  "nitrates",
+    "Сульфаты": "sulfates",
+}
 
 
-def create_collection_geojson(longitudes: list[float], latitudes: list[float], pollution_levels: list[float]) -> str:
-    '''
-    create a collection of GeoJSON Feature objects representing a Point with included data, such as the color to display based on pollution level, and dump the file text
+def compute_gradient_color(ratio: float) -> str:
+    """
+    Возвращает hex-цвет, линейно интерполированный от зелёного к красному.
 
-    :type longitudes: list[float]
-    :type latitudes: list[float]
-    :type pollution_levels: list[float]
-    :return:
-    :rtype: str
-    '''
-    points: list = list()
-    for i in range(len(longitudes)):
-        points.append(feature_data_point(longitudes[i], latitudes[i], pollution_levels[i]))
-    collection: geojson.FeatureCollection = geojson.FeatureCollection(points)
-    return geojson.dumps(collection)
+    ratio=0.0 — все измерения в норме (зелёный).
+    ratio=1.0 — все измерения вне нормы (красный).
+    """
+    ratio = max(0.0, min(1.0, ratio))
+    r = round(_GREEN_RGB[0] + (_RED_RGB[0] - _GREEN_RGB[0]) * ratio)
+    g = round(_GREEN_RGB[1] + (_RED_RGB[1] - _GREEN_RGB[1]) * ratio)
+    b = round(_GREEN_RGB[2] + (_RED_RGB[2] - _GREEN_RGB[2]) * ratio)
+    return f"#{r:02X}{g:02X}{b:02X}"
 
 
-def create_point_feature_geojson(longitude: float, latitude: float, pollution_level: float) -> str:
-    '''
-    create a GeoJSON Feature object representing a Point with included data, such as the color to display based on pollution level, and dump the file text
-
-    :type longitude: float
-    :type latitude: float
-    :type pollution_levels: float
-    :return:
-    :rtype: str
-    '''
-    return geojson.dumps(feature_data_point(longitude, latitude, pollution_level))
+def _parse_float(value) -> float | None:
+    try:
+        return float(str(value).replace(",", "."))
+    except (ValueError, TypeError):
+        return None
 
 
-if __name__ == "__main__":
-    #example of creating a geojson file
-    longs = [0.4214, 61.12315, 57.24239]
-    lats = [75.5466, 15.4521, 87.342521]
-    pollution = [0.0, 5.0, 11.7]
-    with open("example1.geojson", "w") as file:
-        file.write(create_collection_geojson(longs, lats, pollution))
-    with open("example2.geojson", "w") as file:
-        file.write(create_point_feature_geojson(longs[0], lats[0], pollution[0]))
+def generate_report_geojson(observation_points: list[dict], test_results: list[dict]) -> str:
+    """
+    Генерирует GeoJSON FeatureCollection по точкам наблюдения и таблице результатов.
+
+    Каждый Feature содержит:
+    - числовые значения показателей (pH, iron, manganese, nitrates, sulfates),
+    - hex-цвет маркера («marker-color»)
+
+    :param observation_points: список словарей из OBSERVATION_POINTS
+    :param test_results:       список словарей из TEST_RESULTS
+    :return: строка GeoJSON
+    """
+    measurements: dict = {}
+    non_compliant = 0
+    total = 0
+
+    for result in test_results:
+        indicator = str(result.get("indicator", ""))
+        key = _INDICATOR_KEY_MAP.get(indicator, indicator.lower())
+        value = _parse_float(result.get("result"))
+        if value is not None:
+            measurements[key] = value
+
+        compliance = str(result.get("compliance", "")).strip().lower()
+        if compliance in ("да", "нет"):
+            total += 1
+            if compliance == "нет":
+                non_compliant += 1
+
+    ratio = non_compliant / total if total > 0 else 0.0
+    color = compute_gradient_color(ratio)
+
+    features: list = []
+    for point in observation_points:
+        if not isinstance(point, dict):
+            continue
+        lat = _parse_float(point.get("latitude") if point.get("latitude") is not None else point.get("lat"))
+        lon = _parse_float(point.get("longitude") if point.get("longitude") is not None else point.get("lon"))
+        if lat is None or lon is None:
+            continue
+
+        properties = {
+            "name":        str(point.get("observation_point") or ""),
+            "medium_type": str(point.get("medium_type") or ""),
+            "description": str(point.get("description") or ""),
+            "marker-color": color,
+            **measurements,
+        }
+        features.append(geojson.Feature(geometry=geojson.Point((lon, lat)), properties=properties))
+
+    return geojson.dumps(geojson.FeatureCollection(features))

@@ -201,3 +201,7 @@ function validateAllForm() {
 
     return valid;
 }
+
+window.addEventListener("load", function () {
+    attachAllValidationRules()
+}

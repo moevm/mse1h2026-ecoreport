@@ -1,8 +1,10 @@
 import asyncio
+import logging
 from collections import defaultdict
 from typing import Any
 from urllib.parse import quote
 
+logger = logging.getLogger(__name__)
 
 class ReportNotificationHub:
     def __init__(self) -> None:
@@ -26,16 +28,30 @@ class ReportNotificationHub:
                 self._subscribers.pop(user_id, None)
 
     async def publish_report_ready(self, user_id: str, file_name: str) -> None:
+        extension = file_name.split(".")[-1].lower()
         payload = {
             "status": "ready",
             "title": "Отчет готов",
             "file_name": file_name,
+            "file_type": extension,  # pdf / docx
             "download_url": f"/download-file/{quote(file_name, safe='')}",
         }
-
+        
+        logger.info(
+            f"Publishing report ready notification",
+            extra={
+                "user_id": user_id,
+                "file_name": file_name,
+                "file_type": extension,
+                "download_url": payload["download_url"]
+            }
+        )
+        
         async with self._lock:
             subscribers = list(self._subscribers.get(user_id, set()))
 
+        dead_queues = []
+        
         for queue in subscribers:
             if queue.full():
                 try:
@@ -43,7 +59,22 @@ class ReportNotificationHub:
                 except asyncio.QueueEmpty:
                     pass
 
-            queue.put_nowait(payload)
-
+            try:
+                queue.put_nowait(payload)
+            except Exception as e:
+                logger.error(
+                    f"Failed to publish notification to queue for user {user_id}: {e}",
+                    exc_info=True
+                )
+                dead_queues.append(queue)
+        
+        if dead_queues:
+            async with self._lock:
+                queues = self._subscribers.get(user_id)
+                if queues:
+                    for queue in dead_queues:
+                        queues.discard(queue)
+                    if not queues:
+                        self._subscribers.pop(user_id, None)
 
 report_notification_hub = ReportNotificationHub()

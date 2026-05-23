@@ -33,9 +33,9 @@
                             </div>
 
                             <aside class="card__side">
-                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.pdf) }}">Скачать PDF</a>
-                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.docx) }}">Скачать DOCX</a>
-                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.geojson) }}">Скачать GEOJSON</a>
+                                {% if report.files.pdf %}<a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.pdf) }}">Скачать PDF</a>{% endif %}
+                                {% if report.files.docx %}<a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.docx) }}">Скачать DOCX</a>{% endif %}
+                                {% if report.files.geojson %}<a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.geojson) }}">Скачать GEOJSON</a>{% endif %}
                             </aside>
                         </article>
                     {% endfor %}

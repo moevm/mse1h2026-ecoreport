@@ -35,6 +35,7 @@ window.addEventListener("load", function () {
         const newPos = Math.max(0, start + diff);
 
         phoneInput.setSelectionRange(newPos, newPos);
+    });
 
     document.addEventListener("input", function (event) {
         const target = event.target;

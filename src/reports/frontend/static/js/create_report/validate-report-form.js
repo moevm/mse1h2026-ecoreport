@@ -203,5 +203,6 @@ function validateAllForm() {
 }
 
 window.addEventListener("load", function () {
-    attachAllValidationRules()
-}
+    attachAllValidationRules();
+});
+

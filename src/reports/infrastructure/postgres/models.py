@@ -137,8 +137,11 @@ class User(Base):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    user_name: Mapped[Optional[str]] = mapped_column(String(100), unique=True)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255))
     image_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    update_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=False),
+                                                 server_default=func.timezone("UTC", func.current_timestamp()))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=False),
+                                                 server_default=func.timezone("UTC", func.current_timestamp()),
+                                                 onupdate=func.timezone("UTC", func.current_timestamp()))

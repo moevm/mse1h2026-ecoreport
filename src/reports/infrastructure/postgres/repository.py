@@ -6,13 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, update, delete
 from reports.schemas.report_models import (
     GeneratedReportData,
-    UserCreate, UserUpdate,
     FileCreate, FileUpdate,
     DocumentsGostCreate, DocumentsGostUpdate,
     ObservationPointCreate, ObservationPointUpdate,
     TestResultsCreate, TestResultsUpdate,
     ObservationDynamicCreate, ObservationDynamicUpdate
 )
+from reports.schemas.user_models import UserCreate, UserUpdate, UserCreated, UserUpdated, UserFullData
+
 
 class ReportsRepository:
     _collection: Type[Report] = Report
@@ -39,19 +40,26 @@ class ReportsRepository:
 class UserRepository:
     _collection: Type[User] = User
 
-    async def add(self, data: UserCreate, session: AsyncSession) -> int:
-        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection.id)
+    async def add(self, data: UserCreate, session: AsyncSession) -> UserCreated:
+        query = insert(self._collection).values(**data.model_dump(exclude_unset=True)).returning(self._collection)
         result = await session.execute(query)
-        return result.scalar_one()
+        return UserCreated.model_validate(result.scalar_one())
 
-    async def get_by_id(self, record_id: int, session: AsyncSession) -> Optional[User]:
+    async def get_by_id(self, record_id: int, session: AsyncSession) -> UserFullData | None:
         query = select(self._collection).where(self._collection.id == record_id)
-        result = await session.execute(query)
-        return result.scalar_one_or_none()
+        result = (await session.execute(query)).scalar_one_or_none()
+        return UserFullData.model_validate(result) if result else None
 
-    async def update(self, record_id: int, data: UserUpdate, session: AsyncSession) -> None:
-        query = update(self._collection).where(self._collection.id == record_id).values(**data.model_dump(exclude_unset=True))
-        await session.execute(query)
+    async def get_by_user_name(self, user_name: str, session: AsyncSession) -> UserFullData | None:
+        query = select(self._collection).where(self._collection.user_name == user_name)
+        result = (await session.execute(query)).scalar_one_or_none()
+        return UserFullData.model_validate(result) if result else None
+
+    async def update(self, record_id: int, data: UserUpdate, session: AsyncSession) -> UserUpdated:
+        query = (update(self._collection).where(self._collection.id == record_id)
+                 .values(**data.model_dump(exclude_unset=True)).returning(self._collection))
+        result = await session.execute(query)
+        return UserUpdated.model_validate(result.scalar_one())
 
     async def delete(self, record_id: int, session: AsyncSession) -> None:
         query = delete(self._collection).where(self._collection.id == record_id)

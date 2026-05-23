@@ -146,14 +146,12 @@ def comparison_bar_chart(results: list[dict]) -> Image:
         Объект ReportLab.platypus.Image для включения в pdf отчет
     """
     measurements = list()
-    measure_data = {
-        "Нижняя граница нормы": list(),
-        "Результат наблюдения": list(),
-        "Верхняя граница нормы": list()
-    }
+    result_values = list()
     bar_colors = list()
+    norm_lines = []  # (y_value, label, idx)
 
-    for result in results:
+
+    for i, result in enumerate(results):
         indicator = str(result.get("indicator", ""))
         standard = result.get("standard", "")
         low_bound, high_bound = 0, 0
@@ -162,35 +160,43 @@ def comparison_bar_chart(results: list[dict]) -> Image:
         result_val = format_number(result.get("result", ""))
         unit = str(result.get("unit", ""))
         measurements.append(f"{indicator}, {unit}" if unit not in "-" else indicator)
-        measure_data["Результат наблюдения"].append(result_val)
-        measure_data["Нижняя граница нормы"].append(low_bound)
-        measure_data["Верхняя граница нормы"].append(high_bound)
+        result_values.append(result_val)
         bar_colors.append("#4CBA76" if low_bound <= result_val <= high_bound else "#96281A")
+
+        if low_bound != 0:
+            norm_lines.append((low_bound, f"{indicator}_min", i))
+        if high_bound != 0:
+            norm_lines.append((high_bound, f"{indicator}_max", i))
 
     fig, ax = plt.subplots()
 
     x = np.arange(len(measurements))
-    width = 0.32
-    multiplier = 0
-    #Чтобы большая разница между разными показателями не приводила к очень маленьким столбцам на графике
+    width = 0.4
+    # Чтобы большая разница между разными показателями не приводила к очень маленьким столбцам на графике
     ax.set_yscale('log')
 
-    for attribute, measurement in measure_data.items():
-        offset = width * multiplier
-        if attribute == "Результат наблюдения":
-            color = bar_colors
-        elif attribute == "Верхняя граница нормы":
-            color = "#362727"
-        else:
-            color = "#4E5755"
-        rects = ax.bar(x + offset, measurement, width, label=attribute, color=color)
-        ax.bar_label(rects, padding=2)
-        multiplier += 1
+    rects = ax.bar(x, result_values, width, color=bar_colors, label="Результат наблюдения")
+    ax.bar_label(rects, padding=1)
 
-    ax.legend(loc='best')
-    ax.set_xticks(x + width, measurements)
+    ax.set_xlim(-1.0, len(measurements) - 0.4)
+    left_x = ax.get_xlim()[0]
+
+    for y_val, label, idx in norm_lines:
+        xmax = x[idx] + width / 2
+        ax.hlines(y=y_val, xmin=left_x, xmax=xmax, colors='black', linestyles='--', linewidth=0.9, alpha=0.85)
+        va = 'top' if label.endswith('_min') else 'bottom'
+        ax.text(
+            0, y_val, f" {label}",
+            va=va, ha='left',
+            fontsize=10, color='black',
+            transform=ax.get_yaxis_transform()
+        )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(measurements)
     ax.tick_params(right=False, left=False, axis='y', length=0, which='both')
     ax.set_yticks([])
     fig.set_figwidth(9)
+    fig.tight_layout()
 
-    return create_image_through_buffer(fig, width=8)
+    return create_image_through_buffer(fig, width=7)

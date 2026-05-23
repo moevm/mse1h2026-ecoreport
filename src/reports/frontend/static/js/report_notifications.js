@@ -25,6 +25,16 @@
         );
     }
 
+    function makeLink(href, text) {
+        const a = document.createElement("a");
+        a.className = "report-toast__link";
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = text+" ";
+        return a;
+    }
+
     function showReportReadyToast(eventData) {
         const container = createContainer();
 
@@ -35,13 +45,6 @@
         title.className = "report-toast__title";
         title.textContent = eventData?.title || "Отчет готов";
 
-        const action = document.createElement("a");
-        action.className = "report-toast__link";
-        action.href = eventData?.download_url || "#";
-        action.target = "_blank";
-        action.rel = "noopener noreferrer";
-        action.textContent = "Скачать отчет";
-
         const closeBtn = document.createElement("button");
         closeBtn.className = "report-toast__close";
         closeBtn.type = "button";
@@ -49,7 +52,15 @@
         closeBtn.textContent = "Закрыть";
 
         toast.appendChild(title);
-        toast.appendChild(action);
+
+        if (eventData?.download_url) {
+            toast.appendChild(makeLink(eventData.download_url, "Скачать отчет"));
+        }
+
+        if (eventData?.geojson_download_url) {
+            toast.appendChild(makeLink(eventData.geojson_download_url, "Скачать GeoJSON"));
+        }
+
         toast.appendChild(closeBtn);
         container.appendChild(toast);
 

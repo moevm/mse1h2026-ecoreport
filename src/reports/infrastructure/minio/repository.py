@@ -19,6 +19,18 @@ class MinioRepository:
         )
         return result.object_name
 
+    def put_geojson(self, obj_id: str, obj: bytes, bucket: str = settings.MINIO_BUCKET_NAME) -> str:
+        data = BytesIO(obj)
+
+        result = self._client.put_object(
+            bucket_name=bucket,
+            object_name=f"{obj_id}.geojson",
+            data=data,
+            length=len(obj),
+            content_type="application/geo+json"
+        )
+        return result.object_name
+
     def get_object(self, obj_name: str, bucket: str = settings.MINIO_BUCKET_NAME) -> bytes:
         result = self._client.get_object(
             bucket,

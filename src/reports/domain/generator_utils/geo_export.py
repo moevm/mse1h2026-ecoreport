@@ -39,7 +39,7 @@ def _parse_float(value) -> float | None:
         return None
 
 
-def generate_report_geojson(observation_points: list[dict], test_results: list[dict]) -> str:
+def generate_report_geojson(data: dict) -> str:
     """
     Генерирует GeoJSON FeatureCollection по точкам наблюдения и таблице результатов.
 
@@ -47,10 +47,14 @@ def generate_report_geojson(observation_points: list[dict], test_results: list[d
     - числовые значения показателей (pH, iron, manganese, nitrates, sulfates),
     - hex-цвет маркера («marker-color»)
 
-    :param observation_points: список словарей из OBSERVATION_POINTS
-    :param test_results:       список словарей из TEST_RESULTS
+    :param data: dict - словарь данных формы для генерации отчета
     :return: строка GeoJSON
     """
+    observation_points = data.get("OBSERVATION_POINTS", [])
+    if not observation_points:
+        return ""
+    test_results = data.get("TEST_RESULTS", [])
+
     measurements: dict = {}
     non_compliant = 0
     total = 0

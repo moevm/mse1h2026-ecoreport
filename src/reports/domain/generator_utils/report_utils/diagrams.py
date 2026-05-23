@@ -176,8 +176,12 @@ def comparison_bar_chart(results: list[dict]) -> Image:
     ax.set_yscale('log')
 
     rects = ax.bar(x, result_values, width, color=bar_colors, label="Результат наблюдения")
-    ax.bar_label(rects, padding=1)
+    ax.bar_label(rects, padding=1, fmt='%.2f')
 
+    all_vals = [v for v in result_values if v > 0] + [n[0] for n in norm_lines if n[0] > 0]
+    y_min = min(all_vals) * 0.3 if all_vals else 0.1
+    y_max = max(all_vals) * 5 if all_vals else 10
+    ax.set_ylim(y_min, y_max)
     ax.set_xlim(-1.0, len(measurements) - 0.4)
     left_x = ax.get_xlim()[0]
 

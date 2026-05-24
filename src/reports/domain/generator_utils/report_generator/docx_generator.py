@@ -11,6 +11,10 @@ from io import BytesIO
 from datetime import datetime
 import logging
 import re
+from ..report_utils.diagrams import (
+    comparison_bar_chart_docx,
+    concentration_dynamics_lineplot_docx
+)
 
 logger = logging.getLogger(__name__)
 
@@ -546,42 +550,26 @@ class DocxGenerator:
     def get_graph_image_stream(self, graph_type, data_dict):
         """Генерация графика в BytesIO для DOCX"""
         try:
-            from report_module.graphs import (comparison_bar_chart, concentration_dynamics_lineplot)
             results = data_dict.get("TEST_RESULTS", [])
             dynamics = data_dict.get("OBSERVATION_DYNAMICS", [])
-            graph = None
-            if graph_type == "COMPARISON_BAR_CHART":
-                graph = comparison_bar_chart(results)
-            elif graph_type.startswith("DYNAMICS_"):
-                metric = graph_type.replace("DYNAMICS_","").lower()
-                graph = concentration_dynamics_lineplot(results, dynamics, metric)
+            image_stream = None
 
-            if graph is None:
+            if graph_type == "TEST_RESULTS":
+                image_stream = comparison_bar_chart_docx(results)
+
+            elif "OBSERVATION_DYNAMICS" in graph_type:
+                metric = graph_type.replace("OBSERVATION_DYNAMICS:", "").strip().lower()
+                image_stream = concentration_dynamics_lineplot_docx(results, dynamics, metric)
+
+            if image_stream is None:
+                logger.debug(f"График {graph_type} не создан (нет данных)")
                 return None
 
-            source = getattr(graph, "filename", None)
-
-            if isinstance(source, BytesIO):
-                source.seek(0)
-                return source
-
-            if hasattr(source, "read"):
-                source.seek(0)
-                return source
-
-            if isinstance(source, str) and os.path.exists(source):
-                with open(source, "rb") as f:
-                    image_stream = BytesIO(f.read())
-
-                image_stream.seek(0)
-                return image_stream
-
-            return None
+            image_stream.seek(0)
+            return image_stream
 
         except Exception as ex:
-            logger.exception(
-                f"Ошибка генерации графика {graph_type}: {ex}"
-            )
+            logger.error(f"Ошибка генерации графика {graph_type}: {ex}", exc_info=True)
             return None
     
     def add_section_elements(self, doc: Document, elements: list, data_dict: dict):
@@ -645,9 +633,13 @@ class DocxGenerator:
                         paragraph = doc.add_paragraph()
                         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                         run = paragraph.add_run()
+                        image_stream.seek(0)
                         run.add_picture(image_stream, width=Inches(6.5))
+                        logger.debug(f"График {content} успешно вставлен в DOCX")
+                    else:
+                        logger.warning(f"Не удалось создать график {content} (нет данных или ошибка)")
                 except Exception as ex:
-                    logger.exception(f"Ошибка вставки графика {content}: {ex}")
+                    logger.error(f"Критическая ошибка при вставке графика {content}: {ex}", exc_info=True)
 
     def generate(self, user_data: dict) -> bytes:
         """Основная функция генерации DOCX"""

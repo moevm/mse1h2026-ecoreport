@@ -1,3 +1,4 @@
+import io
 import uuid
 import asyncio
 import json
@@ -13,6 +14,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from dishka.integrations.fastapi import inject
 import os
 
+from reports.domain.generator_utils.importer import CSVImporter, XLSXImporter
 from reports.domain.use_cases.download_report import DownloadReportUseCase
 from reports.domain.use_cases.generate_report import GenerateReportUseCase
 from reports.domain.use_cases.new_report_generation import NewReportGenerateUseCase
@@ -166,11 +168,31 @@ async def download_object_file(object_name: str, repository: FromDishka[MinioRep
 
 @reports_router.post("/upload")
 async def upload_file(file: UploadFile):
-    '''
-    Сюда загружается файл .csv или .xlsx с данными, на данный момент он просто сохраняется в отдельной папке.
-    В будущем здесь будет обработка содержимого файла.
-    '''
-    pass
+    ext = splitext(file.filename or "")[1].lower()
+    if ext not in (".csv", ".xlsx", ".xls"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Неподдерживаемый формат файла. Используйте .csv или .xlsx",
+        )
+
+    content = await file.read()
+    importer = CSVImporter(io.BytesIO(content)) if ext == ".csv" else XLSXImporter(io.BytesIO(content))
+
+    try:
+        records = importer.parse_form_data()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Ошибка чтения файла: {e}",
+        )
+
+    if not records:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Файл не содержит данных",
+        )
+
+    return {"status": "success", "data": records[0]}
 
 
 @reports_router.post("/generate-report",

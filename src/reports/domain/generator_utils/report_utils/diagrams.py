@@ -202,25 +202,29 @@ def comparison_bar_chart(results: list[dict]) -> Image:
 
 def concentration_dynamics_lineplot_docx(results: list[dict], dynamics: list[dict], metric: str) -> BytesIO:
     """Создает график динамики измерения для DOCX (возвращает BytesIO вместо reportlab.Image)"""
-    metric_labels = dict([
-        ("pH", "pH"),
-        ("iron", "Железо"),
-        ("manganese", "Марганец"),
-        ("nitrates", "Нитраты"),
-        ("sulfates", "Сульфаты")
-    ])
+    metric_labels = {
+        "ph": "pH",
+        "iron": "Железо",
+        "manganese": "Марганец",
+        "nitrates": "Нитраты",
+        "sulfates": "Сульфаты"
+    }
 
     metric_default = {
-        "pH": ("6.00 - 9.00", "-"),
+        "ph": ("6.00 - 9.00", "-"),
         "iron": ("0.27 - 0.33", "мг/л"),
         "manganese": ("0.09 - 0.12", "мг/л"),
         "nitrates": ("38.25 - 51.75", "мг/л"),
         "sulfates": ("435.00 - 565.00", "мг/л")
     }
 
-    default_standard = metric_default[metric][0]
-    default_unit = metric_default[metric][1]
-    selected_metric_label = metric_labels.get(metric, "")
+    metric_lower = metric.lower()
+    default_standard = metric_default.get(metric_lower, ("", ""))[0]
+    default_unit = metric_default.get(metric_lower, ("", ""))[1]
+    selected_metric_label = metric_labels.get(metric_lower, "")
+
+    if not selected_metric_label:
+        return None
 
     def to_simple_dict(item):
         if hasattr(item, "model_dump"):
@@ -236,7 +240,7 @@ def concentration_dynamics_lineplot_docx(results: list[dict], dynamics: list[dic
 
     simple_dynamics = [to_simple_dict(entry) for entry in dynamics]
 
-    if all(metric not in entry for entry in simple_dynamics):
+    if all(metric_lower not in entry for entry in simple_dynamics):
         return None
 
     measurements, dates = list(), list()
@@ -245,8 +249,8 @@ def concentration_dynamics_lineplot_docx(results: list[dict], dynamics: list[dic
     unit = ""
 
     for result in results:
-        indicator = str(result.get("indicator", ""))
-        if indicator.lower() == selected_metric_label.lower():
+        indicator = str(result.get("indicator", "")).lower()
+        if indicator == metric_lower or indicator == selected_metric_label.lower():
             standard = result.get("standard", default_standard).strip()
             unit = str(result.get("unit", default_unit)).strip()
 
@@ -258,12 +262,11 @@ def concentration_dynamics_lineplot_docx(results: list[dict], dynamics: list[dic
         unit = default_unit
 
     for entry in simple_dynamics:
-        row = []
         date = entry.get("date", "")
         if not date:
             continue
         date = datetime.strptime(date, "%Y-%m-%d")
-        value = format_number(entry.get(metric, "-1"))
+        value = format_number(entry.get(metric_lower, "-1"))
         if value <= 0:
             continue
         measurements.append(value)
@@ -289,8 +292,7 @@ def concentration_dynamics_lineplot_docx(results: list[dict], dynamics: list[dic
     for label in ax.get_xticklabels():
         label.set_rotation(30)
         label.set_horizontalalignment('right')
-    if metric:
-        ax.set_ylabel(f"{selected_metric_label}, {unit}" if unit not in "-" else selected_metric_label)
+    ax.set_ylabel(f"{selected_metric_label}, {unit}" if unit not in "-" else selected_metric_label)
     ax.legend()
     fig.tight_layout()
 

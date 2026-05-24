@@ -585,7 +585,11 @@ class DocxGenerator:
                 rFonts = OxmlElement("w:rFonts")
                 rPr.append(rFonts)
             rFonts.set(qn("w:eastAsia"), "Times New Roman")
+
         table_created = False
+        pending_graph_desc = None
+        pending_center_para = None
+
         for element_type, content in elements:
             if element_type == "TABLE":
                 before_count = len(doc.tables)
@@ -593,6 +597,7 @@ class DocxGenerator:
                 after_count = len(doc.tables)
                 table_created = after_count > before_count
                 continue
+
             if element_type == "RIGHT_PARA":
                 if not table_created:
                     continue
@@ -601,6 +606,7 @@ class DocxGenerator:
                 run = para.add_run(content)
                 apply_font(run)
                 continue
+
             if element_type == "TITLE":
                 para = doc.add_paragraph()
                 para.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -609,6 +615,7 @@ class DocxGenerator:
                 run = para.add_run(content)
                 apply_font(run, size=14, bold=True)
                 continue
+
             if element_type == "PARA":
                 para = doc.add_paragraph()
                 para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -617,29 +624,54 @@ class DocxGenerator:
                 run = para.add_run(content)
                 apply_font(run)
                 continue
+
             if element_type == "CENTER_PARA":
-                para = doc.add_paragraph()
-                para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                run = para.add_run(content)
-                apply_font(run)
+                pending_center_para = content
                 continue
+
+            if element_type == "GRAPH_DESC":
+                pending_graph_desc = content
+                continue
+
             if element_type == "LIST":
                 self.create_list(doc, content)
                 continue
+
             if element_type == "GRAPH":
                 try:
                     image_stream = self.get_graph_image_stream(content, data_dict)
                     if image_stream:
+                        if pending_graph_desc:
+                            para = doc.add_paragraph()
+                            para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                            para.paragraph_format.first_line_indent = self.FIRST_LINE_INDENT
+                            para.paragraph_format.line_spacing = 1.5
+                            run = para.add_run(pending_graph_desc)
+                            apply_font(run)
+
                         paragraph = doc.add_paragraph()
                         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                         run = paragraph.add_run()
                         image_stream.seek(0)
                         run.add_picture(image_stream, width=Inches(6.5))
+
+                        if pending_center_para:
+                            para = doc.add_paragraph()
+                            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            run = para.add_run(pending_center_para)
+                            apply_font(run)
+
                         logger.debug(f"График {content} успешно вставлен в DOCX")
                     else:
-                        logger.warning(f"Не удалось создать график {content} (нет данных или ошибка)")
+                        logger.warning(f"Не удалось создать график {content} (нет данных)")
+
+                    pending_graph_desc = None
+                    pending_center_para = None
+
                 except Exception as ex:
                     logger.error(f"Критическая ошибка при вставке графика {content}: {ex}", exc_info=True)
+                    pending_graph_desc = None
+                    pending_center_para = None
 
     def generate(self, user_data: dict) -> bytes:
         """Основная функция генерации DOCX"""

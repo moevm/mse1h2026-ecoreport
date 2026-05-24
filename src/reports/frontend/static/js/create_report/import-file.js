@@ -2,13 +2,17 @@ async function importFromFile() {
     const fileInput = document.getElementById("file-upload");
     const statusEl = document.getElementById("import-status");
 
+    // Сохраняем ссылку на файл ДО сброса формы — clearAllFormFields очищает input[type=file]
     if (!fileInput || !fileInput.files.length) {
         if (statusEl) statusEl.innerText = "Выберите файл!";
         return;
     }
+    const file = fileInput.files[0];
+
+    clearAllFormFields();
 
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    formData.append("file", file);
 
     if (statusEl) statusEl.innerText = "Загрузка...";
 

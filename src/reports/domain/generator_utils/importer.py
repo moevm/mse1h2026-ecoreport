@@ -123,6 +123,41 @@ class Importer(ABC):
         if test_results:
             record["TEST_RESULTS"] = test_results
 
+    @staticmethod
+    def _normalize_date(val: Any) -> str:
+        """
+        Нормализует значение даты в строку формата ``YYYY-MM-DD``.
+
+        Поддерживает:
+
+        * ``pd.Timestamp`` / ``datetime.datetime`` / ``datetime.date`` — из Excel-ячеек.
+        * Строки с разделителем ``"-"`` (``"2025-01-15"``, ``"15-01-2025"``).
+        * Строки с разделителем ``"/"`` (``"15/01/2025"``, ``"2025/01/15"``).
+
+        При неоднозначности (``DD/MM`` vs ``MM/DD``) предпочитается европейский
+        порядок ``DD/MM`` (``dayfirst=True``).
+
+        :param val: Любое значение даты.
+        :return: Строка ``"YYYY-MM-DD"`` или исходное строковое представление, если
+                 парсинг не удался.
+        """
+        import datetime as _dt
+        import warnings as _warnings
+        if isinstance(val, (pd.Timestamp, _dt.datetime, _dt.date)):
+            return pd.Timestamp(val).strftime("%Y-%m-%d")
+        s = str(val).strip()
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%d-%m-%Y", "%m/%d/%Y"):
+            try:
+                return _dt.datetime.strptime(s, fmt).strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+        try:
+            with _warnings.catch_warnings():
+                _warnings.simplefilter("ignore")
+                return pd.to_datetime(val, dayfirst=True).strftime("%Y-%m-%d")
+        except Exception:
+            return s
+
     @classmethod
     def _merge_vertical_rows(cls, df: pd.DataFrame) -> Dict[str, Any]:
         """
@@ -181,7 +216,7 @@ class Importer(ABC):
                 date_val = row.get(dyn_anchor)
                 if _missing(date_val):
                     continue
-                entry: Dict[str, Any] = {"date": str(date_val)}
+                entry: Dict[str, Any] = {"date": cls._normalize_date(date_val)}
                 for src, dst in cls._DYN_FIELD_MAP[1:]:
                     val = row.get(src)
                     if not _missing(val):
@@ -194,10 +229,13 @@ class Importer(ABC):
         cls._reconstruct_test_results(record)
         return record
 
-    @staticmethod
-    def _clean_record(record: Dict[str, Any]) -> Dict[str, Any]:
+    @classmethod
+    def _clean_record(cls, record: Dict[str, Any]) -> Dict[str, Any]:
         """
         Очищает одну запись: удаляет NaN/None и раскрывает вложенные структуры.
+
+        * JSON-строки в полях ``_COMPLEX_FIELDS`` разворачиваются в объекты.
+        * ``REPORT_DATE`` нормализуется в формат ``YYYY-MM-DD``.
 
         :param record: Сырой словарь с данными.
         :return: Очищенный словарь.
@@ -221,6 +259,11 @@ class Importer(ABC):
                         clean[field] = json.loads(value.replace("'", '"'))
                     except (json.JSONDecodeError, ValueError):
                         pass
+
+        # REPORT_DATE: нормализуем в YYYY-MM-DD (обрабатывает форматы с «/»)
+        if "REPORT_DATE" in clean:
+            clean["REPORT_DATE"] = cls._normalize_date(clean["REPORT_DATE"])
+
         return clean
 
 
@@ -321,6 +364,8 @@ class CSVImporter(Importer):
 
         if "OP_POINT" in df.columns or "DYN_DATE" in df.columns:
             return [self._merge_vertical_rows(df)]
+
+        return df.to_dict(orient="records")
 
     def import_data(self) -> List[ReportInputData]:
         """

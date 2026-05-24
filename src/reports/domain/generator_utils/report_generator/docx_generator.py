@@ -180,6 +180,19 @@ class DocxGenerator:
     def has_value(self, value):
         return value is not None and str(value).strip() != ""
 
+    def is_valid_image_stream(self, image_stream) -> bool:
+        """Проверка создания графика"""
+        if image_stream is None:
+            return False
+        try:
+            current_pos = image_stream.tell()
+            image_stream.seek(0, os.SEEK_END)
+            size = image_stream.tell()
+            image_stream.seek(current_pos)
+            return size > 0
+        except Exception:
+            return False
+    
     def style_table(self, table):
         """Единый стиль таблиц"""
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -368,6 +381,8 @@ class DocxGenerator:
                 ))
             if points:
                 self.create_observation_points_table(doc, points)
+                return True
+            return False
 
         elif table_type == "TEST_RESULTS":
             if data_dict.get("TEST_RESULTS"):
@@ -380,6 +395,7 @@ class DocxGenerator:
                 self.create_observation_dynamics_table(doc, data_dict["OBSERVATION_DYNAMICS"])
                 return True
             return False
+        return False
 
     def create_observation_points_table(self, doc: Document, points: list):
         """Таблица 2. Координаты точек наблюдения"""
@@ -518,6 +534,9 @@ class DocxGenerator:
 
             elif line.startswith("CENTER_PARA:"):
                 elements.append(("CENTER_PARA", line.replace("CENTER_PARA:", "").strip()))
+            
+            elif line.startswith("GRAPH_DESC:"):
+                elements.append(("GRAPH_DESC",line.replace("GRAPH_DESC:","").strip()))
 
             elif line.startswith("TABLE:"):
                 table_type = line.replace("TABLE:", "").strip()
@@ -587,29 +606,34 @@ class DocxGenerator:
             rFonts.set(qn("w:eastAsia"), "Times New Roman")
 
         table_created = False
+        pending_table_caption = None
         pending_graph_desc = None
         pending_center_para = None
 
         for element_type, content in elements:
             if element_type == "TABLE":
-                before_count = len(doc.tables)
-                self.create_table_element(doc, content, data_dict)
-                after_count = len(doc.tables)
-                table_created = after_count > before_count
+
+                # проверка наличия данных для таблицы и её создание
+                created = self.create_table_element(doc, content, data_dict)
+                if created and pending_table_caption:
+                    table = doc.tables[-1]
+                    table_element = table._element
+                    parent = table_element.getparent()
+                    para = doc.add_paragraph()
+                    para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                    run = para.add_run(pending_table_caption)
+                    apply_font(run)
+                    parent.insert( parent.index(table_element), para._element)
+                pending_table_caption = None
                 continue
 
             if element_type == "RIGHT_PARA":
-                if not table_created:
-                    continue
-                para = doc.add_paragraph()
-                para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                run = para.add_run(content)
-                apply_font(run)
+                pending_table_caption = content
                 continue
 
             if element_type == "TITLE":
                 para = doc.add_paragraph()
-                para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                para.alignment = (WD_ALIGN_PARAGRAPH.CENTER)
                 para.paragraph_format.space_before = Pt(12)
                 para.paragraph_format.space_after = Pt(12)
                 run = para.add_run(content)
@@ -618,8 +642,8 @@ class DocxGenerator:
 
             if element_type == "PARA":
                 para = doc.add_paragraph()
-                para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-                para.paragraph_format.first_line_indent = self.FIRST_LINE_INDENT
+                para.alignment = (WD_ALIGN_PARAGRAPH.JUSTIFY)
+                para.paragraph_format.first_line_indent = (self.FIRST_LINE_INDENT)
                 para.paragraph_format.line_spacing = 1.5
                 run = para.add_run(content)
                 apply_font(run)
@@ -639,37 +663,41 @@ class DocxGenerator:
 
             if element_type == "GRAPH":
                 try:
-                    image_stream = self.get_graph_image_stream(content, data_dict)
-                    if image_stream:
-                        if pending_graph_desc:
-                            para = doc.add_paragraph()
-                            para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-                            para.paragraph_format.first_line_indent = self.FIRST_LINE_INDENT
-                            para.paragraph_format.line_spacing = 1.5
-                            run = para.add_run(pending_graph_desc)
-                            apply_font(run)
+                    image_stream = (self.get_graph_image_stream(content, data_dict))
+                    if not self.is_valid_image_stream(image_stream):
+                        logger.warning(f"Не удалось создать график " f"{content} (нет данных)")
+                        pending_graph_desc = None
+                        pending_center_para = None
+                        continue
 
-                        paragraph = doc.add_paragraph()
-                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                        run = paragraph.add_run()
-                        image_stream.seek(0)
-                        run.add_picture(image_stream, width=Inches(6.5))
+                    if pending_graph_desc:
+                        doc.add_page_break()
+                        para = doc.add_paragraph()
+                        para.alignment = (WD_ALIGN_PARAGRAPH.JUSTIFY)
+                        para.paragraph_format.first_line_indent = (self.FIRST_LINE_INDENT)
+                        para.paragraph_format.line_spacing = 1.5
+                        run = para.add_run(pending_graph_desc)
+                        apply_font(run)
 
-                        if pending_center_para:
-                            para = doc.add_paragraph()
-                            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                            run = para.add_run(pending_center_para)
-                            apply_font(run)
+                    paragraph = doc.add_paragraph()
+                    paragraph.alignment = (WD_ALIGN_PARAGRAPH.CENTER)
+                    run = paragraph.add_run()
+                    image_stream.seek(0)
+                    run.add_picture(image_stream, width=Inches(6.5))
 
-                        logger.debug(f"График {content} успешно вставлен в DOCX")
-                    else:
-                        logger.warning(f"Не удалось создать график {content} (нет данных)")
+                    if pending_center_para:
+                        para = doc.add_paragraph()
+                        para.alignment = (WD_ALIGN_PARAGRAPH.CENTER)
+                        run = para.add_run(pending_center_para)
+                        apply_font(run)
+
+                    logger.debug(f"График {content} " f"успешно вставлен в DOCX")
 
                     pending_graph_desc = None
                     pending_center_para = None
 
                 except Exception as ex:
-                    logger.error(f"Критическая ошибка при вставке графика {content}: {ex}", exc_info=True)
+                    logger.error(f"Критическая ошибка " f"при вставке графика " f"{content}: {ex}", exc_info=True)
                     pending_graph_desc = None
                     pending_center_para = None
 

@@ -21,6 +21,11 @@ window.addEventListener("DOMContentLoaded", function () {
         const hasValue = values.some((value) => value.length > 0);
         if (!hasValue) return;
 
+        // Широта и долгота обязательны и должны быть числами
+        const latVal = parseFloat(values[1].replace(",", "."));
+        const lonVal = parseFloat(values[2].replace(",", "."));
+        if (!values[1] || !values[2] || isNaN(latVal) || isNaN(lonVal)) return;
+
         const tbody = targetTable.querySelector("tbody");
         if (!tbody) return;  // дополнительная проверка на наличие tbody
 

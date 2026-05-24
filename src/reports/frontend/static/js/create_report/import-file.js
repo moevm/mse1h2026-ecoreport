@@ -97,13 +97,19 @@ function fillFormFromImport(data) {
         const tbody = document.querySelector("#observation_points_table tbody");
         if (tbody) {
             tbody.innerHTML = "";
-            data.OBSERVATION_POINTS.forEach((point, index) => {
+            let rowNum = 1;
+            data.OBSERVATION_POINTS.forEach((point) => {
+                const lat = parseFloat(String(point.latitude ?? "").replace(",", "."));
+                const lon = parseFloat(String(point.longitude ?? "").replace(",", "."));
+                // Пропускаем строки без числовых широты и долготы
+                if (isNaN(lat) || isNaN(lon)) return;
+
                 const row = document.createElement("tr");
                 [
-                    index + 1,
+                    rowNum++,
                     point.observation_point || "",
-                    point.latitude || "",
-                    point.longitude || "",
+                    lat,
+                    lon,
                     point.medium_type || "",
                     point.description || "",
                 ].forEach((val) => {

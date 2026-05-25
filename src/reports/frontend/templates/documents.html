@@ -55,9 +55,26 @@
                                 </div>
                             </div>
                             <aside class="card__side">
-                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.pdf) }}">Скачать PDF</a>
-                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.docx) }}">Скачать DOCX</a>
-                                <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.geojson) }}">Скачать GEOJSON</a>
+                                <a
+                                    class="card__button {% if not report.files.pdf %}is-disabled{% endif %}"
+                                    href="{% if report.files.pdf %}{{ request.url_for('download_object_file', object_name=report.files.pdf) }}{% else %}#{% endif %}"
+                                    data-file-type="pdf"
+                                    data-object-name="{{ report.files.pdf or '' }}"
+                                >{% if report.files.pdf %}Скачать PDF{% else %}Отчёт генерируется...{% endif %}</a>
+
+                                <a
+                                    class="card__button {% if not report.files.docx %}is-disabled{% endif %}"
+                                    href="{% if report.files.docx %}{{ request.url_for('download_object_file', object_name=report.files.docx) }}{% else %}#{% endif %}"
+                                    data-file-type="docx"
+                                    data-object-name="{{ report.files.docx or '' }}"
+                                >{% if report.files.docx %}Скачать DOCX{% else %}Отчёт генерируется...{% endif %}</a>
+
+                                <a
+                                    class="card__button {% if not report.files.geojson %}is-disabled{% endif %}"
+                                    href="{% if report.files.geojson %}{{ request.url_for('download_object_file', object_name=report.files.geojson) }}{% else %}#{% endif %}"
+                                    data-file-type="geojson"
+                                    data-object-name="{{ report.files.geojson or '' }}"
+                                >{% if report.files.geojson %}Скачать GEOJSON{% else %}Отчёт генерируется...{% endif %}</a>
                             </aside>
                         </article>
                     {% endfor %}
@@ -87,6 +104,7 @@
             </script>
         </section>
     </main>
+    <script src="{{ request.url_for('static', path='js/report_notifications.js') }}"></script>
     <script src="{{ request.url_for('static', path='js/documents.js') }}"></script>
 </body>
 </body>

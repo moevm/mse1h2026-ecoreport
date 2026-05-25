@@ -59,7 +59,7 @@
 
 .card__summary_info {
     display: grid;
-    grid-template-columns: repeat(2,  minmax(60px, auto));
+    grid-template-columns: repeat(2,  minmax(50px, auto));
     margin-bottom: 1em;
 }
 

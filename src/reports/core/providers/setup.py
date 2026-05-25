@@ -1,20 +1,23 @@
 from dishka import make_async_container, Provider, provide, Scope
 from faststream.rabbit import RabbitBroker
 from minio import Minio
+from pwdlib import PasswordHash
 
 from reports.core.config import settings
-from reports.domain.use_cases.download_report import DownloadReportUseCase
-from reports.domain.use_cases.generate_report import GenerateReportUseCase
-from reports.domain.use_cases.new_report_generation import NewReportGenerateUseCase
-from reports.domain.use_cases.save_report import SaveDataUseCase
-from reports.domain.use_cases.update_report import UpdateDataUseCase
-from reports.domain.use_cases.delete_report import DeleteDataUseCase
+from reports.domain.use_cases.reports.download_report import DownloadReportUseCase
+from reports.domain.use_cases.reports.generate_report import GenerateReportUseCase
+from reports.domain.use_cases.reports.new_report_generation import NewReportGenerateUseCase
+from reports.domain.use_cases.reports.save_report import SaveDataUseCase
+from reports.domain.use_cases.reports.update_report import UpdateDataUseCase
+from reports.domain.use_cases.reports.delete_report import DeleteDataUseCase
+from reports.domain.use_cases.users.user_login import UserLoginUseCase
+from reports.domain.use_cases.users.user_registration import UserRegistrationUseCase
 from reports.infrastructure.minio.repository import MinioRepository
 from reports.infrastructure.minio.client import MinioClient
 from reports.infrastructure.postgres.database import Database
 from reports.infrastructure.postgres.repository import (
     ReportsRepository, FileRepository, DocumentsGostRepository,
-    TestResultsRepository, ObservationPointRepository, ObservationDynamicRepository
+    TestResultsRepository, ObservationPointRepository, ObservationDynamicRepository, UserRepository
 )
 from reports.infrastructure.rabbitmq.broker import broker
 from reports.infrastructure.rabbitmq.publisher import RabbitPublisher
@@ -49,8 +52,12 @@ class RepositoryProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def get_postgres_repository(self) -> ReportsRepository:
+    def get_reports_repository(self) -> ReportsRepository:
         return ReportsRepository()
+
+    @provide
+    def get_users_repository(self) -> UserRepository:
+        return UserRepository()
 
     @provide
     def get_file_repository(self) -> FileRepository:
@@ -87,6 +94,10 @@ class ServiceProvider(Provider):
     @provide
     def get_report_generator(self) -> ReportGenerator:
         return ReportGenerator()
+
+    @provide
+    def get_password_hasher(self) -> PasswordHash:
+        return PasswordHash.recommended()
 
 
 class UseCaseProvider(Provider):
@@ -145,6 +156,20 @@ class UseCaseProvider(Provider):
     @provide
     def get_download_report_use_case(self, repository: MinioRepository) -> DownloadReportUseCase:
         return DownloadReportUseCase(repository)
+
+    @provide
+    def create_user_use_case(self,
+                             repository: UserRepository,
+                             database: Database,
+                             hasher: PasswordHash) -> UserRegistrationUseCase:
+        return UserRegistrationUseCase(repository, database, hasher)
+
+    @provide
+    def login_user_use_case(self,
+                            repository: UserRepository,
+                            database: Database,
+                            hasher: PasswordHash) -> UserLoginUseCase:
+        return UserLoginUseCase(repository, database, hasher)
 
 
 container = make_async_container(InfrastructureProvider(), RepositoryProvider(), ServiceProvider(), UseCaseProvider())

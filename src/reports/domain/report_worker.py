@@ -1,10 +1,9 @@
 from faststream.rabbit import RabbitQueue, RabbitExchange
-import logging
 from reports.core.config import settings
 from reports.infrastructure.rabbitmq.broker import broker
 from reports.infrastructure.websocket.report_notifications import report_notification_hub
 from reports.schemas.report_models import ReportInputData, GeneratedReportData
-from reports.domain.use_cases.generate_report import GenerateReportUseCase
+from reports.domain.use_cases.reports.generate_report import GenerateReportUseCase
 from reports.core.providers.setup import container
 
 exchange = RabbitExchange(name=settings.RABBITMQ_EXCHANGE)

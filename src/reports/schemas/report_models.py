@@ -1,20 +1,8 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
-class UserBase(BaseModel):
-    user_name: Optional[str] = None
-    password_hash: Optional[str] = None
-    image_path: Optional[str] = None
-    created_at: Optional[date] = None
-    update_at: Optional[date] = None
-
-class UserCreate(UserBase):
-    pass
-
-class UserUpdate(UserBase):
-    pass
 
 class FileBase(BaseModel):
     full_object_name: Optional[str] = None
@@ -144,7 +132,7 @@ class DynamicResult(BaseModel):
 
 class ReportInputData(BaseModel):
     """Актуальная модель данных для генерации отчета, соответствующая требованиям модуля генерации"""
-    user_id: str = Field(...)
+    user_id: int = Field(...)
     report_id: str = Field(...)
     
     # Информация об объекте
@@ -213,6 +201,6 @@ class ReportInputData(BaseModel):
 
 
 class GeneratedReportData(BaseModel):
-    user_id: str = Field(...)
+    user_id: int = Field(...)
     file_name: str = Field(...)
     

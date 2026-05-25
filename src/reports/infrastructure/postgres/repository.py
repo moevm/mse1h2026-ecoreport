@@ -20,6 +20,7 @@ class ReportsRepository:
 
     async def add_report(self, data: GeneratedReportData, session: AsyncSession) -> None:
         values_data = data.model_dump()
+        values_data["file_id"] = values_data.pop("file_name")
         query = insert(self._collection).values(values_data)
         await session.execute(query)
 

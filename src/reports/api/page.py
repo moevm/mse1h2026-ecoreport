@@ -4,6 +4,7 @@ from os.path import splitext
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Request, Depends
+from starlette.responses import RedirectResponse
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
@@ -120,4 +121,11 @@ async def login_page(request: Request):
 async def register_page(request: Request):
     context = {'request': request}
     return templates.TemplateResponse(request=request, name="register.html", context=context)
+
+
+@page_router.get("/logout")
+async def logout_page():
+    response = RedirectResponse(url="/login", status_code=302)
+    response.delete_cookie("access_token", path="/")
+    return response
 

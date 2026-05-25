@@ -24,7 +24,7 @@
                 <a class="auth-card__tab" href="{{ request.url_for('register_page') }}">Регистрация</a>
             </div>
 
-            <form class="auth-card__form" method="post">
+            <form class="auth-card__form" method="post" action="{{ request.url_for('user_login') }}" data-login-form data-app-url="{{ request.url_for('index') }}">
                 <label class="auth-card__field" for="username">
                     <span>Имя пользователя</span>
                     <input id="username" name="username" type="text" placeholder="Введите имя пользователя" autocomplete="username" required>
@@ -39,5 +39,7 @@
             </form>
         </section>
     </main>
+
+    <script src="{{ request.url_for('static', path='js/auth.js') }}" defer></script>
 </body>
 </html>

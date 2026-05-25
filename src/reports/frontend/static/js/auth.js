@@ -21,13 +21,13 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!response.ok) {
-                alert(failureMessage);
+                showToast(failureMessage, "error");
                 return;
             }
 
             window.location.assign(successUrl);
         } catch (error) {
-            alert(failureMessage);
+            showToast(failureMessage, "error");
         } finally {
             if (submitButton) {
                 submitButton.disabled = false;
@@ -36,6 +36,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    function validateFields(form) {
+        const usernameInput = form.querySelector("#username");
+        const passwordInput = form.querySelector("#password");
+        let valid = true;
+
+        if (!usernameInput.value.trim()) {
+            highlightError(usernameInput);
+            valid = false;
+        }
+        if (!passwordInput.value) {
+            highlightError(passwordInput);
+            valid = false;
+        }
+        if (!valid) {
+            showToast("Заполните все поля.", "error");
+        }
+        return valid;
+    }
+
     if (registerForm) {
         registerForm.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -43,10 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const userName = registerForm.querySelector("#username").value.trim();
             const password = registerForm.querySelector("#password").value;
 
-            if (!userName || !password) {
-                alert("Заполните поля.");
-                return;
-            }
+            if (!validateFields(registerForm)) return;
 
             await submitAuthForm({
                 form: registerForm,
@@ -67,10 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const userName = loginForm.querySelector("#username").value.trim();
             const password = loginForm.querySelector("#password").value;
 
-            if (!userName || !password) {
-                alert("Заполните поля.");
-                return;
-            }
+            if (!validateFields(loginForm)) return;
 
             await submitAuthForm({
                 form: loginForm,
@@ -79,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     user_name: userName,
                     password,
                 },
-                failureMessage: "Ошибка при входе.",
+                failureMessage: "Неверное имя пользователя или пароль.",
             });
         });
     }

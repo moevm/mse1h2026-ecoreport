@@ -2,7 +2,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import String, DateTime, func, Date, Integer, Numeric, Boolean, ForeignKey
+from sqlalchemy import String, DateTime, func, Date, Integer, Numeric, Boolean, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from reports.infrastructure.postgres.base import Base
 
@@ -13,6 +13,7 @@ class Report(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     file_id: Mapped[int] = mapped_column(ForeignKey("file.id"), nullable=False)
+    is_draft: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=False), server_default=func.timezone("UTC", func.current_timestamp()))
 
     user: Mapped["User"] = relationship()
@@ -52,6 +53,7 @@ class File(Base):
     responsible_name: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     responsible_position: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     report_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    selected_indicators: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     documents_gost: Mapped[Optional["DocumentsGost"]] = relationship()
     test_results: Mapped[Optional["TestResults"]] = relationship()

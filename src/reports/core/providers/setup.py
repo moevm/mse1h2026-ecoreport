@@ -10,6 +10,11 @@ from reports.domain.use_cases.reports.new_report_generation import NewReportGene
 from reports.domain.use_cases.reports.save_report import SaveDataUseCase
 from reports.domain.use_cases.reports.update_report import UpdateDataUseCase
 from reports.domain.use_cases.reports.delete_report import DeleteDataUseCase
+from reports.domain.use_cases.reports.save_draft import SaveDraftUseCase
+from reports.domain.use_cases.reports.update_draft import UpdateDraftUseCase
+from reports.domain.use_cases.reports.delete_draft import DeleteDraftUseCase
+from reports.domain.use_cases.reports.get_draft import GetDraftUseCase
+from reports.domain.use_cases.reports.list_drafts import ListDraftsUseCase
 from reports.domain.use_cases.users.user_login import UserLoginUseCase
 from reports.domain.use_cases.users.user_registration import UserRegistrationUseCase
 from reports.infrastructure.minio.repository import MinioRepository
@@ -162,6 +167,69 @@ class UseCaseProvider(Provider):
     @provide
     def get_download_report_use_case(self, repository: MinioRepository) -> DownloadReportUseCase:
         return DownloadReportUseCase(repository)
+
+    @provide
+    def get_save_draft_use_case(self,
+                                postgres_repository: ReportsRepository,
+                                database: Database,
+                                file_repository: FileRepository,
+                                documents_gost_repository: DocumentsGostRepository,
+                                test_results_repository: TestResultsRepository,
+                                observation_point_repository: ObservationPointRepository,
+                                observation_dynamic_repository: ObservationDynamicRepository) -> SaveDraftUseCase:
+        return SaveDraftUseCase(
+            postgres_repository, database, file_repository, documents_gost_repository,
+            test_results_repository, observation_point_repository, observation_dynamic_repository
+        )
+
+    @provide
+    def get_update_draft_use_case(self,
+                                  postgres_repository: ReportsRepository,
+                                  database: Database,
+                                  file_repository: FileRepository,
+                                  documents_gost_repository: DocumentsGostRepository,
+                                  test_results_repository: TestResultsRepository,
+                                  observation_point_repository: ObservationPointRepository,
+                                  observation_dynamic_repository: ObservationDynamicRepository) -> UpdateDraftUseCase:
+        return UpdateDraftUseCase(
+            postgres_repository, database, file_repository, documents_gost_repository,
+            test_results_repository, observation_point_repository, observation_dynamic_repository
+        )
+
+    @provide
+    def get_delete_draft_use_case(self,
+                                  postgres_repository: ReportsRepository,
+                                  database: Database,
+                                  file_repository: FileRepository,
+                                  documents_gost_repository: DocumentsGostRepository,
+                                  test_results_repository: TestResultsRepository,
+                                  observation_point_repository: ObservationPointRepository,
+                                  observation_dynamic_repository: ObservationDynamicRepository) -> DeleteDraftUseCase:
+        return DeleteDraftUseCase(
+            postgres_repository, database, file_repository, documents_gost_repository,
+            test_results_repository, observation_point_repository, observation_dynamic_repository
+        )
+
+    @provide
+    def get_get_draft_use_case(self,
+                               postgres_repository: ReportsRepository,
+                               database: Database,
+                               file_repository: FileRepository,
+                               documents_gost_repository: DocumentsGostRepository,
+                               test_results_repository: TestResultsRepository,
+                               observation_point_repository: ObservationPointRepository,
+                               observation_dynamic_repository: ObservationDynamicRepository) -> GetDraftUseCase:
+        return GetDraftUseCase(
+            postgres_repository, database, file_repository, documents_gost_repository,
+            test_results_repository, observation_point_repository, observation_dynamic_repository
+        )
+
+    @provide
+    def get_list_drafts_use_case(self,
+                                 postgres_repository: ReportsRepository,
+                                 database: Database,
+                                 file_repository: FileRepository) -> ListDraftsUseCase:
+        return ListDraftsUseCase(postgres_repository, database, file_repository)
 
     @provide
     def create_user_use_case(self,

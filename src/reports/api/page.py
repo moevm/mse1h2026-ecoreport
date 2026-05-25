@@ -11,6 +11,7 @@ from starlette.templating import Jinja2Templates
 from reports.api.dependencies import validate_jwt
 from reports.core.config import settings
 from reports.infrastructure.minio.repository import MinioRepository
+from reports.domain.use_cases.reports.list_drafts import ListDraftsUseCase
 from reports.schemas.user_models import UserPayload
 
 page_router = APIRouter()
@@ -52,6 +53,7 @@ async def settings_page(request: Request,
 @inject
 async def documents_page(request: Request,
                          repository: FromDishka[MinioRepository],
+                         list_drafts_use_case: FromDishka[ListDraftsUseCase],
                          auth: UserPayload = Depends(validate_jwt)):
     reports_map: dict[str, dict] = {}
     allowed_extensions = {".pdf", ".docx", ".geojson"}
@@ -104,9 +106,26 @@ async def documents_page(request: Request,
             else "Дата создания недоступна"
         )
 
+    drafts_raw = await list_drafts_use_case.execute(user_id=auth.user_id)
+    drafts = []
+    for d in drafts_raw:
+        last_modified = d.last_modified
+        if last_modified is not None:
+            if last_modified.tzinfo is None:
+                last_modified = last_modified.replace(tzinfo=timezone.utc)
+            last_modified = last_modified.astimezone(gmt_plus_3)
+        drafts.append({
+            "file_id": d.file_id,
+            "title": d.title or "Без названия",
+            "full_object_name": d.full_object_name or "",
+            "organization_name": d.organization_name or "",
+            "last_modified_str": last_modified.strftime("%d.%m.%Y %H:%M") if last_modified else "Дата недоступна",
+        })
+
     context = {
         'request': request,
         'reports': reports,
+        'drafts': drafts,
     }
     return templates.TemplateResponse(request=request, name="documents.html", context=context)
 

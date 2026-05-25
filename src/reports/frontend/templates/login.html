@@ -3,9 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/auth.css') }}">
     <title>Вход</title>
 </head>
 <body>
-    <h1>Вход</h1>
+    <main class="auth-page">
+        <h1 class="auth-page__title">Ecological Report</h1>
+
+        <section class="auth-card" aria-labelledby="auth-title">
+            <div class="auth-card__brand">
+                <h2 class="auth-card__heading" id="auth-title">Вход</h2>
+                <p class="auth-card__subtitle">Войдите, чтобы продолжить работу с отчетами.</p>
+            </div>
+
+            <div class="auth-card__tabs" role="tablist" aria-label="Выбор страницы авторизации">
+                <a class="auth-card__tab auth-card__tab--active" href="{{ request.url_for('login_page') }}" aria-current="page">Вход</a>
+                <a class="auth-card__tab" href="{{ request.url_for('register_page') }}">Регистрация</a>
+            </div>
+
+            <form class="auth-card__form" method="post">
+                <label class="auth-card__field" for="username">
+                    <span>Имя пользователя</span>
+                    <input id="username" name="username" type="text" placeholder="Введите имя пользователя" autocomplete="username" required>
+                </label>
+
+                <label class="auth-card__field" for="password">
+                    <span>Пароль</span>
+                    <input id="password" name="password" type="password" placeholder="Введите пароль" autocomplete="current-password" required>
+                </label>
+
+                <button class="auth-card__submit" type="submit">Войти</button>
+            </form>
+        </section>
+    </main>
 </body>
 </html>

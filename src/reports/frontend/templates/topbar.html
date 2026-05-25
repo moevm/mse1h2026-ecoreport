@@ -14,7 +14,15 @@
         <a class="topbar__icon-link" href="{{ request.url_for('settings_page') }}" title="Настройки" aria-label="Настройки">
             <img src="{{ request.url_for('static', path='images/settings.png') }}" alt="Настройки">
         </a>
-        <img class="topbar__avatar" src="{{ request.url_for('static', path='images/avatar.jpg') }}" alt="Аватар пользователя">
+        <div class="topbar__user-menu">
+            <button class="topbar__avatar-button" type="button" aria-label="Меню пользователя" aria-haspopup="true" aria-expanded="false">
+                <img class="topbar__avatar" src="{{ request.url_for('static', path='images/avatar.jpg') }}" alt="Аватар пользователя">
+            </button>
+            <div class="topbar__dropdown" hidden>
+                <a class="topbar__dropdown-link" href="{{ request.url_for('auth_page') }}">Выйти из аккаунта</a>
+            </div>
+        </div>
     </div>
 </header>
 <script src="{{ request.url_for('static', path='js/report_notifications.js') }}"></script>
+<script src="{{ request.url_for('static', path='js/topbar_menu.js') }}"></script>

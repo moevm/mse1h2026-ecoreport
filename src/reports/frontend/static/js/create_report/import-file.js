@@ -2,14 +2,28 @@ async function importFromFile() {
     const fileInput = document.getElementById("file-upload");
     const statusEl = document.getElementById("import-status");
 
-    // Сохраняем ссылку на файл ДО сброса формы — clearAllFormFields очищает input[type=file]
     if (!fileInput || !fileInput.files.length) {
         if (statusEl) statusEl.innerText = "Выберите файл!";
         return;
     }
     const file = fileInput.files[0];
+    const fileName = file.name;
 
     clearAllFormFields();
+
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+
+    const label = document.querySelector("label[for='file-upload']");
+    if (label) {
+        for (const node of label.childNodes) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                node.textContent = "\n            " + fileName + "\n            ";
+                break;
+            }
+        }
+    }
 
     const formData = new FormData();
     formData.append("file", file);
@@ -172,3 +186,17 @@ function fillFormFromImport(data) {
         }
     }
 }
+
+document.getElementById("file-upload")?.addEventListener("change", function () {
+    const label = document.querySelector("label[for='file-upload']");
+    if (!label) return;
+    const fileName = this.files[0] ? this.files[0].name : "Прикрепите файл формата .xlsx / .csv ...";
+    for (const node of label.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            node.textContent = "\n            " + fileName + "\n            ";
+            break;
+        }
+    }
+    const statusEl = document.getElementById("import-status");
+    if (statusEl) statusEl.innerText = "";
+});

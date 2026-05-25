@@ -261,7 +261,6 @@ class ReportGenerator:
 
         return None
 
-
     # чтение и обработка шаблонов разделов
     def read_section(self, file_path, title_style, normal_style, data_dict):
         elements = []
@@ -276,6 +275,10 @@ class ReportGenerator:
         # преобразование DOCUMENTS_GOST из списка в строку для отображения в LIST
         if isinstance(processed_data.get("DOCUMENTS_GOST"), list):
             processed_data["DOCUMENTS_GOST"] = "\n".join(processed_data["DOCUMENTS_GOST"])
+
+        # плейсхолдеры для сквозной нумерации (Jinja2 подставит заглушки, реальные номера — построчно)
+        processed_data["COUNT_TABLE"] = "__COUNT_TABLE__"
+        processed_data["COUNT_FIGURE"] = "__COUNT_FIGURE__"
 
         with open(file_path, "r", encoding="utf-8") as f:
             template = Template(f.read())
@@ -296,6 +299,10 @@ class ReportGenerator:
                     elements.append(self.create_list(buffer_list, normal_style))
                     buffer_list, in_list = [], False
                 continue
+
+            # подстановка актуальных номеров таблиц и рисунков
+            line = line.replace("__COUNT_TABLE__", str(self._table_counter))
+            line = line.replace("__COUNT_FIGURE__", str(self._figure_counter))
 
             if line.startswith("TITLE:"):
                 elements.append(Paragraph(line.replace("TITLE:", "").strip(), title_style))
@@ -330,6 +337,7 @@ class ReportGenerator:
                         elements.append(Paragraph(pending_right_para, style))
                         pending_right_para = None
                     elements.append(table_element)
+                    self._table_counter += 1
                 else:
                     pending_right_para = None
 
@@ -357,6 +365,7 @@ class ReportGenerator:
                         pending_center_para = None
                     group.append(Spacer(72, 24))
                     elements.append(KeepTogether(group))
+                    self._figure_counter += 1
                 else:
                     pending_center_para = None
 
@@ -421,6 +430,10 @@ class ReportGenerator:
         )
 
         elements = []
+
+        # сквозные счетчики таблиц и рисунков 
+        self._table_counter = 1
+        self._figure_counter = 1
 
         # титульник
         elements.append(Spacer(1, self.mm_to_pt(90)))

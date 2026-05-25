@@ -1,5 +1,126 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
+from datetime import date, datetime
+from decimal import Decimal
+
+
+class FileBase(BaseModel):
+    full_object_name: Optional[str] = None
+    short_object_name: Optional[str] = None
+    organization_name: Optional[str] = None
+    region: Optional[str] = None
+    year: Optional[date] = None
+    gost_id: Optional[int] = None
+    relief_type: Optional[str] = None
+    soil_type: Optional[str] = None
+    groundwater_level: Optional[Decimal] = None
+    climate_zone: Optional[str] = None
+    coordinates_latitude: Optional[Decimal] = None
+    coordinates_longitude: Optional[Decimal] = None
+    object_type: Optional[str] = None
+    system_type: Optional[str] = None
+    pipe_material: Optional[str] = None
+    pipe_diameter: Optional[Decimal] = None
+    pipe_depth: Optional[Decimal] = None
+    pipe_length: Optional[Decimal] = None
+    pipe_install_year: Optional[date] = None
+    manhole_count: Optional[int] = None
+    monitoring_point_count: Optional[int] = None
+    observation_frequency: Optional[str] = None
+    test_results_id: Optional[int] = None
+    organization_address: Optional[str] = None
+    organization_phone: Optional[str] = None
+    organization_email: Optional[str] = None
+    responsible_name: Optional[str] = None
+    responsible_position: Optional[str] = None
+    report_date: Optional[date] = None
+    selected_indicators: Optional[str] = None
+
+class FileCreate(FileBase):
+    pass
+
+class FileUpdate(FileBase):
+    pass
+
+class DocumentsGostBase(BaseModel):
+    gost_r_72274_2025: Optional[bool] = None
+    gost_1811_2019: Optional[bool] = None
+    gost_4_225_83: Optional[bool] = None
+    sp_32_13330_2018: Optional[bool] = None
+    snip_32_03_96: Optional[bool] = None
+    gost_r_71831_2024: Optional[bool] = None
+    gost_r_54560_2015: Optional[bool] = None
+    gost_286_82: Optional[bool] = None
+    sp_100_13330_2016: Optional[bool] = None
+    snip_2_06_15_85: Optional[bool] = None
+    gost_r_71856_2024: Optional[bool] = None
+    gost_33068_2014: Optional[bool] = None
+    sanpin_2_1_3684_21: Optional[bool] = None
+    sp_104_13330_2016: Optional[bool] = None
+    snip_2_04_03_85: Optional[bool] = None
+    gost_r_70628_1_2023: Optional[bool] = None
+    gost_31416_2009: Optional[bool] = None
+    sp_31_13330_2021: Optional[bool] = None
+    sp_250_1325800_2016: Optional[bool] = None
+    snip_2_05_02_85: Optional[bool] = None
+    gost_r_70628_2_2023: Optional[bool] = None
+    gost_6942_98: Optional[bool] = None
+    sp_34_13330_2021: Optional[bool] = None
+    sp_116_13330_2012: Optional[bool] = None
+    snip_2_06_03_85: Optional[bool] = None
+    gost_r_70628_5_2023: Optional[bool] = None
+    gost_17_1_3_13_86: Optional[bool] = None
+    sp_121_13330_2019: Optional[bool] = None
+    sp_50_101_2004: Optional[bool] = None
+    description: Optional[str] = None
+
+class DocumentsGostCreate(DocumentsGostBase):
+    pass
+
+class DocumentsGostUpdate(DocumentsGostBase):
+    pass
+
+class ObservationPointBase(BaseModel):
+    file_id: Optional[int] = None
+    observation_point: Optional[str] = None
+    latitude: Optional[Decimal] = None
+    longitude: Optional[Decimal] = None
+    medium_type: Optional[str] = None
+    description: Optional[str] = None
+
+class ObservationPointCreate(ObservationPointBase):
+    pass
+
+class ObservationPointUpdate(ObservationPointBase):
+    pass
+
+class TestResultsBase(BaseModel):
+    results_ph: Optional[Decimal] = None
+    results_iron: Optional[Decimal] = None
+    results_manganese: Optional[Decimal] = None
+    results_nitrates: Optional[Decimal] = None
+    results_sulfates: Optional[Decimal] = None
+
+class TestResultsCreate(TestResultsBase):
+    pass
+
+class TestResultsUpdate(TestResultsBase):
+    pass
+
+class ObservationDynamicBase(BaseModel):
+    file_id: Optional[int] = None
+    dynamic_ph: Optional[Decimal] = None
+    dynamic_iron: Optional[Decimal] = None
+    dynamic_manganese: Optional[Decimal] = None
+    dynamic_nitrates: Optional[Decimal] = None
+    dynamic_sulfates: Optional[Decimal] = None
+    dynamic_data: Optional[date] = None
+
+class ObservationDynamicCreate(ObservationDynamicBase):
+    pass
+
+class ObservationDynamicUpdate(ObservationDynamicBase):
+    pass
 
 class DynamicResult(BaseModel):
     """Модель для динамики результатов наблюдений"""
@@ -12,7 +133,7 @@ class DynamicResult(BaseModel):
 
 class ReportInputData(BaseModel):
     """Актуальная модель данных для генерации отчета, соответствующая требованиям модуля генерации"""
-    user_id: str = Field(...)
+    user_id: int = Field(...)
     report_id: str = Field(...)
     
     # Информация об объекте
@@ -28,7 +149,7 @@ class ReportInputData(BaseModel):
     # Природные условия
     RELIEF_TYPE: str = Field(..., description="Тип рельефа")
     SOIL_TYPE: str = Field(..., description="Тип почвы")
-    GROUNDWATER_LEVEL: str = Field(..., description="Уровень грунтовых вод")
+    GROUNDWATER_LEVEL: Optional[str] = Field(None, description="Уровень грунтовых вод")
     CLIMATE_ZONE: str = Field(..., description="Климатическая зона")
     
     # Координаты объекта
@@ -39,9 +160,9 @@ class ReportInputData(BaseModel):
     OBJECT_TYPE: str = Field(..., description="Тип объекта (например, город)")
     SYSTEM_TYPE: str = Field(..., description="Тип дренажной системы")
     PIPE_MATERIAL: str = Field(..., description="Материал труб")
-    PIPE_DIAMETER: str = Field(..., description="Диаметр трубы")
-    PIPE_DEPTH: str = Field(..., description="Глубина заложения труб")
-    PIPE_LENGTH: str = Field(..., description="Общая протяженность труб")
+    PIPE_DIAMETER: Optional[str] = Field(None, description="Диаметр трубы")
+    PIPE_DEPTH: Optional[str] = Field(None, description="Глубина заложения труб")
+    PIPE_LENGTH: Optional[str] = Field(None, description="Общая протяженность труб")
     PIPE_INSTALL_YEAR: int = Field(..., description="Год ввода системы в эксплуатацию")
     MANHOLE_COUNT: int = Field(..., description="Количество смотровых колодцев")
     
@@ -81,6 +202,72 @@ class ReportInputData(BaseModel):
 
 
 class GeneratedReportData(BaseModel):
-    user_id: str = Field(...)
+    user_id: int = Field(...)
     file_name: str = Field(...)
+
+
+class ReportCreate(BaseModel):
+    user_id: int = Field(...)
+    file_id: int = Field(...)
+    is_draft: bool = False
+
+
+class DraftInputData(BaseModel):
+    user_id: int = Field(...)
+    FULL_OBJECT_NAME: Optional[str] = None
+    SHORT_OBJECT_NAME: Optional[str] = None
+    YEAR: Optional[int] = None
+    ORGANIZATION_NAME: Optional[str] = None
+    REGION: Optional[str] = None
+    DOCUMENTS_GOST: List[str] = Field(default_factory=list)
+    RELIEF_TYPE: Optional[str] = None
+    SOIL_TYPE: Optional[str] = None
+    GROUNDWATER_LEVEL: Optional[str] = None
+    CLIMATE_ZONE: Optional[str] = None
+    COORDINATES_LATITUDE: Optional[float] = None
+    COORDINATES_LONGITUDE: Optional[float] = None
+    OBJECT_TYPE: Optional[str] = None
+    SYSTEM_TYPE: Optional[str] = None
+    PIPE_MATERIAL: Optional[str] = None
+    PIPE_DIAMETER: Optional[str] = None
+    PIPE_DEPTH: Optional[str] = None
+    PIPE_LENGTH: Optional[str] = None
+    PIPE_INSTALL_YEAR: Optional[int] = None
+    MANHOLE_COUNT: Optional[int] = None
+    MONITORING_POINT_COUNT: Optional[int] = None
+    OBSERVATION_POINT: Optional[str] = None
+    LATITUDE: Optional[float] = None
+    LONGITUDE: Optional[float] = None
+    MEDIUM_TYPE: Optional[str] = None
+    DESCRIPTION: Optional[str] = None
+    OBSERVATION_FREQUENCY: Optional[str] = None
+    OBSERVATION_POINTS: List[Dict[str, Any]] = Field(default_factory=list)
+    RESULTS_PH: Optional[float] = None
+    RESULTS_IRON: Optional[float] = None
+    RESULTS_MANGANESE: Optional[float] = None
+    RESULTS_NITRATES: Optional[float] = None
+    RESULTS_SULFATES: Optional[float] = None
+    TEST_RESULTS: List[Dict[str, Any]] = Field(default_factory=list)
+    RESULTS_DYNAMIC: List[Dict[str, Any]] = Field(default_factory=list)
+    OBSERVATION_DYNAMICS: List[Dict[str, Any]] = Field(default_factory=list)
+    ORGANIZATION_ADDRESS: Optional[str] = None
+    ORGANIZATION_PHONE: Optional[str] = None
+    ORGANIZATION_EMAIL: Optional[str] = None
+    RESPONSIBLE_NAME: Optional[str] = None
+    RESPONSIBLE_POSITION: Optional[str] = None
+    REPORT_DATE: Optional[str] = None
+    SELECTED_TEST_INDICATORS: Optional[List[str]] = None
+    model_config = ConfigDict(extra="ignore")
+
+
+class DraftSummary(BaseModel):
+    file_id: int
+    title: Optional[str] = None
+    full_object_name: Optional[str] = None
+    organization_name: Optional[str] = None
+    last_modified: Optional[datetime] = None
+
+
+class DraftPayload(DraftInputData):
+    file_id: int
     

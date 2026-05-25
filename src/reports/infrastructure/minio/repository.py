@@ -7,15 +7,22 @@ class MinioRepository:
     def __init__(self, client: Minio):
         self._client = client
 
-    def put_object(self, obj_id: str, obj: bytes, bucket: str = settings.MINIO_BUCKET_NAME) -> str:
+    def put_object(self, obj_id: str, obj: bytes, bucket: str = settings.MINIO_BUCKET_NAME, file_type: str = "pdf") -> str:
         data = BytesIO(obj)
+        
+        # Определяем расширение и content type в зависимости от типа файла
+        extension = ".pdf"
+        content_type = "application/pdf"
+        if file_type == "docx":
+            extension = ".docx"
+            content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
         result = self._client.put_object(
             bucket_name=bucket,
-            object_name=f"{obj_id}.pdf",
+            object_name=f"{obj_id}{extension}",
             data=data,
             length=len(obj),
-            content_type="application/pdf"
+            content_type=content_type
         )
         return result.object_name
 

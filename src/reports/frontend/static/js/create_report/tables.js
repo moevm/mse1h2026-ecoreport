@@ -7,6 +7,26 @@ window.addEventListener("DOMContentLoaded", function () {
     const addButton = addTable.closest("section")?.querySelector(".action__button");
     if (!addButton) return;
 
+    const tbody = targetTable.querySelector("tbody");
+
+    function addObservationRow(values) {
+        if (!tbody) return;
+        const rowCount = tbody.querySelectorAll("tr").length + 1;
+        const row = document.createElement("tr");
+
+        const numCell = document.createElement("td");
+        numCell.textContent = rowCount;
+        row.appendChild(numCell);
+
+        values.forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = value || "-";
+            row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+    }
+
     addButton.addEventListener("click", function (event) {
         event.preventDefault();
 
@@ -21,31 +41,28 @@ window.addEventListener("DOMContentLoaded", function () {
         const hasValue = values.some((value) => value.length > 0);
         if (!hasValue) return;
 
-        const tbody = targetTable.querySelector("tbody");
-        if (!tbody) return;  // дополнительная проверка на наличие tbody
+        addObservationRow(values);
 
-        const rowCount = tbody.querySelectorAll("tr").length + 1;
-        const row = document.createElement("tr");
-
-        // добавление номера строки в первую ячейку
-        const numCell = document.createElement("td");
-        numCell.textContent = rowCount;
-        row.appendChild(numCell);
-
-        values.forEach((value) => {
-            const cell = document.createElement("td");
-            cell.textContent = value || "-";
-            row.appendChild(cell);
-        });
-
-        tbody.appendChild(row);
-
-        values.forEach((_, index) => {
-            const inputIds = ["observ-point", "observ-coord-n", "observ-coord-e", "eco-type", "description"];
-            const input = document.getElementById(inputIds[index]);
+        const inputIds = ["observ-point", "observ-coord-n", "observ-coord-e", "eco-type", "description"];
+        inputIds.forEach((id) => {
+            const input = document.getElementById(id);
             if (input) input.value = "";
         });
     });
+
+    window.restoreObservationPoints = function (points) {
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        points.forEach((pt) => {
+            addObservationRow([
+                pt.observation_point || "",
+                pt.latitude !== null && pt.latitude !== undefined ? String(pt.latitude) : "",
+                pt.longitude !== null && pt.longitude !== undefined ? String(pt.longitude) : "",
+                pt.medium_type || "",
+                pt.description || "",
+            ]);
+        });
+    };
 });
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -141,6 +158,35 @@ window.addEventListener("DOMContentLoaded", function () {
     });
 
     renderTable();
+
+    const metricKeyToLabel = { pH: "pH", iron: "Железо", manganese: "Марганец", nitrates: "Нитраты", sulfates: "Сульфаты" };
+
+    window.restoreDynamics = function (rows) {
+        const activeLabels = Object.keys(metricKeyToLabel).filter((key) =>
+            rows.some((r) => r[key] !== null && r[key] !== undefined && String(r[key]).trim() !== "")
+        ).map((key) => metricKeyToLabel[key]);
+
+        resultButtons.forEach((button) => {
+            const label = button.textContent.trim();
+            const selected = activeLabels.length === 0 ? true : activeLabels.includes(label);
+            button.dataset.selected = selected ? "true" : "false";
+            button.classList.toggle("list_element--active", selected);
+        });
+        renderTable();
+
+        const labels = ["Дата", ...getSelectedLabels()];
+        rows.forEach((rowData) => {
+            const tableData = { "Дата": rowData.date || "" };
+            Object.entries(metricKeyToLabel).forEach(([key, label]) => {
+                const v = rowData[key];
+                if (v !== null && v !== undefined) {
+                    const num = parseFloat(String(v).replace(",", "."));
+                    tableData[label] = isNaN(num) ? String(v) : num.toFixed(2);
+                }
+            });
+            tbody.appendChild(buildRow(labels, tableData));
+        });
+    };
 });
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -304,4 +350,29 @@ window.addEventListener("DOMContentLoaded", function () {
     });
 
     renderTable();
+
+    window.restoreTestResults = function (selectedLabels, valuesMap) {
+        resultButtons.forEach((button) => {
+            const label = button.textContent.trim();
+            const selected = selectedLabels.includes(label);
+            button.dataset.selected = selected ? "true" : "false";
+            button.classList.toggle("list_element--active", selected);
+        });
+        renderTable();
+
+        if (valuesMap) {
+            tbody.querySelectorAll("tr").forEach((row) => {
+                const indicator = row.dataset.indicator;
+                if (!indicator || valuesMap[indicator] === undefined) return;
+                const resultInput = row.querySelector("input[data-field='Результат']");
+                if (resultInput) {
+                    resultInput.value = valuesMap[indicator];
+                    const complianceInput = row.querySelector("input[data-field='Соответствие']");
+                    if (complianceInput && window.compareWithStandard) {
+                        complianceInput.value = window.compareWithStandard(indicator, valuesMap[indicator]);
+                    }
+                }
+            });
+        }
+    };
 });

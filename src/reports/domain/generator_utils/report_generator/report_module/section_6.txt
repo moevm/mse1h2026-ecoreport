@@ -14,7 +14,7 @@ PARA: Отбор проб осуществляется в контрольных
 
 PARA: Количество точек наблюдения: {{ MONITORING_POINT_COUNT }}
 
-RIGHT_PARA: Таблица 2. Координаты точек наблюдения
+RIGHT_PARA: Таблица {{ COUNT_TABLE }}. Координаты точек наблюдения
 
 TABLE: OBSERVATION_POINTS
 

@@ -4,6 +4,8 @@ from pydantic import SecretStr
 
 class Settings(BaseSettings):
     APP_PORT: int
+    SECRET: SecretStr
+    ALGORITHM: str
 
     RABBITMQ_HOST: str
     RABBITMQ_PORT: int

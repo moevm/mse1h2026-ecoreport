@@ -72,6 +72,7 @@ services:
         condition: service_healthy
     volumes:
       - ./src:/app/src
+      - ./alembic:/app/alembic
     restart: always
 
 volumes:

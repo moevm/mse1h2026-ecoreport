@@ -1,3 +1,4 @@
+from __future__ import annotations
 from reportlab.platypus import Image
 from datetime import date
 import matplotlib.pyplot as plt
@@ -203,4 +204,190 @@ def comparison_bar_chart(results: list[dict]) -> Image:
     fig.set_figwidth(9)
     fig.tight_layout()
 
-    return create_image_through_buffer(fig, width=7)
+    return create_image_through_buffer(fig, width=6)
+
+
+def concentration_dynamics_lineplot_docx(results: list[dict], dynamics: list[dict], metric: str) -> BytesIO:
+    """Создает график динамики измерения для DOCX"""
+    metric_labels = {
+        "ph": "pH",
+        "iron": "Железо",
+        "manganese": "Марганец",
+        "nitrates": "Нитраты",
+        "sulfates": "Сульфаты"
+    }
+
+    metric_default = {
+        "ph": ("6.00 - 9.00", "-"),
+        "iron": ("0.27 - 0.33", "мг/л"),
+        "manganese": ("0.09 - 0.12", "мг/л"),
+        "nitrates": ("38.25 - 51.75", "мг/л"),
+        "sulfates": ("435.00 - 565.00", "мг/л")
+    }
+
+    metric_lower = str(metric).lower()
+    default_standard = metric_default.get(metric_lower, ("", ""))[0]
+    default_unit = metric_default.get(metric_lower, ("", ""))[1]
+    selected_metric_label = metric_labels.get(metric_lower, "")
+
+    if not selected_metric_label:
+        return None
+
+    def to_simple_dict(item):
+        if hasattr(item, "model_dump"):
+            return item.model_dump(exclude_unset=True, exclude_none=True)
+        if hasattr(item, "dict"):
+            try:
+                return item.dict(exclude_unset=True, exclude_none=True)
+            except TypeError:
+                return item.dict()
+        if isinstance(item, dict):
+            return {k: v for k, v in item.items() if v is not None}
+        return dict(item)
+    
+    def get_case_insensitive_value(data: dict, key: str, default=None):
+        """Поиск ключа без учета регистра"""
+        key_lower = key.lower()
+        for k, v in data.items():
+            if str(k).lower() == key_lower:
+                return v
+        return default
+    simple_dynamics = [to_simple_dict(entry) for entry in dynamics]
+
+    if all(get_case_insensitive_value(entry, metric_lower) is None for entry in simple_dynamics):
+        return None
+
+    measurements = []
+    dates = []
+
+    standard = ""
+    low_bound = 0
+    high_bound = 0
+    unit = ""
+
+    for result in results:
+        indicator = str(result.get("indicator", "")).lower()
+        if (indicator == metric_lower or indicator == selected_metric_label.lower()):
+            standard = str(result.get("standard", default_standard)).strip()
+            unit = str(result.get("unit", default_unit)).strip()
+
+    if not standard:
+        standard = default_standard
+    if standard and " - " in standard:
+        try:
+            low_bound, high_bound = map(format_number, standard.split(" - "))
+        except Exception:
+            pass
+
+    if not unit:
+        unit = default_unit
+
+    for entry in simple_dynamics:
+        date_str = entry.get("date")
+        if not date_str:
+            continue
+        try:
+            date_obj = datetime.strptime(date_str,"%Y-%m-%d")
+        except Exception:
+            continue
+        raw_value = get_case_insensitive_value(entry, metric_lower,"-1")
+        value = format_number(raw_value)
+        if value <= 0:
+            continue
+        measurements.append(value)
+        dates.append(date2num(date_obj))
+
+    if len(dates) < 2:
+        return None
+
+    zipped = list(zip(dates, measurements))
+    zipped.sort()
+    dates, measurements = zip(*zipped)
+
+    fig, ax = plt.subplots()
+    ax.plot(dates, measurements, color="blue", marker="o", label="Динамика наблюдений")
+    if low_bound != 0:
+        ax.hlines(low_bound, 0, 1, colors="#4CBA76", transform=ax.get_yaxis_transform(), label="Нижняя граница нормы")
+    if high_bound != 0:
+        ax.hlines(high_bound, 0, 1, colors="#618071", transform=ax.get_yaxis_transform(), label="Верхняя граница нормы")
+
+    ax.set_xlim(dates[0], dates[-1])
+    ax.xaxis.set_major_formatter(AutoDateFormatter(ax.xaxis.get_major_locator()))
+    ax.grid(True)
+    for label in ax.get_xticklabels():
+        label.set_rotation(30)
+        label.set_horizontalalignment("right")
+    ax.set_ylabel(f"{selected_metric_label}, {unit}" if unit != "-" else selected_metric_label)
+    ax.legend()
+    fig.tight_layout()
+
+    buffer = BytesIO()
+    fig.savefig(buffer, format="png")
+    buffer.seek(0)
+    plt.close(fig)
+    return buffer
+
+
+def comparison_bar_chart_docx(results: list[dict]) -> BytesIO:
+    """Создает столбчатый график для DOCX"""
+    if not results:
+        return None
+    measurements = []
+    measure_data = {"Нижняя граница нормы": [], "Результат наблюдения": [], "Верхняя граница нормы": []}
+    bar_colors = []
+
+    for result in results:
+        indicator = str(result.get("indicator", "")).strip()
+        result_raw = result.get("result")
+        # Пропускаем пустые записи
+        if (not indicator or result_raw in (None, "", "-")):
+            continue
+        standard = result.get("standard", "")
+        low_bound = 0
+        high_bound = 0
+        if (standard and " - " in str(standard)):
+            try:
+                low_bound, high_bound = map(format_number, standard.split(" - "))
+            except Exception:
+                pass
+        result_val = format_number(result_raw)
+        unit = str(result.get("unit", ""))
+        measurements.append(f"{indicator}, {unit}" if unit != "-" else indicator)
+        measure_data["Результат наблюдения"].append(result_val)
+        measure_data["Нижняя граница нормы"].append(low_bound)
+        measure_data["Верхняя граница нормы"].append(high_bound)
+        bar_colors.append("#4CBA76" if low_bound <= result_val <= high_bound else "#96281A")
+    
+    if not measurements:
+        return None
+
+    fig, ax = plt.subplots()
+
+    x = np.arange(len(measurements))
+    width = 0.32
+    multiplier = 0
+    ax.set_yscale("log")
+
+    for attribute, measurement in measure_data.items():
+        offset = width * multiplier
+        if attribute == "Результат наблюдения":
+            color = bar_colors
+        elif attribute == "Верхняя граница нормы":
+            color = "#362727"
+        else:
+            color = "#4E5755"
+        rects = ax.bar(x + offset, measurement, width, label=attribute, color=color)
+        ax.bar_label(rects, padding=2)
+        multiplier += 1
+
+    ax.legend(loc="best")
+    ax.set_xticks(x + width, measurements)
+    ax.tick_params(right=False, left=False, axis="y", length=0, which="both")
+    ax.set_yticks([])
+    fig.set_figwidth(9)
+
+    buffer = BytesIO()
+    fig.savefig(buffer, format="png")
+    buffer.seek(0)
+    plt.close(fig)
+    return buffer

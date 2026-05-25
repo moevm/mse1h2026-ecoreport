@@ -1,5 +1,4 @@
 from faststream.rabbit import RabbitQueue, RabbitExchange
-import logging
 from reports.core.config import settings
 from reports.domain.use_cases.save_report import SaveDataUseCase
 from reports.infrastructure.rabbitmq.broker import broker

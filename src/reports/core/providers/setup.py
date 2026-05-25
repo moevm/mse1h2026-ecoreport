@@ -14,6 +14,7 @@ from reports.infrastructure.postgres.repository import ReportsRepository
 from reports.infrastructure.rabbitmq.broker import broker
 from reports.infrastructure.rabbitmq.publisher import RabbitPublisher
 from reports.domain.generator_utils.report_generator.report_generator import ReportGenerator
+from reports.domain.generator_utils.report_generator.docx_generator import DocxGenerator
 
 
 class InfrastructureProvider(Provider):
@@ -63,6 +64,10 @@ class ServiceProvider(Provider):
     def get_report_generator(self) -> ReportGenerator:
         return ReportGenerator()
 
+    @provide
+    def get_docx_generator(self) -> DocxGenerator:
+        return DocxGenerator()
+
 
 class UseCaseProvider(Provider):
     scope = Scope.REQUEST
@@ -74,8 +79,9 @@ class UseCaseProvider(Provider):
     @provide
     def get_generate_report_use_case(self, publisher: RabbitPublisher,
                                         generator: ReportGenerator,
+                                        docx_generator: DocxGenerator,
                                         repository: MinioRepository) -> GenerateReportUseCase:
-        return GenerateReportUseCase(publisher, generator, repository)
+        return GenerateReportUseCase(publisher, generator, docx_generator, repository)
 
     @provide
     def get_save_data_use_case(self, repository: ReportsRepository, database: Database) -> SaveDataUseCase:

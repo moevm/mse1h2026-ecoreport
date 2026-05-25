@@ -9,14 +9,11 @@ from jinja2 import Template
 import os
 from io import BytesIO
 from datetime import datetime
-import logging
 import re
 from ..report_utils.diagrams import (
     comparison_bar_chart_docx,
     concentration_dynamics_lineplot_docx
 )
-
-logger = logging.getLogger(__name__)
 
 class DocxGenerator:
     """Генератор DOCX-отчетов"""
@@ -592,14 +589,12 @@ class DocxGenerator:
                 image_stream = concentration_dynamics_lineplot_docx(results, dynamics, metric)
 
             if image_stream is None:
-                logger.debug(f"График {graph_type} не создан (нет данных)")
                 return None
 
             image_stream.seek(0)
             return image_stream
 
-        except Exception as ex:
-            logger.error(f"Ошибка генерации графика {graph_type}: {ex}", exc_info=True)
+        except Exception:
             return None
     
     def add_section_elements(self, doc: Document, elements: list, data_dict: dict):
@@ -680,7 +675,6 @@ class DocxGenerator:
                 try:
                     image_stream = (self.get_graph_image_stream(content, data_dict))
                     if not self.is_valid_image_stream(image_stream):
-                        logger.warning(f"Не удалось создать график " f"{content} (нет данных)")
                         pending_graph_desc = None
                         pending_center_para = None
                         continue
@@ -706,15 +700,12 @@ class DocxGenerator:
                         run = para.add_run(pending_center_para)
                         apply_font(run)
 
-                    logger.debug(f"График {content} " f"успешно вставлен в DOCX")
-
                     self._figure_counter += 1
 
                     pending_graph_desc = None
                     pending_center_para = None
 
-                except Exception as ex:
-                    logger.error(f"Критическая ошибка " f"при вставке графика " f"{content}: {ex}", exc_info=True)
+                except Exception:
                     pending_graph_desc = None
                     pending_center_para = None
 

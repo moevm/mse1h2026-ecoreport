@@ -8,9 +8,6 @@ import numpy as np
 from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfutils import readJPEGInfo
 from datetime import datetime, date
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def format_number(value):

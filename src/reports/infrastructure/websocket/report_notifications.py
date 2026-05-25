@@ -1,10 +1,7 @@
 import asyncio
-import logging
 from collections import defaultdict
 from typing import Any
 from urllib.parse import quote
-
-logger = logging.getLogger(__name__)
 
 class ReportNotificationHub:
     def __init__(self) -> None:
@@ -37,16 +34,6 @@ class ReportNotificationHub:
             "download_url": f"/download-file/{quote(file_name, safe='')}",
         }
         
-        logger.info(
-            f"Publishing report ready notification",
-            extra={
-                "user_id": user_id,
-                "file_name": file_name,
-                "file_type": extension,
-                "download_url": payload["download_url"]
-            }
-        )
-        
         async with self._lock:
             subscribers = list(self._subscribers.get(user_id, set()))
 
@@ -61,11 +48,7 @@ class ReportNotificationHub:
 
             try:
                 queue.put_nowait(payload)
-            except Exception as e:
-                logger.error(
-                    f"Failed to publish notification to queue for user {user_id}: {e}",
-                    exc_info=True
-                )
+            except Exception:
                 dead_queues.append(queue)
         
         if dead_queues:

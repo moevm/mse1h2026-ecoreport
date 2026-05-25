@@ -3,9 +3,6 @@ from reports.domain.generator_utils.report_generator.docx_generator import DocxG
 from reports.infrastructure.minio.repository import MinioRepository
 from reports.infrastructure.rabbitmq.publisher import RabbitPublisher
 from reports.schemas.report_models import ReportInputData, GeneratedReportData
-import logging
-
-logger = logging.getLogger(__name__)
 
 class GenerateReportUseCase:
     def __init__(self,
@@ -43,5 +40,5 @@ class GenerateReportUseCase:
             await self._publisher.publish_generated_message(
                 GeneratedReportData(user_id=message.user_id, file_name=docx_object_name)
             )
-        except Exception as e:
-            logger.error(f"Failed to generate DOCX for report {message.report_id}: {str(e)}", exc_info=True)
+        except Exception:
+            pass

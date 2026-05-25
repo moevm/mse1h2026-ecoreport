@@ -146,3 +146,44 @@
         padding-top: 1em;
     }
 }
+
+.card--new-report {
+    position: relative;
+    background: linear-gradient(135deg,
+            rgba(42, 77, 136, 0.05) 0%,
+            rgba(124, 148, 184, 0.05) 100%);
+    border: 2.5px solid #2A4D88;
+    transform: translateY(-1px) scale(1.008);
+    box-shadow:
+        0 6px 18px rgba(42, 77, 136, 0.12),
+        0 2px 6px rgba(42, 77, 136, 0.06);
+    transition:
+        transform 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+.card--new-report.animate {
+    animation: reportAppear 850ms ease-out;
+}
+
+@keyframes reportAppear {
+    0% {
+        transform: scale(0.950) translateY(6px);
+        opacity: 0.8;
+        box-shadow: 0 0 0 rgba(42, 77, 136, 0);
+    }
+
+    55% {
+        transform: scale(1.001) translateY(-4px);
+        box-shadow:
+            0 12px 28px rgba(42, 77, 136, 0.18),
+            0 4px 12px rgba(42, 77, 136, 0.08);
+    }
+
+    100% {
+        transform: translateY(-1px) scale(1.008);
+        box-shadow:
+            0 6px 18px rgba(42, 77, 136, 0.12),
+            0 2px 6px rgba(42, 77, 136, 0.06);
+    }
+}

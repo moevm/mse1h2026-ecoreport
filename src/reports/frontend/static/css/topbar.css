@@ -147,6 +147,8 @@ body {
 }
 
 .report-toast__link {
+    display: block;
+    margin: 0.5em 0;
     color: #fff;
     font-weight: 600;
     text-decoration: none;

@@ -4,7 +4,7 @@ PARA: Дренажная система представляет собой ко
 
 PARA: Тип объекта: {{ OBJECT_TYPE }}
 
-RIGHT_PARA: Таблица 1. Основные характеристики системы
+RIGHT_PARA: Таблица {{ COUNT_TABLE }}. Основные характеристики системы
 
 TABLE: SYSTEM_CHARACTERISTICS
 

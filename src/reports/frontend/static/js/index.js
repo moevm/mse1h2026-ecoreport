@@ -646,13 +646,36 @@ async function sendForm() {
     }
 
     try {
-        await fetch("/generate-report", {
+        const response = await fetch("/generate-report", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+            // Сохраняем report_id в sessionStorage для выделения на странице документов
+            sessionStorage.setItem("newReportId", result.report_id);
+            
+            // Удаляем все существующие toast-уведомления
+            const toastContainer = document.querySelector(".report-toast-container");
+            if (toastContainer) {
+                toastContainer.innerHTML = "";
+            }
+            
+            // Обновляем статус
+            if (status) status.innerText = "Отчет генерируется. Переход на страницу отчетов...";
+            
+            // Переходим на страницу отчетов
+            setTimeout(() => {
+                window.location.href = "/documents";
+            }, 500);
+        } else {
+            console.log(result.message);
+        }
     } catch (error) {
         showToast("Ошибка соединения: " + error.message, "error");
     }

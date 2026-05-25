@@ -102,6 +102,12 @@ class DocxGenerator:
             section.top_margin = self.TOP_MARGIN
             section.bottom_margin = self.BOTTOM_MARGIN
 
+    def replace_counters(self, text: str) -> str:
+        """Подстановка актуальных номеров"""
+        if not text:
+            return text
+        return (text.replace("__COUNT_TABLE__", str(self._table_counter)).replace("__COUNT_FIGURE__", str(self._figure_counter)))
+
     def add_title_page(self, doc: Document, user_data: dict):
         """Добавление титульной страницы"""
         # Заголовок организации 
@@ -501,8 +507,13 @@ class DocxGenerator:
 
         # Обработка специальных полей перед рендерингом
         processed_data = data_dict.copy()
+        
         if isinstance(processed_data.get("DOCUMENTS_GOST"), list):
             processed_data["DOCUMENTS_GOST"] = "\n".join(processed_data["DOCUMENTS_GOST"])
+
+        # плейсхолдеры для сквозной нумерации
+        processed_data["COUNT_TABLE"] = "__COUNT_TABLE__"
+        processed_data["COUNT_FIGURE"] = "__COUNT_FIGURE__"
 
         with open(file_path, "r", encoding="utf-8") as f:
             template = Template(f.read())
@@ -624,11 +635,15 @@ class DocxGenerator:
                     run = para.add_run(pending_table_caption)
                     apply_font(run)
                     parent.insert( parent.index(table_element), para._element)
+                
+                if created:
+                    self._table_counter += 1
+
                 pending_table_caption = None
                 continue
 
             if element_type == "RIGHT_PARA":
-                pending_table_caption = content
+                pending_table_caption = self.replace_counters(content)
                 continue
 
             if element_type == "TITLE":
@@ -650,11 +665,11 @@ class DocxGenerator:
                 continue
 
             if element_type == "CENTER_PARA":
-                pending_center_para = content
+                pending_center_para = self.replace_counters(content)
                 continue
 
             if element_type == "GRAPH_DESC":
-                pending_graph_desc = content
+                pending_graph_desc = self.replace_counters(content)
                 continue
 
             if element_type == "LIST":
@@ -693,6 +708,8 @@ class DocxGenerator:
 
                     logger.debug(f"График {content} " f"успешно вставлен в DOCX")
 
+                    self._figure_counter += 1
+
                     pending_graph_desc = None
                     pending_center_para = None
 
@@ -714,6 +731,10 @@ class DocxGenerator:
 
         # Титульная страница
         self.add_title_page(doc, user_data)
+
+        # сквозные счетчики таблиц и рисунков
+        self._table_counter = 1
+        self._figure_counter = 1
 
         # Разделы
         content_file = os.path.join(self.BASE_DIR, "report_module", "content.txt")

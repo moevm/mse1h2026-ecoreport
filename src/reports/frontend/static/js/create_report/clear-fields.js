@@ -90,6 +90,7 @@ function clearAllFormFields() {
     });
 }
 
+function clearForm() {
     const inputs = document.querySelectorAll("input:not([type=hidden]):not([type=file]), select, textarea");
     inputs.forEach((el) => {
         if (el.type === "checkbox" || el.type === "radio") {

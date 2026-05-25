@@ -5,7 +5,7 @@ from reports.infrastructure.postgres.models import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, update, delete
 from reports.schemas.report_models import (
-    GeneratedReportData,
+    ReportCreate,
     FileCreate, FileUpdate,
     DocumentsGostCreate, DocumentsGostUpdate,
     ObservationPointCreate, ObservationPointUpdate,
@@ -18,10 +18,8 @@ from reports.schemas.user_models import UserCreate, UserUpdate, UserCreated, Use
 class ReportsRepository:
     _collection: Type[Report] = Report
 
-    async def add_report(self, data: GeneratedReportData, session: AsyncSession) -> None:
-        values_data = data.model_dump()
-        values_data["file_id"] = values_data.pop("file_name")
-        query = insert(self._collection).values(values_data)
+    async def add_report(self, data: ReportCreate, session: AsyncSession) -> None:
+        query = insert(self._collection).values(**data.model_dump())
         await session.execute(query)
 
     async def get_all_reports_id(self, user_id: str, session: AsyncSession) -> list[str]:

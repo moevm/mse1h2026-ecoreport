@@ -203,4 +203,9 @@ class ReportInputData(BaseModel):
 class GeneratedReportData(BaseModel):
     user_id: int = Field(...)
     file_name: str = Field(...)
+
+
+class ReportCreate(BaseModel):
+    user_id: int = Field(...)
+    file_id: int = Field(...)
     

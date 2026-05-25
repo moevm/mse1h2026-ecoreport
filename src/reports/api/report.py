@@ -80,11 +80,8 @@ async def generate_report(payload: dict,
         user_id = user_data.user_id
         report_id = str(uuid.uuid4())
         message = ReportInputData(**payload, user_id=user_id, report_id=report_id)
-        
-        # Сохранить данные отчета в БД
+
         await save_use_case.execute(data=message)
-        
-        # Отправить на обработку PDF генерации
         await generate_use_case.execute(message=message)
         
         return {"status": "success", "report_id": report_id}

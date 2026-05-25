@@ -5,6 +5,7 @@ from reports.api.page import page_router
 from reports.api.report import reports_router
 from reports.api.user import user_router
 from reports.infrastructure.rabbitmq.broker import broker
+from reports.domain import report_worker  # noqa: F401  registers @broker.subscriber handlers
 from reports.core.providers.setup import container
 from dishka.integrations.fastapi import setup_dishka
 from reports.infrastructure.minio.client import MinioClient

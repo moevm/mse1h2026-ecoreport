@@ -5,7 +5,7 @@ from reports.infrastructure.postgres.repository import (
 )
 from reports.schemas.report_models import (
     ReportInputData, FileCreate, DocumentsGostCreate, TestResultsCreate,
-    ObservationPointCreate, ObservationDynamicCreate, GeneratedReportData
+    ObservationPointCreate, ObservationDynamicCreate, ReportCreate
 )
 from datetime import datetime
 
@@ -96,9 +96,9 @@ class SaveDataUseCase:
                     )
                     await self._observation_dynamic_repository.add(dyn_data, session)
 
-                report_data = GeneratedReportData(
+                report_data = ReportCreate(
                     user_id=data.user_id,
-                    file_name=str(file_id) 
+                    file_id=file_id
                 )
                 await self._postgres_repository.add_report(report_data, session)
                 

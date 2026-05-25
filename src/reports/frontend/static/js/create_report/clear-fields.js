@@ -90,16 +90,16 @@ function clearAllFormFields() {
     });
 }
 
-
-document.addEventListener('DOMContentLoaded', function () {
-    const clearButton = document.getElementById('clear-form-button');
-
-    if (clearButton) {
-        clearButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            clearAllFormFields();
-        });
-    } else {
-        console.warn("Кнопка 'Очистить поля' не найдена");
-    }
-});
+    const inputs = document.querySelectorAll("input:not([type=hidden]):not([type=file]), select, textarea");
+    inputs.forEach((el) => {
+        if (el.type === "checkbox" || el.type === "radio") {
+            el.checked = false;
+        } else {
+            el.value = "";
+        }
+    });
+    localStorage.removeItem("gost_list");
+    localStorage.removeItem("gost_other");
+    const tables = document.querySelectorAll(".dynamic-table tbody");
+    tables.forEach((tbody) => { tbody.innerHTML = ""; });
+}

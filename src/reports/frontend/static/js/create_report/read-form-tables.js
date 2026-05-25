@@ -156,7 +156,7 @@ function readObservationDynamics() {
             return entry[metric] !== undefined && String(entry[metric]).trim() !== "";
         });
 
-        if (entry.date && hasMetricValue) {
+        if (entry.date || hasMetricValue) {
             const normalize = (value) => {
                 if (value === undefined || value === null || String(value).trim() === "") {
                     return "";

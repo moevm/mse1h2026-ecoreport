@@ -138,3 +138,16 @@
 ### Задачи на следующую итерацию
 [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/4)
 
+## Итерация №4
+### [Презентация](docs/EcoReport_Sprint_4_Presentation.pdf)
+
+### [Инструкция к запуску](docs/run-instruction/instruction.md)
+
+### Скринкасты
+[демо3](docs/demo3.zip)
+### Запланированные задачи
+- Доработать приложения
+- [см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/4)
+### Выполненные задачи
+- Создано приложение
+[см. в issues](https://github.com/moevm/mse1h2026-ecoreport/milestone/4)

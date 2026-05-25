@@ -35,6 +35,27 @@ class ReportsRepository:
         result = (await session.execute(query)).one()
         return result.file_id
 
+    async def list_drafts_by_user(self, user_id: int, session: AsyncSession) -> list[Report]:
+        query = (select(self._collection)
+                 .where(self._collection.user_id == user_id, self._collection.is_draft == True)
+                 .order_by(self._collection.created_at.desc()))
+        result = (await session.scalars(query)).all()
+        return list(result)
+
+    async def get_draft_by_file_id(self, file_id: int, user_id: int, session: AsyncSession) -> Optional[Report]:
+        query = select(self._collection).where(
+            self._collection.file_id == file_id,
+            self._collection.user_id == user_id,
+            self._collection.is_draft == True
+        )
+        return (await session.scalars(query)).first()
+
+    async def mark_as_final(self, file_id: int, user_id: int, session: AsyncSession) -> None:
+        query = (update(self._collection)
+                 .where(self._collection.file_id == file_id, self._collection.user_id == user_id)
+                 .values(is_draft=False))
+        await session.execute(query)
+
 
 class UserRepository:
     _collection: Type[User] = User
@@ -112,6 +133,11 @@ class ObservationPointRepository:
         query = delete(self._collection).where(self._collection.file_id == file_id)
         await session.execute(query)
 
+    async def list_by_file_id(self, file_id: int, session: AsyncSession) -> list[ObservationPoint]:
+        query = select(self._collection).where(self._collection.file_id == file_id)
+        result = (await session.scalars(query)).all()
+        return list(result)
+
 
 class TestResultsRepository:
     _collection: Type[TestResults] = TestResults
@@ -159,6 +185,11 @@ class ObservationDynamicRepository:
     async def delete_by_file_id(self, file_id: int, session: AsyncSession) -> None:
         query = delete(self._collection).where(self._collection.file_id == file_id)
         await session.execute(query)
+
+    async def list_by_file_id(self, file_id: int, session: AsyncSession) -> list[ObservationDynamic]:
+        query = select(self._collection).where(self._collection.file_id == file_id)
+        result = (await session.scalars(query)).all()
+        return list(result)
 
 
 class FileRepository:

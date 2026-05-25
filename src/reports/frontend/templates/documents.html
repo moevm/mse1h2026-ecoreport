@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/documents.css') }}">
-    <link rel="stylesheet" href="{{ request.url_for('static', path='css/documents.css') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/topbar.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/toast.css') }}">
     <link rel="icon" href="{{ request.url_for('static', path='images/eco-house.png') }}" type="image/png">
     <title>Документы</title>
 </head>
@@ -15,8 +15,35 @@
         <section class="page__container">
             <h1 class="title">Отчеты</h1>
 
-            <section class="list">
-                {% if reports %}
+            {% if drafts %}
+            <section class="reports-block">
+                <h2 class="subtitle">Черновики</h2>
+                <section class="list">
+                    {% for draft in drafts %}
+                        <article class="card card--draft">
+                            <div class="card__summary">
+                                <div class="card__summary_info">
+                                    <div>
+                                        <h2 class="card__title">{{ draft.organization_name }}</h2>
+                                        <p class="card__date">{{ draft.full_object_name }}</p>
+                                        <p class="card__date">Изменён: {{ draft.last_modified_str }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <aside class="card__side">
+                                <a class="card__button" href="/create?draft_id={{ draft.file_id }}">Продолжить заполнение</a>
+                                <button class="card__button card__button--danger" data-draft-id="{{ draft.file_id }}">Удалить</button>
+                            </aside>
+                        </article>
+                    {% endfor %}
+                </section>
+            </section>
+            {% endif %}
+
+            {% if reports %}
+            <section class="reports-block">
+                <h2 class="subtitle">Готовые отчёты</h2>
+                <section class="list">
                     {% for report in reports %}
                         <article class="card">
                             <div class="card__summary">
@@ -25,14 +52,8 @@
                                         <h2 class="card__title">{{ report.title }}</h2>
                                         <p class="card__date">Дата создания: {{ report.last_modified }}</p>
                                     </div>
-                                    <div class="card__meta">
-                                        <p>Название организации</p>
-                                        <p>Название объекта</p>
-                                    </div>
                                 </div>
-                                <p class="card__description">Краткое описание отчета...</p>
                             </div>
-
                             <aside class="card__side">
                                 <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.pdf) }}">Скачать PDF</a>
                                 <a class="card__button" href="{{ request.url_for('download_object_file', object_name=report.files.docx) }}">Скачать DOCX</a>
@@ -40,10 +61,30 @@
                             </aside>
                         </article>
                     {% endfor %}
-                {% else %}
-                    <div class="reports-empty">Отчетов пока нет.</div>
-                {% endif %}
+                </section>
             </section>
+            {% endif %}
+
+            {% if not drafts and not reports %}
+                <div class="reports-empty">Отчётов и черновиков пока нет.</div>
+            {% endif %}
+
+            <script src="{{ request.url_for('static', path='js/toast.js') }}"></script>
+            <script>
+                document.querySelectorAll(".card__button--danger").forEach(function(btn) {
+                    btn.addEventListener("click", async function() {
+                        const draftId = this.getAttribute("data-draft-id");
+                        if (!confirm("Удалить черновик?")) return;
+                        const response = await fetch("/delete-draft/" + draftId, { method: "DELETE" });
+                        if (response.ok || response.status === 204) {
+                            location.reload();
+                        } else {
+                            const err = await response.json().catch(function() { return {}; });
+                            showToast("Ошибка: " + (err.detail || response.status), "error");
+                        }
+                    });
+                });
+            </script>
         </section>
     </main>
 </body>

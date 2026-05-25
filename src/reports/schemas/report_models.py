@@ -34,6 +34,7 @@ class FileBase(BaseModel):
     responsible_name: Optional[str] = None
     responsible_position: Optional[str] = None
     report_date: Optional[date] = None
+    selected_indicators: Optional[str] = None
 
 class FileCreate(FileBase):
     pass
@@ -148,7 +149,7 @@ class ReportInputData(BaseModel):
     # Природные условия
     RELIEF_TYPE: str = Field(..., description="Тип рельефа")
     SOIL_TYPE: str = Field(..., description="Тип почвы")
-    GROUNDWATER_LEVEL: str = Field(..., description="Уровень грунтовых вод")
+    GROUNDWATER_LEVEL: Optional[str] = Field(None, description="Уровень грунтовых вод")
     CLIMATE_ZONE: str = Field(..., description="Климатическая зона")
     
     # Координаты объекта
@@ -159,9 +160,9 @@ class ReportInputData(BaseModel):
     OBJECT_TYPE: str = Field(..., description="Тип объекта (например, город)")
     SYSTEM_TYPE: str = Field(..., description="Тип дренажной системы")
     PIPE_MATERIAL: str = Field(..., description="Материал труб")
-    PIPE_DIAMETER: str = Field(..., description="Диаметр трубы")
-    PIPE_DEPTH: str = Field(..., description="Глубина заложения труб")
-    PIPE_LENGTH: str = Field(..., description="Общая протяженность труб")
+    PIPE_DIAMETER: Optional[str] = Field(None, description="Диаметр трубы")
+    PIPE_DEPTH: Optional[str] = Field(None, description="Глубина заложения труб")
+    PIPE_LENGTH: Optional[str] = Field(None, description="Общая протяженность труб")
     PIPE_INSTALL_YEAR: int = Field(..., description="Год ввода системы в эксплуатацию")
     MANHOLE_COUNT: int = Field(..., description="Количество смотровых колодцев")
     
@@ -208,4 +209,65 @@ class GeneratedReportData(BaseModel):
 class ReportCreate(BaseModel):
     user_id: int = Field(...)
     file_id: int = Field(...)
+    is_draft: bool = False
+
+
+class DraftInputData(BaseModel):
+    user_id: int = Field(...)
+    FULL_OBJECT_NAME: Optional[str] = None
+    SHORT_OBJECT_NAME: Optional[str] = None
+    YEAR: Optional[int] = None
+    ORGANIZATION_NAME: Optional[str] = None
+    REGION: Optional[str] = None
+    DOCUMENTS_GOST: List[str] = Field(default_factory=list)
+    RELIEF_TYPE: Optional[str] = None
+    SOIL_TYPE: Optional[str] = None
+    GROUNDWATER_LEVEL: Optional[str] = None
+    CLIMATE_ZONE: Optional[str] = None
+    COORDINATES_LATITUDE: Optional[float] = None
+    COORDINATES_LONGITUDE: Optional[float] = None
+    OBJECT_TYPE: Optional[str] = None
+    SYSTEM_TYPE: Optional[str] = None
+    PIPE_MATERIAL: Optional[str] = None
+    PIPE_DIAMETER: Optional[str] = None
+    PIPE_DEPTH: Optional[str] = None
+    PIPE_LENGTH: Optional[str] = None
+    PIPE_INSTALL_YEAR: Optional[int] = None
+    MANHOLE_COUNT: Optional[int] = None
+    MONITORING_POINT_COUNT: Optional[int] = None
+    OBSERVATION_POINT: Optional[str] = None
+    LATITUDE: Optional[float] = None
+    LONGITUDE: Optional[float] = None
+    MEDIUM_TYPE: Optional[str] = None
+    DESCRIPTION: Optional[str] = None
+    OBSERVATION_FREQUENCY: Optional[str] = None
+    OBSERVATION_POINTS: List[Dict[str, Any]] = Field(default_factory=list)
+    RESULTS_PH: Optional[float] = None
+    RESULTS_IRON: Optional[float] = None
+    RESULTS_MANGANESE: Optional[float] = None
+    RESULTS_NITRATES: Optional[float] = None
+    RESULTS_SULFATES: Optional[float] = None
+    TEST_RESULTS: List[Dict[str, Any]] = Field(default_factory=list)
+    RESULTS_DYNAMIC: List[Dict[str, Any]] = Field(default_factory=list)
+    OBSERVATION_DYNAMICS: List[Dict[str, Any]] = Field(default_factory=list)
+    ORGANIZATION_ADDRESS: Optional[str] = None
+    ORGANIZATION_PHONE: Optional[str] = None
+    ORGANIZATION_EMAIL: Optional[str] = None
+    RESPONSIBLE_NAME: Optional[str] = None
+    RESPONSIBLE_POSITION: Optional[str] = None
+    REPORT_DATE: Optional[str] = None
+    SELECTED_TEST_INDICATORS: Optional[List[str]] = None
+    model_config = ConfigDict(extra="ignore")
+
+
+class DraftSummary(BaseModel):
+    file_id: int
+    title: Optional[str] = None
+    full_object_name: Optional[str] = None
+    organization_name: Optional[str] = None
+    last_modified: Optional[datetime] = None
+
+
+class DraftPayload(DraftInputData):
+    file_id: int
     

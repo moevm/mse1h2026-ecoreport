@@ -13,9 +13,14 @@ from reports.domain.use_cases.reports.new_report_generation import NewReportGene
 from reports.domain.use_cases.reports.save_report import SaveDataUseCase
 from reports.domain.use_cases.reports.update_report import UpdateDataUseCase
 from reports.domain.use_cases.reports.delete_report import DeleteDataUseCase
+from reports.domain.use_cases.reports.save_draft import SaveDraftUseCase
+from reports.domain.use_cases.reports.update_draft import UpdateDraftUseCase
+from reports.domain.use_cases.reports.delete_draft import DeleteDraftUseCase
+from reports.domain.use_cases.reports.get_draft import GetDraftUseCase
+from reports.domain.use_cases.reports.list_drafts import ListDraftsUseCase
 from reports.infrastructure.minio.repository import MinioRepository
 from reports.infrastructure.websocket.report_notifications import report_notification_hub
-from reports.schemas.report_models import ReportInputData
+from reports.schemas.report_models import ReportInputData, DraftInputData
 from reports.api.dependencies import validate_jwt
 from reports.schemas.user_models import UserPayload
 
@@ -75,15 +80,27 @@ async def upload_file(file: UploadFile):
 async def generate_report(payload: dict,
                           save_use_case: FromDishka[SaveDataUseCase],
                           generate_use_case: FromDishka[NewReportGenerateUseCase],
+                          update_draft_use_case: FromDishka[UpdateDraftUseCase],
                           user_data: UserPayload = Depends(validate_jwt)):
     try:
         user_id = user_data.user_id
         report_id = str(uuid.uuid4())
+        draft_file_id = payload.pop("file_id", None)
+
         message = ReportInputData(**payload, user_id=user_id, report_id=report_id)
+
+        if draft_file_id:
+            draft_data = DraftInputData(**payload, user_id=user_id)
+            try:
+                await update_draft_use_case.execute(
+                    file_id=int(draft_file_id), user_id=user_id, data=draft_data, promote=True
+                )
+            except ValueError:
+                pass
 
         await save_use_case.execute(data=message)
         await generate_use_case.execute(message=message)
-        
+
         return {"status": "success", "report_id": report_id}
     except pydantic.ValidationError as exc:
         raise HTTPException(
@@ -189,5 +206,70 @@ async def delete_report_data(file_id: int, use_case: FromDishka[DeleteDataUseCas
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(val_err)
         )
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@reports_router.post("/save-draft", status_code=status.HTTP_201_CREATED)
+@inject
+async def save_draft(payload: dict,
+                     save_draft_use_case: FromDishka[SaveDraftUseCase],
+                     update_draft_use_case: FromDishka[UpdateDraftUseCase],
+                     user_data: UserPayload = Depends(validate_jwt)):
+    try:
+        user_id = user_data.user_id
+        existing_file_id = payload.pop("file_id", None)
+        data = DraftInputData(**payload, user_id=user_id)
+
+        if existing_file_id:
+            try:
+                await update_draft_use_case.execute(
+                    file_id=int(existing_file_id), user_id=user_id, data=data
+                )
+                return {"status": "success", "file_id": int(existing_file_id)}
+            except ValueError:
+                pass
+
+        file_id = await save_draft_use_case.execute(data=data)
+        return {"status": "success", "file_id": file_id}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@reports_router.delete("/delete-draft/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+async def delete_draft(file_id: int,
+                       use_case: FromDishka[DeleteDraftUseCase],
+                       user_data: UserPayload = Depends(validate_jwt)):
+    try:
+        await use_case.execute(file_id=file_id, user_id=user_data.user_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except ValueError as val_err:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(val_err))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@reports_router.get("/drafts", status_code=status.HTTP_200_OK)
+@inject
+async def list_drafts(use_case: FromDishka[ListDraftsUseCase],
+                      user_data: UserPayload = Depends(validate_jwt)):
+    try:
+        drafts = await use_case.execute(user_id=user_data.user_id)
+        return [d.model_dump() for d in drafts]
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@reports_router.get("/draft/{file_id}", status_code=status.HTTP_200_OK)
+@inject
+async def get_draft(file_id: int,
+                    use_case: FromDishka[GetDraftUseCase],
+                    user_data: UserPayload = Depends(validate_jwt)):
+    try:
+        payload = await use_case.execute(file_id=file_id, user_id=user_data.user_id)
+        return payload.model_dump()
+    except ValueError as val_err:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(val_err))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

@@ -641,7 +641,7 @@ async function sendForm() {
     console.log("OBSERVATION_DYNAMICS:", data.OBSERVATION_DYNAMICS);
 
     try {
-        await fetch("/generate-report", {
+        const response = await fetch("/generate-report", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -652,20 +652,27 @@ async function sendForm() {
         const result = await response.json();
 
         if (result.status === "success") {
-            const downloadUrl = `/download/${result.report_id}`;
-
-            status.innerHTML = `
-                Отчет готов!
-                <a href="${downloadUrl}" target="_blank"
-                   style="color: #5050f5; text-decoration: underline;">
-                   Скачать PDF
-                </a>
-            `;
+            // Сохраняем report_id в sessionStorage для выделения на странице документов
+            sessionStorage.setItem("newReportId", result.report_id);
+            
+            // Удаляем все существующие toast-уведомления
+            const toastContainer = document.querySelector(".report-toast-container");
+            if (toastContainer) {
+                toastContainer.innerHTML = "";
+            }
+            
+            // Обновляем статус
+            if (status) status.innerText = "Отчет генерируется. Переход на страницу отчетов...";
+            
+            // Переходим на страницу отчетов
+            setTimeout(() => {
+                window.location.href = "/documents";
+            }, 500);
         } else {
-            status.innerText = "Ошибка: " + result.message;
+            if (status) status.innerText = "Ошибка: " + result.message;
         }
     } catch (error) {
-        status.innerText = "Ошибка соединения: " + error.message;
+        if (status) status.innerText = "Ошибка соединения: " + error.message;
     }
 }
 

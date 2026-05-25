@@ -1,4 +1,5 @@
 from reports.domain.generator_utils.report_generator.report_generator import ReportGenerator
+from reports.domain.generator_utils.geo_export import generate_report_geojson
 from reports.domain.generator_utils.report_generator.docx_generator import DocxGenerator
 from reports.infrastructure.minio.repository import MinioRepository
 from reports.infrastructure.rabbitmq.publisher import RabbitPublisher
@@ -25,6 +26,10 @@ class GenerateReportUseCase:
             obj=pdf_bytes,
             file_type="pdf"
         )
+
+        geojson_str = generate_report_geojson(data_dict)
+        geojson_name = self._repository.put_geojson(obj_id=message.report_id, obj=geojson_str.encode("utf-8"))
+
         await self._publisher.publish_generated_message(
             GeneratedReportData(user_id=message.user_id, file_name=pdf_object_name)
         )

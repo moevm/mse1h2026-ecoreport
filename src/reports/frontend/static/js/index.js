@@ -1,533 +1,3 @@
-// функция для установки ошибки поля
-function setFieldError(input, message) {
-    if (!input) return;
-    input.classList.add("invalid-field");
-    input.setAttribute("aria-invalid", "true");
-    input.title = message;
-
-    let error = input.nextElementSibling;
-    if (!error || !error.classList.contains("field-error")) {
-        error = document.createElement("span");
-        error.className = "field-error";
-        input.parentNode.insertBefore(error, input.nextSibling);
-    }
-    error.textContent = message;
-}
-
-// функция для очистки ошибок поля
-function clearFieldError(input) {
-    if (!input) return;
-    input.classList.remove("invalid-field");
-    input.removeAttribute("aria-invalid");
-    input.title = "";
-    const error = input.nextElementSibling;
-    if (error?.classList.contains("field-error")) {
-        error.remove();
-    }
-}
-
-// функция для валидации положительного числа с двумя десятичными знаками
-function validatePositiveTwoDecimals(value) {
-    const normalized = value.trim().replace(',', '.');
-    return /^\d+\.\d{2}$/.test(normalized) && parseFloat(normalized) > 0;
-}
-
-// функция для валидации целого положительного числа
-function validatePositiveInteger(value) {
-    return /^[1-9]\d*$/.test(value.trim());
-}
-
-// функция для валидации года (целое положительное число, не больше текущего года)
-function validateYear(value) {
-    const normalized = value.trim();
-    const year = parseInt(normalized, 10);
-    const currentYear = new Date().getFullYear();
-    return /^[1-9]\d*$/.test(normalized) && year <= currentYear;
-}
-
-// функция для валидации даты (не в будущем)
-function validateDateNotFuture(value) {
-    if (!value) return false;
-    const date = new Date(value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return !Number.isNaN(date.getTime()) && date <= today;
-}
-
-// функция для валидации всех полей формы с помощью заданных правил
-function validateFieldInput(field, validator, hint) {
-    if (!field) return true;
-    const value = field.value.trim();
-    if (!value) {
-        clearFieldError(field);
-        return true;
-    }
-    const valid = validator(value);
-    if (!valid) {
-        setFieldError(field, hint);
-    } else {
-        clearFieldError(field);
-    }
-    return valid;
-}
-
-// функция для привязки валидации к полю по его ID
-function attachValidationRule(id, validator, hint) {
-    const field = document.getElementById(id);
-    if (!field) return;
-    field.addEventListener("input", () => validateFieldInput(field, validator, hint));
-}
-
-// функция для валидации полей результатов тестов в таблице
-function validateTestResultsInput(field) {
-    if (!field) return true;
-    const value = field.value.trim();
-    if (value === "") {
-        setFieldError(field, "Заполните результат или отключите показатель");
-        return false;
-    }
-    if (!validatePositiveTwoDecimals(value)) {
-        setFieldError(field, "Введите положительное число с двумя знаками после запятой");
-        return false;
-    }
-    clearFieldError(field);
-    return true;
-}
-
-// функция для валидации полей динамики наблюдений в таблице
-function validateObservationDynamicsInput(field) {
-    if (!field) return true;
-    const fieldName = field.dataset.field;
-    const value = field.value.trim();
-
-    if (fieldName === "Дата") {
-        if (value === "") {
-            setFieldError(field, "Укажите дату");
-            return false;
-        }
-        if (!validateDateNotFuture(value)) {
-            setFieldError(field, "Дата не должна быть позже сегодняшнего дня");
-            return false;
-        }
-        clearFieldError(field);
-        return true;
-    }
-
-    if (value === "") {
-        clearFieldError(field);
-        return true;
-    }
-    if (!validatePositiveTwoDecimals(value)) {
-        setFieldError(field, "Введите положительное число с двумя знаками после запятой");
-        return false;
-    }
-    clearFieldError(field);
-    return true;
-}
-
-// общая функция для валидации всех полей таблицы результатов тестов
-function validateTestResultsTable() {
-    const table = document.getElementById("test_results_table");
-    if (!table) return true;
-    const tbody = table.querySelector("tbody");
-    if (!tbody) return true;
-
-    let valid = true;
-    tbody.querySelectorAll("input[data-field='Результат']").forEach((input) => {
-        if (!validateTestResultsInput(input)) valid = false;
-    });
-    return valid;
-}
-
-// общая функция для валидации всех полей таблицы динамики наблюдений
-function validateObservationDynamicsTable() {
-    const table = document.getElementById("observation_dynamics_table");
-    if (!table) return true;
-    const tbody = table.querySelector("tbody");
-    if (!tbody) return true;
-
-    let valid = true;
-    tbody.querySelectorAll("tr").forEach((row) => {
-        const dateInput = row.querySelector("input[data-field='Дата']");
-        const metricInputs = Array.from(row.querySelectorAll("input[data-field]")).filter((input) => input.dataset.field !== "Дата");
-        const hasMetric = metricInputs.some((input) => input.value.trim() !== "");
-
-        if (!dateInput || !dateInput.value.trim()) {
-            if (hasMetric) {
-                setFieldError(dateInput, "Дата обязательна, если введены показатели");
-                valid = false;
-            }
-        } else if (hasMetric && !validateObservationDynamicsInput(dateInput)) {
-            valid = false;
-        }
-
-        metricInputs.forEach((input) => {
-            if (input.value.trim() !== "" && !validateObservationDynamicsInput(input)) {
-                valid = false;
-            }
-        });
-    });
-
-    return valid;
-}
-
-// функция для валидации полей метаданных отчета
-function validateMetadataFields() {
-    const rules = [
-        { id: "groundwater-level", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
-        { id: "pipe-diameter", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
-        { id: "total-length", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
-        { id: "burial-depth", validator: validatePositiveTwoDecimals, hint: "Укажите положительное число с двумя знаками после запятой" },
-        { id: "laying-year", validator: validateYear, hint: `Введите год не больше ${new Date().getFullYear()}` },
-        { id: "wells-count", validator: validatePositiveInteger, hint: "Введите целое положительное число" },
-        { id: "report-year", validator: validateYear, hint: `Введите год не больше ${new Date().getFullYear()}` },
-        { id: "org-phone", validator: validatePhone, hint: "Введите корректный номер телефона" },
-        { id: "org-email", validator: validateEmail, hint: "Введите корректный email" },
-        { id: "report-date", validator: validateReportDate, hint: "Дата не может быть позже сегодняшнего дня" },
-        { id: "monitor-amount", validator: validatePositiveInteger, hint: "Введите целое положительное число" }
-    ];
-
-    let valid = true;
-    rules.forEach((rule) => {
-        const field = document.getElementById(rule.id);
-        if (field && !validateFieldInput(field, rule.validator, rule.hint)) {
-            valid = false;
-        }
-    });
-    return valid;
-}
-
-// функция для общей валидации всех полей формы перед отправкой
-function validateAllForm() {
-    let valid = true;
-    valid = validateMetadataFields() && valid;
-    valid = validateTestResultsTable() && valid;
-    valid = validateObservationDynamicsTable() && valid;
-
-    if (!valid) {
-        const status = document.getElementById("report-status");
-        if (status) {
-            status.innerText = "Исправьте ошибки в выделенных полях и повторите попытку";
-        }
-    }
-
-    return valid;
-}
-
-// функция для валидации почты
-function validateEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
-// функция для валидации телефона
-function validatePhone(value) {
-    const digits = value.replace(/\D/g, "").replace(/^8/, "7");
-    return digits.length === 11 && digits.startsWith("7");
-}
-
-// функция для валидации даты отчета (не в будущем)
-function validateReportDate(value) {
-    if (!value) return false;
-
-    // строго ISO формат
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-
-    const date = new Date(value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return date <= today;
-}
-
-// функция для форматирования телефонного номера в процессе ввода
-function formatPhone(value) {
-    const digits = value.replace(/\D/g, "").replace(/^8/, "7").slice(0, 11);
-
-    let result = "+7";
-
-    if (digits.length > 1) {
-        const d = digits.slice(1);
-
-        if (d.length > 0) result += " (" + d.slice(0, 3);
-        if (d.length >= 3) result += ") ";
-
-        if (d.length >= 4) result += d.slice(3, 6);
-        if (d.length >= 6) result += "-" + d.slice(6, 8);
-        if (d.length >= 8) result += "-" + d.slice(8, 10);
-    }
-
-    return result;
-}
-
-window.addEventListener("load", function () {
-    const phoneInput = document.getElementById("org-phone");
-    if (!phoneInput) return;
-
-    phoneInput.addEventListener("input", function () {
-        const start = phoneInput.selectionStart;
-
-        const oldValue = phoneInput.value;
-        const newValue = formatPhone(oldValue);
-
-        phoneInput.value = newValue;
-
-        // возврат курсора 
-        const diff = newValue.length - oldValue.length;
-        const newPos = Math.max(0, start + diff);
-
-        phoneInput.setSelectionRange(newPos, newPos);
-    });
-});
-
-window.addEventListener("load", function () {
-    attachValidationRule("groundwater-level", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
-    attachValidationRule("pipe-diameter", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
-    attachValidationRule("total-length", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
-    attachValidationRule("burial-depth", validatePositiveTwoDecimals, "Укажите положительное число с двумя знаками после запятой");
-    attachValidationRule("laying-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
-    attachValidationRule("wells-count", validatePositiveInteger, "Введите целое положительное число");
-    attachValidationRule("monitor-amount", validatePositiveInteger, "Введите целое положительное число");
-    attachValidationRule("report-year", validateYear, `Введите год не больше ${new Date().getFullYear()}`);
-    attachValidationRule("org-phone", validatePhone, "Введите номер в формате +7 (999) 999-99-99");
-    attachValidationRule("org-email", validateEmail, "Введите корректный email (example@mail.com)");
-    attachValidationRule("report-date", validateReportDate, "Некорректный формат даты");
-
-    document.addEventListener("input", function (event) {
-        const target = event.target;
-        if (!(target instanceof HTMLInputElement)) return;
-
-        // обработка полей "Результат" в таблице тестов
-        if (target.closest("#test_results_table") && target.dataset.field === "Результат") {
-            // замена запятой на точки прямо в поле ввода
-            const oldValue = target.value;
-            const newValue = oldValue.replace(/,/g, '.');
-            if (newValue !== oldValue) {
-                // сохранение позиции курсора
-                const cursorPos = target.selectionStart;
-                target.value = newValue;
-                target.setSelectionRange(cursorPos, cursorPos);
-            }
-
-            // валидация введенного значения
-            validateTestResultsInput(target);
-
-            // автоматическое обновление ячейки "Соответствие" в той же строке
-            const row = target.closest("tr");
-            if (row && row.dataset.indicator) {
-                const complianceInput = row.querySelector("input[data-field='Соответствие']");
-                if (complianceInput) {
-                    complianceInput.value = compareWithStandard(row.dataset.indicator, target.value);
-                }
-            }
-        }
-
-        // обработка полей динамики наблюдений
-        if (target.closest("#observation_dynamics_table") && target.dataset.field && target.dataset.field !== "Дата") {
-            // замена запятой на точку
-            const oldValue = target.value;
-            const newValue = oldValue.replace(/,/g, '.');
-            if (newValue !== oldValue) {
-                const cursorPos = target.selectionStart;
-                target.value = newValue;
-                target.setSelectionRange(cursorPos, cursorPos);
-            }
-            // валидация введенного значения
-            validateObservationDynamicsInput(target);
-        }
-    });
-
-    // отдельный обработчик change для поля "Дата" в таблице динамика наблюдений
-    document.addEventListener("change", function (event) {
-        const target = event.target;
-        if (!(target instanceof HTMLInputElement)) return;
-        if (target.closest("#observation_dynamics_table") && target.dataset.field === "Дата") {
-            validateObservationDynamicsInput(target);
-        }
-    });
-
-});
-
-// функция для чтения данных из таблицы наблюдения
-function readObservationPoints() {
-    const table = document.getElementById("observation_points_table");
-    const points = [];
-    if (!table) {
-        console.warn("observation_points_table not found");
-        return points;
-    }
-
-    // все строки в таблице (не только из tbody)
-    const rows = Array.from(table.querySelectorAll("tr")).filter(row => {
-        const cells = row.querySelectorAll("td");
-        return cells.length >= 5; // пропуск заголовков и пустых строк
-    });
-
-    // парсинг числовых значений с учетом возможных запятых и пробелов
-    const parseNumber = (text) => {
-        const value = text.trim().replace(',', '.');
-        const number = Number(value);
-        return Number.isFinite(number) ? number : text.trim();
-    };
-
-    rows.forEach((row) => {
-        const cells = row.querySelectorAll("td");
-        if (cells.length < 6) return;
-
-        const point = {
-            observation_point: cells[1].textContent.trim(),
-            latitude: parseNumber(cells[2].textContent),
-            longitude: parseNumber(cells[3].textContent),
-            medium_type: cells[4].textContent.trim(),
-            description: cells[5].textContent.trim(),
-        };
-        if (point.observation_point || point.medium_type || point.description) {
-            points.push(point);
-        }
-    });
-
-    console.log("Observation points collected:", points);
-    return points;
-}
-
-// функция для чтения данных из таблицы результатов тестов
-function readTestResults() {
-    const table = document.getElementById("test_results_table");
-    const results = [];
-    if (!table) {
-        console.warn("test_results_table not found");
-        return results;
-    }
-
-    const tbody = table.querySelector("tbody");
-    if (!tbody) {
-        console.warn("test_results_table tbody not found");
-        return results;
-    }
-
-    const rows = tbody.querySelectorAll("tr");
-    console.log("Test results table rows found:", rows.length);
-
-    rows.forEach((row) => {
-        const indicator = row.dataset.indicator;
-        if (!indicator) {
-            console.log("Row skipped - no indicator:", row);
-            return; // пропуск строк без indicator
-        }
-
-        const inputs = row.querySelectorAll("input[data-field]");
-        console.log(`Row for indicator "${indicator}" has ${inputs.length} inputs`);
-
-        const result = {
-            indicator: indicator,
-            standard: "",
-            result: "",
-            unit: "",
-            compliance: ""
-        };
-
-        inputs.forEach((input) => {
-            const field = input.dataset.field;
-            const value = input.value.trim();
-            console.log(`  Input field "${field}" = "${value}"`);
-
-            if (field === "Норматив") result.standard = value;
-            else if (field === "Результат") result.result = value;
-            else if (field === "Единицы измерения") result.unit = value || "";
-            else if (field === "Соответствие") result.compliance = value;
-        });
-
-        console.log("Result object:", result);
-
-        const maybeResult = typeof result.result === "string" ? result.result.trim() : String(result.result).trim();
-        if (result.indicator && maybeResult !== "") {
-            const normalized = maybeResult.replace(',', '.');
-            const numeric = parseFloat(normalized);
-            if (!Number.isNaN(numeric)) {
-                result.result = numeric;
-                results.push(result);
-            }
-        }
-    });
-
-    console.log("Test results collected:", results);
-    return results;
-}
-
-// функция для чтения данных из таблицы динамики наблюдений
-function readObservationDynamics() {
-    const table = document.getElementById("observation_dynamics_table");
-    const dynamics = [];
-    if (!table) {
-        console.warn("observation_dynamics_table not found");
-        return dynamics;
-    }
-
-    const tbody = table.querySelector("tbody");
-    if (!tbody) {
-        console.warn("observation_dynamics_table tbody not found");
-        return dynamics;
-    }
-
-    const rows = tbody.querySelectorAll("tr");
-    console.log("Observation dynamics table rows found:", rows.length);
-
-    const metricKeyMap = {
-        "pH": "pH",
-        "Железо": "iron",
-        "Марганец": "manganese",
-        "Нитраты": "nitrates",
-        "Сульфаты": "sulfates"
-    };
-
-    rows.forEach((row, rowIndex) => {
-        const inputs = row.querySelectorAll("input[data-field]");
-        console.log(`Row ${rowIndex} has ${inputs.length} inputs`);
-
-        const entry = { date: "" };
-
-        inputs.forEach((input) => {
-            const field = input.dataset.field;
-            const value = input.value.trim();
-            console.log(`  Input field "${field}" = "${value}"`);
-
-            if (field === "Дата") {
-                entry.date = value;
-            } else {
-                const key = metricKeyMap[field] || field;
-                entry[key] = value;
-            }
-        });
-
-        console.log("Entry object:", entry);
-
-        const metrics = ["pH", "iron", "manganese", "nitrates", "sulfates"];
-        const hasMetricValue = metrics.some((metric) => {
-            return entry[metric] !== undefined && String(entry[metric]).trim() !== "";
-        });
-
-        if (entry.date && hasMetricValue) {
-            const normalize = (value) => {
-                if (value === undefined || value === null || String(value).trim() === "") {
-                    return "";
-                }
-                const normalized = String(value).trim().replace(',', '.');
-                const parsed = parseFloat(normalized);
-                return Number.isNaN(parsed) ? value : parsed;
-            };
-
-            metrics.forEach((metric) => {
-                if (entry[metric] !== undefined) {
-                    entry[metric] = normalize(entry[metric]);
-                }
-            });
-            dynamics.push(entry);
-        }
-    });
-
-    console.log("Observation dynamics collected:", dynamics);
-    return dynamics;
-}
-
 async function sendForm() {
     if (!validateAllForm()) {
         return;
@@ -551,7 +21,7 @@ async function sendForm() {
         // природные условия
         RELIEF_TYPE: document.getElementById("relief-type")?.value || "Равнинный",
         SOIL_TYPE: document.getElementById("soil-type")?.value || "Суглинок",
-        GROUNDWATER_LEVEL: (document.getElementById("groundwater-level")?.value.trim() || "").replace(',', '.'),
+        GROUNDWATER_LEVEL: document.getElementById("groundwater-level")?.value.trim().replace(',', '.') || null,
         CLIMATE_ZONE: document.getElementById("climate-zone")?.value || "Умеренный",
 
         // координаты объекта
@@ -562,9 +32,9 @@ async function sendForm() {
         OBJECT_TYPE: document.getElementById("object-type")?.value || "город",
         SYSTEM_TYPE: document.getElementById("type-system")?.value || "",
         PIPE_MATERIAL: document.getElementById("pipe-material")?.value.trim() || "",
-        PIPE_DIAMETER: (document.getElementById("pipe-diameter")?.value.trim() || "").replace(',', '.'),
-        PIPE_DEPTH: (document.getElementById("burial-depth")?.value.trim() || "").replace(',', '.'),
-        PIPE_LENGTH: (document.getElementById("total-length")?.value.trim() || "").replace(',', '.'),
+        PIPE_DIAMETER: document.getElementById("pipe-diameter")?.value.trim().replace(',', '.') || null,
+        PIPE_DEPTH: document.getElementById("burial-depth")?.value.trim().replace(',', '.') || null,
+        PIPE_LENGTH: document.getElementById("total-length")?.value.trim().replace(',', '.') || null,
         PIPE_INSTALL_YEAR: parseInt(document.getElementById("laying-year")?.value) || 0,
         MANHOLE_COUNT: parseInt(document.getElementById("wells-count")?.value) || 0,
 
@@ -605,8 +75,13 @@ async function sendForm() {
     console.log("TEST_RESULTS:", data.TEST_RESULTS);
     console.log("OBSERVATION_DYNAMICS:", data.OBSERVATION_DYNAMICS);
 
+    const draftFileId = document.getElementById("draft-file-id")?.value;
+    if (draftFileId) {
+        data.file_id = parseInt(draftFileId);
+    }
+
     try {
-        await fetch("/generate-report", {
+        const response = await fetch("/generate-report", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -617,126 +92,239 @@ async function sendForm() {
         const result = await response.json();
 
         if (result.status === "success") {
-            const downloadUrl = `/download/${result.report_id}`;
-
-            status.innerHTML = `
-                Отчет готов!
-                <a href="${downloadUrl}" target="_blank"
-                   style="color: #5050f5; text-decoration: underline;">
-                   Скачать PDF
-                </a>
-            `;
+            // Сохраняем report_id в sessionStorage для выделения на странице документов
+            sessionStorage.setItem("newReportId", result.report_id);
+            
+            // Удаляем все существующие toast-уведомления
+            const toastContainer = document.querySelector(".report-toast-container");
+            if (toastContainer) {
+                toastContainer.innerHTML = "";
+            }
+            
+            // Обновляем статус
+            if (status) status.innerText = "Отчет генерируется. Переход на страницу отчетов...";
+            
+            // Переходим на страницу отчетов
+            setTimeout(() => {
+                window.location.href = "/documents";
+            }, 500);
         } else {
-            status.innerText = "Ошибка: " + result.message;
+            console.log(result.message);
         }
     } catch (error) {
-        status.innerText = "Ошибка соединения: " + error.message;
+        showToast("Ошибка соединения: " + error.message, "error");
     }
 }
 
+function collectDraftData() {
+    return {
+        FULL_OBJECT_NAME: document.getElementById("full-object-name")?.value || null,
+        SHORT_OBJECT_NAME: document.getElementById("short-object-name")?.value || null,
+        YEAR: parseInt(document.getElementById("report-year")?.value) || null,
+        ORGANIZATION_NAME: document.getElementById("organization-name")?.value || null,
+        REGION: document.getElementById("region")?.value || null,
+        DOCUMENTS_GOST: JSON.parse(localStorage.getItem("gost_list") || "[]"),
+        RELIEF_TYPE: document.getElementById("relief-type")?.value || null,
+        SOIL_TYPE: document.getElementById("soil-type")?.value || null,
+        GROUNDWATER_LEVEL: document.getElementById("groundwater-level")?.value?.trim()?.replace(",", ".") || null,
+        CLIMATE_ZONE: document.getElementById("climate-zone")?.value || null,
+        COORDINATES_LATITUDE: parseFloat(document.getElementById("coord-n")?.value) || null,
+        COORDINATES_LONGITUDE: parseFloat(document.getElementById("coord-e")?.value) || null,
+        OBJECT_TYPE: document.getElementById("object-type")?.value || null,
+        SYSTEM_TYPE: document.getElementById("type-system")?.value || null,
+        PIPE_MATERIAL: document.getElementById("pipe-material")?.value?.trim() || null,
+        PIPE_DIAMETER: document.getElementById("pipe-diameter")?.value?.trim()?.replace(",", ".") || null,
+        PIPE_DEPTH: document.getElementById("burial-depth")?.value?.trim()?.replace(",", ".") || null,
+        PIPE_LENGTH: document.getElementById("total-length")?.value?.trim()?.replace(",", ".") || null,
+        PIPE_INSTALL_YEAR: parseInt(document.getElementById("laying-year")?.value) || null,
+        MANHOLE_COUNT: parseInt(document.getElementById("wells-count")?.value) || null,
+        MONITORING_POINT_COUNT: parseInt(document.getElementById("monitor-amount")?.value) || null,
+        OBSERVATION_POINT: document.getElementById("observ-point")?.value || null,
+        LATITUDE: parseFloat(document.getElementById("observ-coord-n")?.value) || null,
+        LONGITUDE: parseFloat(document.getElementById("observ-coord-e")?.value) || null,
+        MEDIUM_TYPE: document.getElementById("eco-type")?.value || null,
+        DESCRIPTION: document.getElementById("description")?.value || null,
+        OBSERVATION_FREQUENCY: document.getElementById("observ-period")?.value || null,
+        OBSERVATION_POINTS: readObservationPoints(),
+        ...(() => {
+            const indicatorToField = { "pH": "RESULTS_PH", "Железо": "RESULTS_IRON", "Марганец": "RESULTS_MANGANESE", "Нитраты": "RESULTS_NITRATES", "Сульфаты": "RESULTS_SULFATES" };
+            const map = { RESULTS_PH: null, RESULTS_IRON: null, RESULTS_MANGANESE: null, RESULTS_NITRATES: null, RESULTS_SULFATES: null };
+            readTestResults().forEach((r) => {
+                const field = indicatorToField[r.indicator];
+                if (field !== undefined) map[field] = r.result;
+            });
+            return map;
+        })(),
+        TEST_RESULTS: readTestResults(),
+        RESULTS_DYNAMIC: [],
+        OBSERVATION_DYNAMICS: readObservationDynamics(),
+        ORGANIZATION_ADDRESS: document.getElementById("org-address")?.value || null,
+        ORGANIZATION_PHONE: document.getElementById("org-phone")?.value || null,
+        ORGANIZATION_EMAIL: document.getElementById("org-email")?.value || null,
+        RESPONSIBLE_NAME: document.getElementById("resp-name")?.value || null,
+        RESPONSIBLE_POSITION: document.getElementById("resp-pos")?.value || null,
+        REPORT_DATE: document.getElementById("report-date")?.value || null,
+        SELECTED_TEST_INDICATORS: (function () {
+            const section = document.getElementById("test_results_table")?.closest("section");
+            if (!section) return null;
+            return Array.from(section.querySelectorAll(".list_element"))
+                .filter((btn) => btn.dataset.selected !== "false")
+                .map((btn) => btn.textContent.trim());
+        })(),
+    };
+}
 
-// функция для очистки всех полей на странице создания отчета
-function clearAllFormFields() {
-    console.log("Start clearing forms");
-    
-    // 1. Очищаем обычные поля ввода и select
-    const regularFields = document.querySelectorAll(`
-        input:not([type="button"]):not([type="submit"]):not([type="hidden"]),
-        select
-    `);
-    
-    // не трогаем поля внутри таблиц
-    regularFields.forEach(field => {
-        if (field.closest('table')) return;
+async function saveDraft() {
+    const data = collectDraftData();
 
-        if (field.tagName === 'SELECT') {
-            field.selectedIndex = 0;
-        } else {
-            field.value = '';
-        }
-    });
-
-
-    // 2. Очистка таблиц
-    // --------------------------
-    // Таблица "Точки наблюдения"
-    const pointsTbody = document.querySelector('#observation_points_table tbody');
-    if (pointsTbody) {
-        pointsTbody.innerHTML = '';
+    if (!data.ORGANIZATION_NAME || !data.ORGANIZATION_NAME.trim()) {
+        const el = document.getElementById("organization-name");
+        highlightError(el);
+        el?.focus();
+        showToast("Укажите название организации", "error");
+        return;
+    }
+    if (!data.FULL_OBJECT_NAME || !data.FULL_OBJECT_NAME.trim()) {
+        const el = document.getElementById("full-object-name");
+        highlightError(el);
+        el?.focus();
+        showToast("Укажите полное название объекта", "error");
+        return;
     }
 
-    const testResultsTbody = document.querySelector('#test_results_table tbody');
-    if (testResultsTbody) {
-        const resultInputs = testResultsTbody.querySelectorAll('input[data-field="Результат"]');
+    const draftFileId = document.getElementById("draft-file-id")?.value;
+    if (draftFileId) {
+        data.file_id = parseInt(draftFileId);
+    }
 
-        resultInputs.forEach(input => {
-            const oldValue = input.value;
-            input.value = '';
+    try {
+        const response = await fetch("/save-draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            showToast("Ошибка при сохранении черновика: " + (err.detail || response.status), "error");
+            return;
+        }
+        const result = await response.json();
+        const hiddenInput = document.getElementById("draft-file-id");
+        if (hiddenInput) hiddenInput.value = result.file_id;
+        showToast("Черновик сохранён", "success");
+    } catch (error) {
+        showToast("Ошибка соединения: " + error.message, "error");
+    }
+}
 
-            // Обновляем поле "Соответствие" после очищения таблицы
-            if (oldValue !== '') {
-                const changeEvent = new Event('change', { bubbles: true });
-                input.dispatchEvent(changeEvent);
+async function deleteDraft() {
+    const draftFileId = document.getElementById("draft-file-id")?.value;
+    if (!draftFileId) {
+        showToast("Сначала сохраните черновик", "info");
+        return;
+    }
+    if (!confirm("Удалить черновик?")) return;
+
+    try {
+        const response = await fetch(`/delete-draft/${draftFileId}`, { method: "DELETE" });
+        if (!response.ok && response.status !== 204) {
+            const err = await response.json().catch(() => ({}));
+            showToast("Ошибка: " + (err.detail || response.status), "error");
+            return;
+        }
+        document.getElementById("draft-file-id").value = "";
+        clearForm();
+        showToast("Черновик удалён", "success");
+    } catch (error) {
+        showToast("Ошибка соединения: " + error.message, "error");
+    }
+}
+
+async function prefillFromDraft() {
+    const params = new URLSearchParams(window.location.search);
+    const draftId = params.get("draft_id");
+    if (!draftId) return;
+
+    try {
+        const response = await fetch(`/draft/${draftId}`);
+        if (!response.ok) return;
+        const d = await response.json();
+
+        const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el && val !== null && val !== undefined) el.value = val;
+        };
+
+        set("full-object-name", d.FULL_OBJECT_NAME);
+        set("short-object-name", d.SHORT_OBJECT_NAME);
+        set("report-year", d.YEAR);
+        set("organization-name", d.ORGANIZATION_NAME);
+        set("region", d.REGION);
+        set("relief-type", d.RELIEF_TYPE);
+        set("soil-type", d.SOIL_TYPE);
+        set("groundwater-level", d.GROUNDWATER_LEVEL);
+        set("climate-zone", d.CLIMATE_ZONE);
+        set("coord-n", d.COORDINATES_LATITUDE);
+        set("coord-e", d.COORDINATES_LONGITUDE);
+        set("object-type", d.OBJECT_TYPE);
+        set("type-system", d.SYSTEM_TYPE);
+        set("pipe-material", d.PIPE_MATERIAL);
+        set("pipe-diameter", d.PIPE_DIAMETER);
+        set("burial-depth", d.PIPE_DEPTH);
+        set("total-length", d.PIPE_LENGTH);
+        set("laying-year", d.PIPE_INSTALL_YEAR);
+        set("wells-count", d.MANHOLE_COUNT);
+        set("monitor-amount", d.MONITORING_POINT_COUNT);
+        set("observ-point", d.OBSERVATION_POINT);
+        set("observ-coord-n", d.LATITUDE);
+        set("observ-coord-e", d.LONGITUDE);
+        set("eco-type", d.MEDIUM_TYPE);
+        set("description", d.DESCRIPTION);
+        set("observ-period", d.OBSERVATION_FREQUENCY);
+        set("org-address", d.ORGANIZATION_ADDRESS);
+        set("org-phone", d.ORGANIZATION_PHONE);
+        set("org-email", d.ORGANIZATION_EMAIL);
+        set("resp-name", d.RESPONSIBLE_NAME);
+        set("resp-pos", d.RESPONSIBLE_POSITION);
+        set("report-date", d.REPORT_DATE);
+
+        if (d.DOCUMENTS_GOST && d.DOCUMENTS_GOST.length) {
+            localStorage.setItem("gost_list", JSON.stringify(d.DOCUMENTS_GOST));
+            const knownGosts = new Set(Array.from(document.querySelectorAll("#gost_list .list_element")).map((b) => b.textContent.trim()));
+            const customGost = d.DOCUMENTS_GOST.find((g) => !knownGosts.has(g)) || "";
+            if (customGost) {
+                localStorage.setItem("gost_other", customGost);
+                const otherInput = document.getElementById("gost-other");
+                if (otherInput) otherInput.value = customGost;
             }
-        });
-    }
-
-    // Таблица "Динамика наблюдений"
-    const dynamicsTbody = document.querySelector('#observation_dynamics_table tbody');
-    if (dynamicsTbody) {
-        dynamicsTbody.innerHTML = '';
-    }
-
-    // 3. Сброс кнопок ГОСТов
-    const gostButtons = document.querySelectorAll('#gost_list .list_element');
-    gostButtons.forEach(btn => {
-        btn.classList.remove('list_element--active');
-        btn.dataset.selected = "false";
-    });
-
-    // 4. Сброс синих кнопок (pH, Железо, Марганец и т.д.)
-    const toggleButtons = document.querySelectorAll('.list_element:not(#gost_list .list_element)');
-    toggleButtons.forEach(button => {
-        button.dataset.selected = "false";
-        button.classList.add('list_element--active');
-    });
-    toggleButtons.forEach(button => button.click());
-
-    // 5. Очистка ошибок валидации
-    document.querySelectorAll('.invalid-field').forEach(el => {
-        el.classList.remove('invalid-field');
-    });
-    document.querySelectorAll('.field-error').forEach(el => el.remove());
-
-    // 6. Очистка карт
-    ['coord-n', 'coord-e', 'observ-coord-n', 'observ-coord-e'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = '';
-            el.dispatchEvent(new Event('change', { bubbles: true }));
         }
-    });
 
-    // 7. Очистка полей ввода точки наблюдения (внутри таблицы add_observation_point)
-    const observationInputIds = ["observ-point", "observ-coord-n", "observ-coord-e", "eco-type", "description"];
-    observationInputIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = '';
+        if (d.SELECTED_TEST_INDICATORS && window.restoreTestResults) {
+            const fmt = (v) => (v !== null && v !== undefined) ? Number(v).toFixed(2) : undefined;
+            const valuesMap = {};
+            const ph = fmt(d.RESULTS_PH); if (ph !== undefined) valuesMap["pH"] = ph;
+            const iron = fmt(d.RESULTS_IRON); if (iron !== undefined) valuesMap["Железо"] = iron;
+            const mn = fmt(d.RESULTS_MANGANESE); if (mn !== undefined) valuesMap["Марганец"] = mn;
+            const no3 = fmt(d.RESULTS_NITRATES); if (no3 !== undefined) valuesMap["Нитраты"] = no3;
+            const so4 = fmt(d.RESULTS_SULFATES); if (so4 !== undefined) valuesMap["Сульфаты"] = so4;
+            window.restoreTestResults(d.SELECTED_TEST_INDICATORS, valuesMap);
         }
-    });
+
+        if (d.OBSERVATION_POINTS && d.OBSERVATION_POINTS.length > 0 && window.restoreObservationPoints) {
+            window.restoreObservationPoints(d.OBSERVATION_POINTS);
+        }
+
+        if (d.OBSERVATION_DYNAMICS && d.OBSERVATION_DYNAMICS.length > 0 && window.restoreDynamics) {
+            window.restoreDynamics(d.OBSERVATION_DYNAMICS);
+        }
+
+        const hiddenInput = document.getElementById("draft-file-id");
+        if (hiddenInput) hiddenInput.value = d.file_id;
+    } catch (e) {
+        console.error("Ошибка загрузки черновика:", e);
+    }
 }
 
-
-document.addEventListener('DOMContentLoaded', function () {
-    const clearButton = document.getElementById('clear-form-button');
-
-    if (clearButton) {
-        clearButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            clearAllFormFields();
-        });
-    } else {
-        console.warn("Кнопка 'Очистить поля' не найдена");
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    prefillFromDraft();
 });

@@ -58,6 +58,7 @@ input[type="file"] {
 
 .file_upload img {
     width: 1.2em;
+    margin-left: auto;
 }
 
 .action__button {

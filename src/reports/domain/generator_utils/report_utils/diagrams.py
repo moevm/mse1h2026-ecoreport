@@ -333,61 +333,63 @@ def comparison_bar_chart_docx(results: list[dict]) -> BytesIO:
     if not results:
         return None
     measurements = []
-    measure_data = {"Нижняя граница нормы": [], "Результат наблюдения": [], "Верхняя граница нормы": []}
+    result_values = []
     bar_colors = []
+    norm_lines = [] 
 
-    for result in results:
+    for i, result in enumerate(results):
         indicator = str(result.get("indicator", "")).strip()
         result_raw = result.get("result")
-        # Пропускаем пустые записи
-        if (not indicator or result_raw in (None, "", "-")):
+
+        if not indicator or result_raw in (None, "", "-"):
             continue
-        standard = result.get("standard", "")
-        low_bound = 0
-        high_bound = 0
-        if (standard and " - " in str(standard)):
+        standard = str(result.get("standard", "")).strip()
+        low_bound, high_bound = 0, 0
+        if standard and " - " in standard:
             try:
                 low_bound, high_bound = map(format_number, standard.split(" - "))
             except Exception:
                 pass
         result_val = format_number(result_raw)
-        unit = str(result.get("unit", ""))
+        unit = str(result.get("unit", "")).strip()
         measurements.append(f"{indicator}, {unit}" if unit != "-" else indicator)
-        measure_data["Результат наблюдения"].append(result_val)
-        measure_data["Нижняя граница нормы"].append(low_bound)
-        measure_data["Верхняя граница нормы"].append(high_bound)
+        result_values.append(result_val)
         bar_colors.append("#4CBA76" if low_bound <= result_val <= high_bound else "#96281A")
-    
+        if low_bound != 0:
+            norm_lines.append((low_bound, f"{indicator}_min", i))
+        if high_bound != 0:
+            norm_lines.append((high_bound, f"{indicator}_max", i))
     if not measurements:
         return None
 
     fig, ax = plt.subplots()
 
     x = np.arange(len(measurements))
-    width = 0.32
-    multiplier = 0
+    width = 0.4
     ax.set_yscale("log")
 
-    for attribute, measurement in measure_data.items():
-        offset = width * multiplier
-        if attribute == "Результат наблюдения":
-            color = bar_colors
-        elif attribute == "Верхняя граница нормы":
-            color = "#362727"
-        else:
-            color = "#4E5755"
-        rects = ax.bar(x + offset, measurement, width, label=attribute, color=color)
-        ax.bar_label(rects, padding=2)
-        multiplier += 1
-
-    ax.legend(loc="best")
-    ax.set_xticks(x + width, measurements)
-    ax.tick_params(right=False, left=False, axis="y", length=0, which="both")
+    rects = ax.bar(x, result_values, width, color=bar_colors, label="Результат наблюдения")
+    ax.bar_label(rects, padding=1, fmt="%.2f")
+    all_vals = ([v for v in result_values if v > 0] + [n[0] for n in norm_lines if n[0] > 0])
+    y_min = min(all_vals) * 0.3 if all_vals else 0.1
+    y_max = max(all_vals) * 5 if all_vals else 10
+    ax.set_ylim(y_min, y_max)
+    ax.set_xlim(-1.0, len(measurements) - 0.4)
+    left_x = ax.get_xlim()[0]
+    for y_val, label, idx in norm_lines:
+        xmax = x[idx] + width / 2
+        ax.hlines(y=y_val, xmin=left_x, xmax=xmax, colors="black", linestyles="--", linewidth=0.9, alpha=0.85,)
+        va = "top" if label.endswith("_min") else "bottom"
+        ax.text(0, y_val, f" {label}", va=va, ha="left", fontsize=10, color="black", transform=ax.get_yaxis_transform(),)
+    ax.set_xticks(x)
+    ax.set_xticklabels(measurements)
+    ax.tick_params(right=False, left=False, axis="y", length=0, which="both",)
     ax.set_yticks([])
     fig.set_figwidth(9)
+    fig.tight_layout()
 
     buffer = BytesIO()
-    fig.savefig(buffer, format="png")
+    fig.savefig(buffer, format="png", bbox_inches="tight", dpi=300)
     buffer.seek(0)
     plt.close(fig)
     return buffer

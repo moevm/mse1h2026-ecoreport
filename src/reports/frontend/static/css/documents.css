@@ -101,6 +101,16 @@
     filter: brightness(0.9);
 }
 
+.card__button.is-disabled {
+    opacity: 0.6;
+    filter: grayscale(0.25);
+    cursor: not-allowed;
+}
+
+.card__button.is-disabled:hover {
+    filter: brightness(0.9) grayscale(0.25);
+}
+
 .card__description {
     margin: 0;
     color: #2f3d4e;

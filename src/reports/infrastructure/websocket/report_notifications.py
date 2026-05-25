@@ -25,22 +25,12 @@ class ReportNotificationHub:
             if not queues:
                 self._subscribers.pop(user_id, None)
 
-    async def publish_report_ready(
-        self,
-        user_id: str,
-        file_name: str,
-        geojson_file_name: str | None = None,
-    ) -> None:
+    async def publish_report_ready(self, user_id: str, file_name: str) -> None:
         payload = {
             "status": "ready",
             "title": "Отчет готов",
             "file_name": file_name,
             "download_url": f"/download-file/{quote(file_name, safe='')}",
-            "geojson_download_url": (
-                f"/download-file/{quote(geojson_file_name, safe='')}"
-                if geojson_file_name
-                else None
-            ),
         }
 
         async with self._lock:

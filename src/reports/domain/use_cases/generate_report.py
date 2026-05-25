@@ -22,5 +22,4 @@ class GenerateReportUseCase:
         geojson_str = generate_report_geojson(data)
         geojson_name = self._repository.put_geojson(obj_id=message.report_id, obj=geojson_str.encode("utf-8"))
 
-        await self._publisher.publish_generated_message(GeneratedReportData(
-            user_id=message.user_id, file_name=object_name, geojson_file_name=geojson_name))
+        await self._publisher.publish_generated_message(GeneratedReportData(user_id=message.user_id, file_name=object_name))

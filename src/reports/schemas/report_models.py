@@ -83,5 +83,4 @@ class ReportInputData(BaseModel):
 class GeneratedReportData(BaseModel):
     user_id: str = Field(...)
     file_name: str = Field(...)
-    geojson_file_name: Optional[str] = Field(default=None)
     

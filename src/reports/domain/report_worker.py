@@ -29,5 +29,4 @@ async def handle_generated(msg: str):
     await report_notification_hub.publish_report_ready(
         user_id=message.user_id,
         file_name=message.file_name,
-        geojson_file_name=message.geojson_file_name,
     )

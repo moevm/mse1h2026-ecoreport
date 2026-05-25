@@ -22,6 +22,7 @@ from reports.infrastructure.postgres.repository import (
 from reports.infrastructure.rabbitmq.broker import broker
 from reports.infrastructure.rabbitmq.publisher import RabbitPublisher
 from reports.domain.generator_utils.report_generator.report_generator import ReportGenerator
+from reports.domain.generator_utils.report_generator.docx_generator import DocxGenerator
 
 
 class InfrastructureProvider(Provider):
@@ -96,6 +97,10 @@ class ServiceProvider(Provider):
         return ReportGenerator()
 
     @provide
+    def get_docx_generator(self) -> DocxGenerator:
+        return DocxGenerator()
+
+    @provide
     def get_password_hasher(self) -> PasswordHash:
         return PasswordHash.recommended()
 
@@ -110,18 +115,19 @@ class UseCaseProvider(Provider):
     @provide
     def get_generate_report_use_case(self, publisher: RabbitPublisher,
                                         generator: ReportGenerator,
+                                        docx_generator: DocxGenerator,
                                         repository: MinioRepository) -> GenerateReportUseCase:
-        return GenerateReportUseCase(publisher, generator, repository)
+        return GenerateReportUseCase(publisher, generator, docx_generator, repository)
 
     @provide
     def get_save_data_use_case(self,
-                               postgres_repository: ReportsRepository,
-                               database: Database,
-                               file_repository: FileRepository,
-                               documents_gost_repository: DocumentsGostRepository,
-                               test_results_repository: TestResultsRepository,
-                               observation_point_repository: ObservationPointRepository,
-                               observation_dynamic_repository: ObservationDynamicRepository) -> SaveDataUseCase:
+                            postgres_repository: ReportsRepository,
+                            database: Database,
+                            file_repository: FileRepository,
+                            documents_gost_repository: DocumentsGostRepository,
+                            test_results_repository: TestResultsRepository,
+                            observation_point_repository: ObservationPointRepository,
+                            observation_dynamic_repository: ObservationDynamicRepository) -> SaveDataUseCase:
         return SaveDataUseCase(
             postgres_repository, database, file_repository, documents_gost_repository,
             test_results_repository, observation_point_repository, observation_dynamic_repository
@@ -142,12 +148,12 @@ class UseCaseProvider(Provider):
 
     @provide
     def get_delete_data_use_case(self,
-                                 database: Database,
-                                 file_repository: FileRepository,
-                                 documents_gost_repository: DocumentsGostRepository,
-                                 test_results_repository: TestResultsRepository,
-                                 observation_point_repository: ObservationPointRepository,
-                                 observation_dynamic_repository: ObservationDynamicRepository) -> DeleteDataUseCase:
+                                database: Database,
+                                file_repository: FileRepository,
+                                documents_gost_repository: DocumentsGostRepository,
+                                test_results_repository: TestResultsRepository,
+                                observation_point_repository: ObservationPointRepository,
+                                observation_dynamic_repository: ObservationDynamicRepository) -> DeleteDataUseCase:
         return DeleteDataUseCase(
             database, file_repository, documents_gost_repository,
             test_results_repository, observation_point_repository, observation_dynamic_repository

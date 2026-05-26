@@ -45,7 +45,7 @@
                 <h2 class="subtitle">Готовые отчёты</h2>
                 <section class="list">
                     {% for report in reports %}
-                        <article class="card">
+                        <article class="card" data-report-id="{{ report.title }}">
                             <div class="card__summary">
                                 <div class="card__summary_info">
                                     <div>
